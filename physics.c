@@ -17,7 +17,6 @@ struct BUTTON_INFO {
   int prev;
 };
 
-
 struct PLAYER_INFO {
   u8 x;
   u8 y;
@@ -38,7 +37,7 @@ struct PLAYER_INFO {
 
 struct PLAYER_INFO player[PLAYERS];
 
-u8 isSolid[] = {0, 1, 0};
+u8 isSolid[] = {0, 0, 1, 0};
 
 #define PLAYER_START_WIDTH  8
 #define PLAYER_START_HEIGHT 8
@@ -182,7 +181,7 @@ int main()
       player[i].y = PLAYER_1_START_Y;
     }
 
-    MapSprite2(i, yellow, 0);
+    MapSprite2(i, yellow_front, 0);
   }
 
   // Fills the video RAM with the first tile (0, 0)
@@ -226,6 +225,11 @@ int main()
     }
       
     for (u8 i = 0; i < PLAYERS; ++i) {
+      if (player[i].left == player[i].right)
+        MapSprite2(i, yellow_front, 0);
+      else
+        MapSprite2(i, yellow_side, player[i].right ? SPRITE_FLIP_X : 0);
+
       MoveSprite(i, player[i].x, player[i].y, 1, 1);
     }
   }

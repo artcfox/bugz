@@ -4,10 +4,11 @@
   <output file="level.inc">
     <tiles var-name="tiles"/>
     <maps pointers-size="8">
-      <map var-name="yellow" left="0" top="0" width="1" height="1"/>
-      <map var-name="green" left="1" top="0" width="1" height="1"/>
-      <map var-name="black" left="2" top="0" width="1" height="1"/>
-      <map var-name="level" left="0" top="1" width="30" height="26"/>
+      <map var-name="yellow_side" left="0" top="0" width="1" height="1"/>
+      <map var-name="yellow_front" left="1" top="0" width="1" height="1"/>
+      <map var-name="green" left="2" top="0" width="1" height="1"/>
+      <map var-name="black" left="3" top="0" width="1" height="1"/>
+      <map var-name="level" left="0" top="1" width="30" height="28"/>
     </maps>
   </output>
 </gfx-xform>
