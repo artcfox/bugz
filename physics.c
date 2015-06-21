@@ -1,3 +1,60 @@
+/*
+
+  physics.c
+
+  Copyright 2015 Matthew T. Pandina. All rights reserved.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
+
+  1. Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+
+  THIS SOFTWARE IS PROVIDED BY MATTHEW T. PANDINA "AS IS" AND ANY
+  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL MATTHEW T. PANDINA OR
+  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+  OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  SUCH DAMAGE.
+
+  This file incorporates work covered by the following copyright and
+  permission notice:
+
+    Copyright (c) 2013 Jake Gordon and contributors
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use, copy,
+    modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+  
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+  
+*/
+
 #include <stdbool.h>
 #include <avr/io.h>
 #include <stdlib.h>
@@ -59,9 +116,9 @@ u8 isSolid[] = {0, 0, 1, 0};
 // max vertical speed (60 tiles per second)
 #define WORLD_MAXDY (WORLD_METER * 20)
 // horizontal acceleration - take 1/2 second to reach maxdx
-#define WORLD_ACCEL (WORLD_MAXDX * 8)
+#define WORLD_ACCEL (WORLD_MAXDX * 15)
 // horizontal friction - take 1/6 second to stop from maxdx
-#define WORLD_FRICTION (WORLD_MAXDX * 6)
+#define WORLD_FRICTION (WORLD_MAXDX * WORLD_FPS)
 // (a large) instantaneous jump impulse
 #define WORLD_JUMP (WORLD_METER * 600)
 
@@ -83,31 +140,31 @@ void update(u8 i)
   player[i].ddy = WORLD_GRAVITY;
 
   if (player[i].left)
-    player[i].ddx = player[i].ddx - WORLD_ACCEL; // player wants to go left
+    player[i].ddx -= WORLD_ACCEL; // player wants to go left
   else if (wasLeft)
-    player[i].ddx = player[i].ddx + WORLD_FRICTION; // player was going left, but not anymore
+    player[i].ddx += WORLD_FRICTION; // player was going left, but not anymore
 
   if (player[i].right)
-    player[i].ddx = player[i].ddx + WORLD_ACCEL; // player wants to go right
+    player[i].ddx += WORLD_ACCEL; // player wants to go right
   else if (wasRight)
-    player[i].ddx = player[i].ddx - WORLD_FRICTION; // player was going right, but not anymore
+    player[i].ddx -= WORLD_FRICTION; // player was going right, but not anymore
 
   if (player[i].jump && !player[i].jumping && !falling) {
-    player[i].ddy = player[i].ddy - WORLD_JUMP; // apply an instantaneous (large) vertical impulse
+    player[i].ddy -= WORLD_JUMP; // apply an instantaneous (large) vertical impulse
     player[i].jumping = true;
   }
 
   // Integrate the forces to calculate the new position (x,y) and velocity (dx,dy)
-  player[i].y = player[i].y + (player[i].dy / WORLD_FPS);
-  player[i].x = player[i].x + (player[i].dx / WORLD_FPS);
+  player[i].y += (player[i].dy / WORLD_FPS);
+  player[i].x += (player[i].dx / WORLD_FPS);
 
-  player[i].dx = player[i].dx + (player[i].ddx / WORLD_FPS);
+  player[i].dx += (player[i].ddx / WORLD_FPS);
   if (player[i].dx < -WORLD_MAXDX)
     player[i].dx = -WORLD_MAXDX;
   else if (player[i].dx > WORLD_MAXDX)
     player[i].dx = WORLD_MAXDX;
 
-  player[i].dy = player[i].dy + (player[i].ddy / WORLD_FPS);
+  player[i].dy += (player[i].ddy / WORLD_FPS);
   if (player[i].dy < -WORLD_MAXDY)
     player[i].dy = -WORLD_MAXDY;
   else if (player[i].dy > WORLD_MAXDY)
@@ -123,10 +180,10 @@ void update(u8 i)
   u8 ty = p2vt(player[i].y);
   u8 nx = player[i].x % TILE_WIDTH;  // true if player overlaps right
   u8 ny = player[i].y % TILE_HEIGHT; // true if player overlaps below
-  u8 cell = isSolid[GetTile(tx, ty)];
+  u8 cell      = isSolid[GetTile(tx,     ty)];
   u8 cellright = isSolid[GetTile(tx + 1, ty)];
-  u8 celldown = isSolid[GetTile(tx, ty + 1)];
-  u8 celldiag = isSolid[GetTile(tx + 1, ty + 1)];
+  u8 celldown  = isSolid[GetTile(tx,     ty + 1)];
+  u8 celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
 
   if (player[i].dy > 0) {
     if ((celldown && !cell) ||
@@ -162,7 +219,7 @@ void update(u8 i)
     }
   }
 
-  player[i].falling = !(celldown || (nx && celldiag));
+  player[i].falling = !(celldown || (nx && celldiag)); // detect if we're now falling or not
 }
 
 int main()
@@ -195,14 +252,14 @@ int main()
   /* for (u8 i = 0; i < SCREEN_TILES_H; i++) { */
   /*   for (u8 j = 0; j < SCREEN_TILES_V; j++) { */
   /*     if (i == 0 || i == SCREEN_TILES_H - 1) { */
-  /*       SetTile(i, j, 1); */
+  /*       SetTile(i, j, 2); */
   /*       continue; */
   /*     } */
   /*     if (j == 0 || j == SCREEN_TILES_V - 1) { */
-  /*       SetTile(i, j, 1); */
+  /*       SetTile(i, j, 2); */
   /*       continue; */
   /*     } */
-  /*     SetTile(i, j, 2); */
+  /*     SetTile(i, j, 3); */
   /*   } */
   /* } */
   DrawMap(0, 0, level);
@@ -225,14 +282,14 @@ int main()
 
       // Improve the user experience, by allowing players to jump by holding the jump
       // button before landing, but require them to release it before jumping again
-      if (player[i].jumpReleased) {                 // jumping multiple times requires releasing the jump button between jumps
-        player[i].jump = (buttons[i].held & BTN_A); // player[i].jump can only be true if BTN_A has been released from the previous jump
-        if (player[i].jump && !player[i].jumping)   // if we are currently holding BTN_A, and the previous jump is complete (i.e. not currently jumping)
-          player[i].jumpReleased = false;           // that means we will start a jump during the next call to update(), so clear the jumpReleased flag now.
-      } else {                                      // otherwise, it means that we just jumped, and BTN_A is still being held down
-        player[i].jump = false;                     // so we explicitly disallow any additional jumps until
-        if (buttons[i].released & BTN_A)            // BTN_A is released again
-          player[i].jumpReleased = true;            // at which point we set the jumpReleased flag so we may jump again.
+      if (player[i].jumpReleased) {                                      // Jumping multiple times requires releasing the jump button between jumps
+        player[i].jump = (buttons[i].held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
+        if (player[i].jump && !(player[i].jumping || player[i].falling)) // if player[i] is currently holding BTN_A, (and is on the ground)
+          player[i].jumpReleased = false;                                // a jump will occur during the next call to update(), so clear the jumpReleased flag.
+      } else {                                                           // Otherwise, it means that we just jumped, and BTN_A is still being held down
+        player[i].jump = false;                                          // so explicitly disallow any additional jumps until
+        if (buttons[i].released & BTN_A)                                 // BTN_A is released again
+          player[i].jumpReleased = true;                                 // at which point reset the jumpReleased flag so another jump may occur.
       }
 
     }
