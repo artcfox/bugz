@@ -3,10 +3,9 @@
 #include <stdlib.h>
 #include <avr/pgmspace.h>
 #include <uzebox.h>
+#include <string.h>
 
 #include "data/level.inc"
-
-#define NELEMS(x) (sizeof(x)/sizeof(x[0]))
 
 #define PLAYERS 2
 
@@ -31,12 +30,15 @@ struct PLAYER_INFO {
   bool right; // if the input was BTN_RIGHT, then set this to true
   bool jump; // if the input was BTN_A, then set this to true
 
+  // Enhancement to improve jumping experience
+  bool jumpReleased; // if BTN_A was released, then set this to true
   /* u8 w; */
   /* u8 h; */
 };
 
 struct PLAYER_INFO player[PLAYERS];
 
+// Maps tile number to solidity
 u8 isSolid[] = {0, 0, 1, 0};
 
 #define PLAYER_START_WIDTH  8
@@ -181,6 +183,8 @@ int main()
       player[i].y = PLAYER_1_START_Y;
     }
 
+    player[i].jumpReleased = true; // we haven't jumped yet, so this is true
+
     MapSprite2(i, yellow_front, 0);
   }
 
@@ -203,7 +207,8 @@ int main()
   /* } */
   DrawMap(0, 0, level);
 
-  struct BUTTON_INFO buttons[PLAYERS] = {0};
+  struct BUTTON_INFO buttons[PLAYERS];
+  memset(buttons, 0, sizeof(buttons));
 
   for (;;) {
     WaitVsync(1);
@@ -217,13 +222,27 @@ int main()
 
       player[i].left = (buttons[i].held & BTN_LEFT);
       player[i].right = (buttons[i].held & BTN_RIGHT);
-      player[i].jump = (buttons[i].pressed & BTN_A);
+
+      // Improve the user experience, by allowing players to jump by holding the jump
+      // button before landing, but require them to release it before jumping again
+      if (player[i].jumpReleased) {                 // jumping multiple times requires releasing the jump button between jumps
+        player[i].jump = (buttons[i].held & BTN_A); // player[i].jump can only be true if BTN_A has been released from the previous jump
+        if (player[i].jump && !player[i].jumping)   // if we are currently holding BTN_A, and the previous jump is complete (i.e. not currently jumping)
+          player[i].jumpReleased = false;           // that means we will start a jump during the next call to update(), so clear the jumpReleased flag now.
+      } else {                                      // otherwise, it means that we just jumped, and BTN_A is still being held down
+        player[i].jump = false;                     // so we explicitly disallow any additional jumps until
+        if (buttons[i].released & BTN_A)            // BTN_A is released again
+          player[i].jumpReleased = true;            // at which point we set the jumpReleased flag so we may jump again.
+      }
+
     }
 
+    // Update the state of the players
     for (u8 i = 0; i < PLAYERS; ++i) {
       update(i);
     }
-      
+    
+    // Render the world
     for (u8 i = 0; i < PLAYERS; ++i) {
       if (player[i].left == player[i].right)
         MapSprite2(i, yellow_front, 0);
