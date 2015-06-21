@@ -1,0 +1,2 @@
+#!/bin/sh
+cd ../data && ~/uzebox/bin/gconvert level.xml && cd ../default && make clean && make && ~/uzebox/bin/uzem physics.uze -s .
