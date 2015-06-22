@@ -89,6 +89,9 @@ struct PLAYER_INFO {
 
   // Enhancement to improve jumping experience
   bool jumpReleased; // if BTN_A was released, then set this to true
+
+  uint16_t framesFalling;
+
   /* u8 w; */
   /* u8 h; */
 };
@@ -96,7 +99,7 @@ struct PLAYER_INFO {
 struct PLAYER_INFO player[PLAYERS];
 
 // Maps tile number to solidity
-u8 isSolid[] = {0, 0, 1, 0};
+u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 
 #define PLAYER_START_WIDTH  8
 #define PLAYER_START_HEIGHT 8
@@ -114,13 +117,15 @@ u8 isSolid[] = {0, 0, 1, 0};
 // max horizontal speed (20 tiles per second)
 #define WORLD_MAXDX (WORLD_METER * 6)
 // max vertical speed (60 tiles per second)
-#define WORLD_MAXDY (WORLD_METER * 20)
+#define WORLD_MAXDY (WORLD_METER * 18)
 // horizontal acceleration - take 1/2 second to reach maxdx
 #define WORLD_ACCEL (WORLD_MAXDX * 15)
 // horizontal friction - take 1/6 second to stop from maxdx
 #define WORLD_FRICTION (WORLD_MAXDX * WORLD_FPS)
 // (a large) instantaneous jump impulse
-#define WORLD_JUMP (WORLD_METER * 600)
+#define WORLD_JUMP (WORLD_METER * 1500)
+
+#define WORLD_FALLING_GRACE_FRAMES 6
 
 #define vt2p(t) ((t) * TILE_HEIGHT)
 #define ht2p(t) ((t) * TILE_WIDTH)
@@ -134,7 +139,7 @@ void update(u8 i)
 {
   bool wasLeft = player[i].dx < 0;
   bool wasRight = player[i].dx > 0;
-  bool falling = player[i].falling;
+  bool falling = player[i].falling ? (player[i].framesFalling > WORLD_FALLING_GRACE_FRAMES) : false;
 
   player[i].ddx = 0;
   player[i].ddy = WORLD_GRAVITY;
@@ -172,7 +177,7 @@ void update(u8 i)
 
   // Clamp horizontal velocity to zero if we detect that the players direction has changed
   if ((wasLeft && (player[i].dx > 0)) || (wasRight && (player[i].dx < 0))) {
-    player[i].dx = 0; // clamp at zero to prevent friction from maxing us jiggle side to side
+    player[i].dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
   }
 
   // Collision Detection
@@ -220,6 +225,10 @@ void update(u8 i)
   }
 
   player[i].falling = !(celldown || (nx && celldiag)); // detect if we're now falling or not
+  if (player[i].falling)
+    player[i].framesFalling++;
+  else
+    player[i].framesFalling = 0;
 }
 
 int main()
@@ -241,6 +250,7 @@ int main()
     }
 
     player[i].jumpReleased = true; // we haven't jumped yet, so this is true
+    player[i].framesFalling = 0;
 
     MapSprite2(i, yellow_front, 0);
   }
@@ -284,7 +294,7 @@ int main()
       // button before landing, but require them to release it before jumping again
       if (player[i].jumpReleased) {                                      // Jumping multiple times requires releasing the jump button between jumps
         player[i].jump = (buttons[i].held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
-        if (player[i].jump && !(player[i].jumping || player[i].falling)) // if player[i] is currently holding BTN_A, (and is on the ground)
+        if (player[i].jump && !(player[i].jumping || (player[i].falling && player[i].framesFalling > WORLD_FALLING_GRACE_FRAMES))) // if player[i] is currently holding BTN_A, (and is on the ground)
           player[i].jumpReleased = false;                                // a jump will occur during the next call to update(), so clear the jumpReleased flag.
       } else {                                                           // Otherwise, it means that we just jumped, and BTN_A is still being held down
         player[i].jump = false;                                          // so explicitly disallow any additional jumps until
