@@ -10,6 +10,8 @@
       <map var-name="black" left="3" top="0" width="1" height="1"/>
       <map var-name="ground1" left="4" top="0" width="1" height="1"/>
       <map var-name="ground2" left="5" top="0" width="1" height="1"/>
+      <map var-name="orange_side" left="6" top="0" width="1" height="1"/>
+      <map var-name="orange_front" left="7" top="0" width="1" height="1"/>
       <map var-name="level" left="0" top="1" width="30" height="28"/>
     </maps>
   </output>
