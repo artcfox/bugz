@@ -159,12 +159,21 @@ void update(u8 i)
   if (player[i].jump && !player[i].jumping && !falling) {
     player[i].ddy -= WORLD_JUMP; // apply an instantaneous (large) vertical impulse
     player[i].jumping = true;
+    //player[i].falling = false;
+    //player[i].framesFalling = WORLD_FALLING_GRACE_FRAMES + 1; // disallow double jumping during the grace period
   }
 
-  // Integrate the Y forces to calculate the new position (x,y) and velocity (dx,dy)
+  // Integrate the Y force to calculate the new position (x,y)
   player[i].y += (player[i].dy / WORLD_FPS);
 
-  // Collision Detection for Y only first
+  // Integrate the Y force to calculate the new velocity (dx,dy)
+  player[i].dy += (player[i].ddy / WORLD_FPS);
+  if (player[i].dy < -WORLD_MAXDY)
+    player[i].dy = -WORLD_MAXDY;
+  else if (player[i].dy > WORLD_MAXDY)
+    player[i].dy = WORLD_MAXDY;
+
+  // Collision Detection for Y (using the old velocity)
   u8 tx = p2ht(player[i].x);
   u8 ty = p2vt(player[i].y);
   u8 nx = player[i].x % TILE_WIDTH;  // true if player overlaps right
@@ -182,6 +191,7 @@ void update(u8 i)
       player[i].y = vt2p(ty);     // clamp the y position to avoid falling into platform below
       player[i].dy = 0;           // stop downward velocity
       player[i].falling = false;  // no longer falling
+      player[i].framesFalling = 0;
       player[i].jumping = false;  // (or jumping)
       ny = 0;                     // no longer overlaps the cells below
     }
@@ -197,9 +207,18 @@ void update(u8 i)
     }
   }
 
+
+  // Integrate the X force to calculate the new position (x,y)
   player[i].x += (player[i].dx / WORLD_FPS);
 
-  // Collision Detection
+  // Integrate the X force to calculate the new velocity (dx,dy)
+  player[i].dx += (player[i].ddx / WORLD_FPS);
+  if (player[i].dx < -WORLD_MAXDX)
+    player[i].dx = -WORLD_MAXDX;
+  else if (player[i].dx > WORLD_MAXDX)
+    player[i].dx = WORLD_MAXDX;
+
+  // Collision Detection for X (using the old velocity)
   tx = p2ht(player[i].x);
   ty = p2vt(player[i].y);
   nx = player[i].x % TILE_WIDTH;  // true if player overlaps right
@@ -214,42 +233,37 @@ void update(u8 i)
         (celldiag  && !celldown && ny)) {
       clamped[i] = true;
       player[i].x = ht2p(tx);     // clamp the x position to avoid moving into the platform we just hit
-      player[i].dx = 0;           // stop horizontal velocity
+      //      player[i].dx = 0;           // stop horizontal velocity
       nx = 0;                     // player no longer overlaps the adjacent cell
+      tx = p2ht(player[i].x);
+      celldown  = isSolid[GetTile(tx,     ty + 1)];
+      celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+
     }
   } else {
     if ((cell     && !cellright) ||
         (celldown && !celldiag && ny)) {
       clamped[i] = true;
       player[i].x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
-      player[i].dx = 0;           // stop horizontal velocity
-      celldown = celldiag;        // player is no longer really in that cell, we clamped them to the adjacent cell
+      //      player[i].dx = 0;           // stop horizontal velocity
+      //      celldown = celldiag;        // player is no longer really in that cell, we clamped them to the adjacent cell
       nx = 0;                     // player no longer overlaps the adjacent cell
+      tx = p2ht(player[i].x);
+      celldown  = isSolid[GetTile(tx,     ty + 1)];
+      celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
     }
   }
-
-  player[i].dx += (player[i].ddx / WORLD_FPS);
-  if (player[i].dx < -WORLD_MAXDX)
-    player[i].dx = -WORLD_MAXDX;
-  else if (player[i].dx > WORLD_MAXDX)
-    player[i].dx = WORLD_MAXDX;
-
-  player[i].dy += (player[i].ddy / WORLD_FPS);
-  if (player[i].dy < -WORLD_MAXDY)
-    player[i].dy = -WORLD_MAXDY;
-  else if (player[i].dy > WORLD_MAXDY)
-    player[i].dy = WORLD_MAXDY;
 
   // Clamp horizontal velocity to zero if we detect that the players direction has changed
   if ((wasLeft && (player[i].dx > 0)) || (wasRight && (player[i].dx < 0))) {
     player[i].dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
   }
 
-  player[i].falling = !(celldown || (nx && celldiag)); // detect if we're now falling or not
+  player[i].falling = !(celldown || (nx && celldiag)) && !player[i].jumping; // detect if we're now falling or not
   if (player[i].falling)
     player[i].framesFalling++;
-  else
-    player[i].framesFalling = 0;
+  /* else */
+  /*   player[i].framesFalling = 0; */
 }
 
 int main()
@@ -299,7 +313,7 @@ int main()
   memset(buttons, 0, sizeof(buttons));
 
   for (;;) {
-    WaitVsync(20);
+    WaitVsync(4);
 
     // Read the current state of each controller
     for (u8 i = 0; i < PLAYERS; ++i) {
