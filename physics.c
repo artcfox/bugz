@@ -88,7 +88,7 @@ struct PLAYER_INFO {
   bool jump; // if the input was BTN_A, then set this to true
 
   // Enhancement to improve jumping experience
-  bool jumpReleased; // if BTN_A was released, then set this to true
+  bool jumpAllowed; // if BTN_A was released, then set this to true
 
   uint16_t framesFalling;
 
@@ -273,7 +273,7 @@ int main()
       player[i].y = PLAYER_1_START_Y;
     }
 
-    player[i].jumpReleased = true; // we haven't jumped yet, so this is true
+    player[i].jumpAllowed = true; // we haven't jumped yet, so this is true
     player[i].framesFalling = 0;
 
     MapSprite2(i, yellow_front, 0);
@@ -316,14 +316,14 @@ int main()
 
       // Improve the user experience, by allowing players to jump by holding the jump
       // button before landing, but require them to release it before jumping again
-      if (player[i].jumpReleased) {                                      // Jumping multiple times requires releasing the jump button between jumps
+      if (player[i].jumpAllowed) {                                      // Jumping multiple times requires releasing the jump button between jumps
         player[i].jump = (buttons[i].held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
         if (player[i].jump && !(player[i].jumping || (player[i].falling && player[i].framesFalling > WORLD_FALLING_GRACE_FRAMES))) // if player[i] is currently holding BTN_A, (and is on the ground)
-          player[i].jumpReleased = false;                                // a jump will occur during the next call to update(), so clear the jumpReleased flag.
+          player[i].jumpAllowed = false;                                // a jump will occur during the next call to update(), so clear the jumpAllowed flag.
       } else {                                                           // Otherwise, it means that we just jumped, and BTN_A is still being held down
         player[i].jump = false;                                          // so explicitly disallow any additional jumps until
         if (buttons[i].released & BTN_A)                                 // BTN_A is released again
-          player[i].jumpReleased = true;                                 // at which point reset the jumpReleased flag so another jump may occur.
+          player[i].jumpAllowed = true;                                 // at which point reset the jumpAllowed flag so another jump may occur.
       }
 
     }
