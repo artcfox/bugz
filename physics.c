@@ -215,12 +215,15 @@ void update(u8 i)
         (celldiag  && !celldown && ny)) {
       player[i].x = ht2p(tx);     // clamp the x position to avoid moving into the platform we just hit
       player[i].dx = 0;           // stop horizontal velocity
+      nx = 0;                     // player no longer overlaps the adjacent cell
     }
-  } else if (player[i].dx < 0) {
+  } else {
     if ((cell     && !cellright) ||
         (celldown && !celldiag && ny)) {
       player[i].x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
       player[i].dx = 0;           // stop horizontal velocity
+      celldown = celldiag;        // player is no longer really in that cell, we clamped them to the adjacent cell
+      nx = 0;                     // player no longer overlaps the adjacent cell
     }
   }
 
