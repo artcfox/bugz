@@ -219,24 +219,25 @@ void update(u8 i)
   celldown  = isSolid[GetTile(tx,     ty + 1)];
   celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
 
-  if (player[i].dx > 0) {
+  if (player[i].dx >= 0) {
     if ((cellright && !cell) ||
         (celldiag  && !celldown && ny)) {
       clamped[i] = true;
       player[i].x = ht2p(tx);     // clamp the x position to avoid moving into the platform we just hit
-      //      player[i].dx = 0;           // stop horizontal velocity
+      /* player[i].dx = 0;           // stop horizontal velocity */
       nx = 0;                     // player no longer overlaps the adjacent cell
       tx = p2ht(player[i].x);
       celldown  = isSolid[GetTile(tx,     ty + 1)];
       celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
 
     }
-  } else {
+  }
+  if (player[i].dx <= 0) {
     if ((cell     && !cellright) ||
         (celldown && !celldiag && ny)) {
       clamped[i] = true;
       player[i].x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
-      //      player[i].dx = 0;           // stop horizontal velocity
+      /* player[i].dx = 0;           // stop horizontal velocity */
       nx = 0;                     // player no longer overlaps the adjacent cell
       tx = p2ht(player[i].x);
       celldown  = isSolid[GetTile(tx,     ty + 1)];
