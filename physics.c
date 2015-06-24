@@ -74,8 +74,8 @@ struct BUTTON_INFO {
 };
 
 struct PLAYER_INFO {
-  u8 x;
-  u8 y;
+  u16 x;
+  u16 y;
   int16_t dx;
   int16_t dy;
   int16_t ddx;
@@ -104,17 +104,18 @@ struct PLAYER_INFO player[PLAYERS];
 // Maps tile number to solidity
 u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 
+#define FP_SHIFT   2
 #define PLAYER_START_WIDTH  8
 #define PLAYER_START_HEIGHT 8
-#define PLAYER_0_START_X    (4 * TILE_WIDTH)
-#define PLAYER_0_START_Y    ((SCREEN_TILES_V - 1) * TILE_HEIGHT  - PLAYER_START_HEIGHT)
-#define PLAYER_1_START_X    ((SCREEN_TILES_H - 4) * TILE_WIDTH - PLAYER_START_WIDTH)
-#define PLAYER_1_START_Y    ((SCREEN_TILES_V - 1) * TILE_HEIGHT  - PLAYER_START_HEIGHT)
+#define PLAYER_0_START_X    (4 * (TILE_WIDTH << FP_SHIFT))
+#define PLAYER_0_START_Y    ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (PLAYER_START_HEIGHT << FP_SHIFT))
+#define PLAYER_1_START_X    ((SCREEN_TILES_H - 4) * (TILE_WIDTH << FP_SHIFT) - (PLAYER_START_WIDTH << FP_SHIFT))
+#define PLAYER_1_START_Y    ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (PLAYER_START_HEIGHT << FP_SHIFT))
 
 // 1/30th of a second per frame
 #define WORLD_FPS 30
 // arbitrary choice for 1m
-#define WORLD_METER 8
+#define WORLD_METER (8 << FP_SHIFT)
 // very exagerated gravity (6x)
 #define WORLD_GRAVITY (WORLD_METER * 9.8 * 4)
 // max horizontal speed (20 tiles per second)
@@ -126,14 +127,16 @@ u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 // horizontal friction - take 1/6 second to stop from maxdx
 #define WORLD_FRICTION (WORLD_MAXDX * WORLD_FPS)
 // (a large) instantaneous jump impulse
-#define WORLD_JUMP (WORLD_METER * 1500)
+#define WORLD_JUMP (WORLD_METER * 1000)
 
 #define WORLD_FALLING_GRACE_FRAMES 6
 
-#define vt2p(t) ((t) * TILE_HEIGHT)
-#define ht2p(t) ((t) * TILE_WIDTH)
-#define p2vt(p) ((p) / TILE_HEIGHT)
-#define p2ht(p) ((p) / TILE_WIDTH)
+#define vt2p(t) ((t) * (TILE_HEIGHT << FP_SHIFT))
+#define ht2p(t) ((t) * (TILE_WIDTH << FP_SHIFT))
+#define p2vt(p) ((p) / (TILE_HEIGHT << FP_SHIFT))
+#define p2ht(p) ((p) / (TILE_WIDTH << FP_SHIFT))
+#define nv(p) ((p) % (TILE_HEIGHT << FP_SHIFT))
+#define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
 /* Calculate forces that apply to the player
    Apply the forces to move and accelerate the player
@@ -180,8 +183,8 @@ void update(u8 i)
   // Collision Detection for X
   u8 tx = p2ht(player[i].x);
   u8 ty = p2vt(player[i].y);
-  u8 nx = player[i].x % TILE_WIDTH;  // true if player overlaps right
-  u8 ny = player[i].y % TILE_HEIGHT; // true if player overlaps below
+  u8 nx = nh(player[i].x);  // true if player overlaps right
+  u8 ny = nv(player[i].y); // true if player overlaps below
   u8 cell      = isSolid[GetTile(tx,     ty)];
   u8 cellright = isSolid[GetTile(tx + 1, ty)];
   u8 celldown  = isSolid[GetTile(tx,     ty + 1)];
@@ -224,8 +227,8 @@ void update(u8 i)
   // Collision Detection for Y
   tx = p2ht(player[i].x);
   ty = p2vt(player[i].y);
-  nx = player[i].x % TILE_WIDTH;  // true if player overlaps right
-  ny = player[i].y % TILE_HEIGHT; // true if player overlaps below
+  nx = nh(player[i].x);  // true if player overlaps right
+  ny = nv(player[i].y); // true if player overlaps below
   cell      = isSolid[GetTile(tx,     ty)];
   cellright = isSolid[GetTile(tx + 1, ty)];
   celldown  = isSolid[GetTile(tx,     ty + 1)];
@@ -348,7 +351,7 @@ int main()
         else
           MapSprite2(i, yellow_side, player[i].right ? SPRITE_FLIP_X : 0);
       }
-      MoveSprite(i, player[i].x, player[i].y, 1, 1);
+      MoveSprite(i, player[i].x >> FP_SHIFT, player[i].y >> FP_SHIFT, 1, 1);
     }
   }
 
