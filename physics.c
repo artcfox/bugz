@@ -117,17 +117,17 @@ u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 // arbitrary choice for 1m
 #define WORLD_METER (8 << FP_SHIFT)
 // very exagerated gravity (6x)
-#define WORLD_GRAVITY (WORLD_METER * 9.8 * 4)
+#define WORLD_GRAVITY (WORLD_METER * 38)
 // max horizontal speed (20 tiles per second)
-#define WORLD_MAXDX (WORLD_METER * 6)
+#define WORLD_MAXDX 144
 // max vertical speed (60 tiles per second)
-#define WORLD_MAXDY (WORLD_METER * 18)
+#define WORLD_MAXDY (WORLD_METER * 17)
 // horizontal acceleration - take 1/2 second to reach maxdx
 #define WORLD_ACCEL (WORLD_MAXDX * 15)
 // horizontal friction - take 1/6 second to stop from maxdx
 #define WORLD_FRICTION (WORLD_MAXDX * WORLD_FPS)
 // (a large) instantaneous jump impulse
-#define WORLD_JUMP (WORLD_METER * 1000)
+#define WORLD_JUMP (WORLD_METER * 1024)
 
 #define WORLD_FALLING_GRACE_FRAMES 6
 
