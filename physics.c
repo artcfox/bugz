@@ -130,8 +130,10 @@ u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 #define WORLD_FRICTION (WORLD_MAXDX * 4)
 // (a large) instantaneous jump impulse
 #define WORLD_JUMP (WORLD_METER * 382)
-
+// how many frames you can be falling and still jump
 #define WORLD_FALLING_GRACE_FRAMES 6
+// parameter used for variable jumping (gravity / 10 is a good default)
+#define WORLD_CUT_JUMP_SPEED_LIMIT (WORLD_GRAVITY / 10)
 
 #define vt2p(t) ((t) * (TILE_HEIGHT << FP_SHIFT))
 #define ht2p(t) ((t) * (TILE_WIDTH << FP_SHIFT))
@@ -169,8 +171,8 @@ void update(u8 i)
   }
 
   // Variable height jumping
-  /* if (player[i].jumping && (buttons[i].released & BTN_A) && (player[i].dy < -WORLD_GRAVITY / 10)) */
-  /*     player[i].dy = -WORLD_GRAVITY / 10; */
+  if (player[i].jumping && (buttons[i].released & BTN_A) && (player[i].dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
+      player[i].dy = -WORLD_CUT_JUMP_SPEED_LIMIT;
 
   // Clamp horizontal velocity to zero if we detect that the players direction has changed
   if ((wasLeft && (player[i].dx > 0)) || (wasRight && (player[i].dx < 0))) {
