@@ -127,7 +127,7 @@ u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 // horizontal friction - take 1/6 second to stop from maxdx
 #define WORLD_FRICTION (WORLD_MAXDX * WORLD_FPS)
 // (a large) instantaneous jump impulse
-#define WORLD_JUMP (WORLD_METER * 1024)
+#define WORLD_JUMP (WORLD_METER * 1023)
 
 #define WORLD_FALLING_GRACE_FRAMES 6
 
