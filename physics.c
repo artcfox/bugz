@@ -63,6 +63,7 @@
 #include <string.h>
 
 #include "data/level.inc"
+#include "data/patches.inc"
 
 #define PLAYERS 2
 
@@ -129,7 +130,7 @@ u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 // (a large) instantaneous jump impulse
 #define WORLD_JUMP (WORLD_METER * 1023)
 
-#define WORLD_FALLING_GRACE_FRAMES 6
+#define WORLD_FALLING_GRACE_FRAMES 5
 
 #define vt2p(t) ((t) * (TILE_HEIGHT << FP_SHIFT))
 #define ht2p(t) ((t) * (TILE_WIDTH << FP_SHIFT))
@@ -267,6 +268,8 @@ int main()
 
   SetSpritesTileBank(0, tiles);
 
+  InitMusicPlayer(patches);
+
   for (u8 i = 0; i < PLAYERS; ++i) {
     /* player[i].w = PLAYER_START_WIDTH; */
     /* player[i].h = PLAYER_START_HEIGHT; */
@@ -323,8 +326,10 @@ int main()
       // button before landing, but require them to release it before jumping again
       if (player[i].jumpAllowed) {                                      // Jumping multiple times requires releasing the jump button between jumps
         player[i].jump = (buttons[i].held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
-        if (player[i].jump && !(player[i].jumping || (player[i].falling && player[i].framesFalling > WORLD_FALLING_GRACE_FRAMES))) // if player[i] is currently holding BTN_A, (and is on the ground)
+        if (player[i].jump && !(player[i].jumping || (player[i].falling && player[i].framesFalling > WORLD_FALLING_GRACE_FRAMES))) { // if player[i] is currently holding BTN_A, (and is on the ground)
           player[i].jumpAllowed = false;                                // a jump will occur during the next call to update(), so clear the jumpAllowed flag.
+          TriggerFx(0, 128, false);
+        }
       } else {                                                           // Otherwise, it means that we just jumped, and BTN_A is still being held down
         player[i].jump = false;                                          // so explicitly disallow any additional jumps until
         if (buttons[i].released & BTN_A)                                 // BTN_A is released again
