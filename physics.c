@@ -119,7 +119,7 @@ u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 // arbitrary choice for 1m
 #define WORLD_METER (8 << FP_SHIFT)
 // very exagerated gravity (6x)
-#define WORLD_GRAVITY (WORLD_METER * 38)
+#define WORLD_GRAVITY (WORLD_METER * 32)
 // max horizontal speed (20 tiles per second)
 #define WORLD_MAXDX (WORLD_METER * 4)
 // max vertical speed (60 tiles per second)
