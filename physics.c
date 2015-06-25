@@ -119,17 +119,17 @@ u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 // arbitrary choice for 1m
 #define WORLD_METER (8 << FP_SHIFT)
 // very exagerated gravity (6x)
-#define WORLD_GRAVITY (WORLD_METER * 32)
+#define WORLD_GRAVITY (WORLD_METER * 18)
 // max horizontal speed (20 tiles per second)
-#define WORLD_MAXDX (WORLD_METER * 4)
-// max vertical speed (60 tiles per second)
-#define WORLD_MAXDY (WORLD_METER * 20)
+#define WORLD_MAXDX (WORLD_METER * 3)
+// max vertical speed (60 tiles per second). If the jump impulse is increased, this should be increased as well.
+#define WORLD_MAXDY (WORLD_METER * 12)
 // horizontal acceleration - take 1/2 second to reach maxdx
 #define WORLD_ACCEL (WORLD_MAXDX * 15)
 // horizontal friction - take 1/6 second to stop from maxdx
 #define WORLD_FRICTION (WORLD_MAXDX * 15)
 // (a large) instantaneous jump impulse
-#define WORLD_JUMP (WORLD_METER * 510)
+#define WORLD_JUMP (WORLD_METER * 374)
 
 #define WORLD_FALLING_GRACE_FRAMES 6
 
@@ -169,8 +169,8 @@ void update(u8 i)
   }
 
   // Variable height jumping
-  /* if (player[i].jumping && (buttons[i].released & BTN_A) && (player[i].dy < -WORLD_GRAVITY / 10)) */
-  /*     player[i].dy = -WORLD_GRAVITY / 10; */
+  if (player[i].jumping && (buttons[i].released & BTN_A) && (player[i].dy < -WORLD_GRAVITY / 10))
+      player[i].dy = -WORLD_GRAVITY / 10;
 
   // Clamp horizontal velocity to zero if we detect that the players direction has changed
   if ((wasLeft && (player[i].dx > 0)) || (wasRight && (player[i].dx < 0))) {
