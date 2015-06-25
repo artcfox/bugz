@@ -101,11 +101,12 @@ struct PLAYER_INFO {
 };
 
 struct PLAYER_INFO player[PLAYERS];
+struct BUTTON_INFO buttons[PLAYERS];
 
 // Maps tile number to solidity
 u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 
-#define FP_SHIFT   2
+#define FP_SHIFT   3
 #define PLAYER_START_WIDTH  8
 #define PLAYER_START_HEIGHT 8
 #define PLAYER_0_START_X    (4 * (TILE_WIDTH << FP_SHIFT))
@@ -120,17 +121,17 @@ u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 // very exagerated gravity (6x)
 #define WORLD_GRAVITY (WORLD_METER * 38)
 // max horizontal speed (20 tiles per second)
-#define WORLD_MAXDX 144
+#define WORLD_MAXDX (WORLD_METER * 4)
 // max vertical speed (60 tiles per second)
-#define WORLD_MAXDY (WORLD_METER * 17)
+#define WORLD_MAXDY (WORLD_METER * 20)
 // horizontal acceleration - take 1/2 second to reach maxdx
 #define WORLD_ACCEL (WORLD_MAXDX * 15)
 // horizontal friction - take 1/6 second to stop from maxdx
-#define WORLD_FRICTION (WORLD_MAXDX * WORLD_FPS)
+#define WORLD_FRICTION (WORLD_MAXDX * 15)
 // (a large) instantaneous jump impulse
-#define WORLD_JUMP (WORLD_METER * 1023)
+#define WORLD_JUMP (WORLD_METER * 510)
 
-#define WORLD_FALLING_GRACE_FRAMES 5
+#define WORLD_FALLING_GRACE_FRAMES 6
 
 #define vt2p(t) ((t) * (TILE_HEIGHT << FP_SHIFT))
 #define ht2p(t) ((t) * (TILE_WIDTH << FP_SHIFT))
@@ -162,9 +163,14 @@ void update(u8 i)
     player[i].ddx -= WORLD_FRICTION; // player was going right, but not anymore
 
   if (player[i].jump && !player[i].jumping && !falling) {
+    player[i].dy = 0;            // reset vertical velocity so jumps during grace period are consistent with jumps from ground
     player[i].ddy -= WORLD_JUMP; // apply an instantaneous (large) vertical impulse
     player[i].jumping = true;
   }
+
+  // Variable height jumping
+  /* if (player[i].jumping && (buttons[i].released & BTN_A) && (player[i].dy < -WORLD_GRAVITY / 10)) */
+  /*     player[i].dy = -WORLD_GRAVITY / 10; */
 
   // Clamp horizontal velocity to zero if we detect that the players direction has changed
   if ((wasLeft && (player[i].dx > 0)) || (wasRight && (player[i].dx < 0))) {
@@ -191,25 +197,23 @@ void update(u8 i)
   u8 celldown  = isSolid[GetTile(tx,     ty + 1)];
   u8 celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
 
-  // When player[i].dx = 0, we should clamp from both sides to prevent overlapping adjacent cells
-  if (player[i].dx >= 0) {
+  if (player[i].dx > 0) {
     if ((cellright && !cell) ||
         (celldiag  && !celldown && ny)) {
       player[i].clamped = true;
       player[i].x = ht2p(tx);     // clamp the x position to avoid moving into the platform we just hit
-      /* player[i].dx = 0;           // stop horizontal velocity */
+      player[i].dx = 0;           // stop horizontal velocity
       nx = 0;                     // player no longer overlaps the adjacent cell
       tx = p2ht(player[i].x);
       celldown  = isSolid[GetTile(tx,     ty + 1)];
       celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
     }
-  }
-  if (player[i].dx <= 0) {
+  } else {
     if ((cell     && !cellright) ||
         (celldown && !celldiag && ny)) {
       player[i].clamped = true;
       player[i].x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
-      /* player[i].dx = 0;           // stop horizontal velocity */
+      player[i].dx = 0;           // stop horizontal velocity
       nx = 0;                     // player no longer overlaps the adjacent cell
       tx = p2ht(player[i].x);
       celldown  = isSolid[GetTile(tx,     ty + 1)];
@@ -306,7 +310,7 @@ int main()
   /* } */
   DrawMap(0, 0, level);
 
-  struct BUTTON_INFO buttons[PLAYERS];
+  //  struct BUTTON_INFO buttons[PLAYERS];
   memset(buttons, 0, sizeof(buttons));
 
   for (;;) {
