@@ -208,7 +208,7 @@ void update(u8 i)
       celldown  = isSolid[GetTile(tx,     ty + 1)];
       celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
     }
-  } else {
+  } else if (player[i].dx < 0) {
     if ((cell     && !cellright) ||
         (celldown && !celldiag && ny)) {
       player[i].clamped = true;
@@ -360,7 +360,7 @@ int main()
         else
           MapSprite2(i, yellow_side, player[i].right ? SPRITE_FLIP_X : 0);
       }
-      MoveSprite(i, player[i].x >> FP_SHIFT, player[i].y >> FP_SHIFT, 1, 1);
+      MoveSprite(i, (player[i].x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (player[i].y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
     }
   }
 
