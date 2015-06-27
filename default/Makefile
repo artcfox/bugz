@@ -14,7 +14,7 @@ UZEBIN_DIR=../../../bin
 ## Kernel settings
 KERNEL_DIR = ../../../kernel
 KERNEL_OPTIONS  = -DVIDEO_MODE=3 -DINTRO_LOGO=0 -DSCROLLING=0
-KERNEL_OPTIONS += -DMAX_SPRITES=12 -DRAM_TILES_COUNT=10 -DSCREEN_TILES_V=28
+KERNEL_OPTIONS += -DMAX_SPRITES=10 -DRAM_TILES_COUNT=16 -DSCREEN_TILES_V=28
 # -DSCREEN_TILES_V=26 -DFIRST_RENDER_LINE=28
 #-DSOUND_CHANNEL_4_ENABLE=0 
 
@@ -49,7 +49,7 @@ HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
 
 
 ## Objects that must be built in order to link
-OBJECTS = uzeboxVideoEngineCore.o uzeboxCore.o uzeboxSoundEngine.o uzeboxSoundEngineCore.o uzeboxVideoEngine.o $(GAME).o
+OBJECTS = uzeboxVideoEngineCore.o uzeboxCore.o uzeboxSoundEngine.o uzeboxSoundEngineCore.o uzeboxVideoEngine.o $(GAME).o entity.o
 
 ## Objects explicitly added by the user
 LINKONLYOBJECTS =
@@ -78,6 +78,9 @@ uzeboxVideoEngine.o: $(KERNEL_DIR)/uzeboxVideoEngine.c
 
 ## Compile game sources
 $(GAME).o: ../physics.c
+	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+
+entity.o: ../entity.c
 	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
 ##Link

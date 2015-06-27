@@ -55,6 +55,7 @@
   
 */
 
+#include <stdint.h>
 #include <stdbool.h>
 #include <avr/io.h>
 #include <stdlib.h>
@@ -65,7 +66,15 @@
 #include "data/level.inc"
 #include "data/patches.inc"
 
-#define PLAYERS 2
+#include "entity.h"
+
+#define NELEMS(x) (sizeof(x)/sizeof(x[0]))
+
+#define PLAYERS 1
+#define MONSTERS 2
+
+struct BUTTON_INFO;
+typedef struct BUTTON_INFO BUTTON_INFO;
 
 struct BUTTON_INFO {
   int held;
@@ -74,34 +83,39 @@ struct BUTTON_INFO {
   int prev;
 };
 
-struct PLAYER_INFO {
-  u16 x;
-  u16 y;
-  int16_t dx;
-  int16_t dy;
-  int16_t ddx;
-  int16_t ddy;
-  bool falling;
-  bool jumping;
+/* struct PLAYER_INFO { */
+/*   u16 x; */
+/*   u16 y; */
+/*   int16_t dx; */
+/*   int16_t dy; */
+/*   int16_t ddx; */
+/*   int16_t ddy; */
+/*   bool falling; */
+/*   bool jumping; */
 
-  bool left; // if the input was BTN_LEFT, then set this to true
-  bool right; // if the input was BTN_RIGHT, then set this to true
-  bool jump; // if the input was BTN_A, then set this to true
+/*   bool left; // if the input was BTN_LEFT, then set this to true */
+/*   bool right; // if the input was BTN_RIGHT, then set this to true */
+/*   bool jump; // if the input was BTN_A, then set this to true */
 
-  // Enhancement to improve jumping experience
-  bool jumpAllowed; // if BTN_A was released, then set this to true
+/*   // Enhancement to improve jumping experience */
+/*   bool jumpAllowed; // if BTN_A was released, then set this to true */
 
-  uint16_t framesFalling;
+/*   uint16_t framesFalling; */
 
-  // Debugging purposes
-  bool clamped;
+/*   // Debugging purposes */
+/*   bool clamped; */
 
-  /* u8 w; */
-  /* u8 h; */
-};
+/*   /\* u8 w; *\/ */
+/*   /\* u8 h; *\/ */
+/* }; */
 
-struct PLAYER_INFO player[PLAYERS];
-struct BUTTON_INFO buttons[PLAYERS];
+PLAYER player[PLAYERS];
+BUTTON_INFO buttons[PLAYERS];
+
+ENTITY monster[MONSTERS];
+
+/* ENTITY* entities[] = { 0, 0, 0 }; */
+ENTITY* entities[PLAYERS + MONSTERS] = {(ENTITY*)&player[0]}; // for some reason this has to point to something at compile time
 
 // Maps tile number to solidity
 u8 isSolid[] = {0, 0, 1, 0, 1, 1};
@@ -135,6 +149,22 @@ u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 // parameter used for variable jumping (gravity / 10 is a good default)
 #define WORLD_CUT_JUMP_SPEED_LIMIT (WORLD_GRAVITY / 10)
 
+uint16_t monster_start_x[] = {
+  ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT) - (PLAYER_START_WIDTH << FP_SHIFT)),
+  ((SCREEN_TILES_H - 7) * (TILE_WIDTH << FP_SHIFT) - (PLAYER_START_WIDTH << FP_SHIFT)),
+  (2 * (TILE_WIDTH << FP_SHIFT)),
+  (17 * (TILE_WIDTH << FP_SHIFT)),
+  (6 * (TILE_WIDTH << FP_SHIFT)),
+};
+
+uint16_t monster_start_y[] = {
+  ((SCREEN_TILES_V - 6) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
+  ((SCREEN_TILES_V - 19) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
+  ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
+  ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
+  ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
+};
+
 #define vt2p(t) ((t) * (TILE_HEIGHT << FP_SHIFT))
 #define ht2p(t) ((t) * (TILE_WIDTH << FP_SHIFT))
 #define p2vt(p) ((p) / (TILE_HEIGHT << FP_SHIFT))
@@ -142,129 +172,322 @@ u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 #define nv(p) ((p) % (TILE_HEIGHT << FP_SHIFT))
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
-/* Calculate forces that apply to the player
-   Apply the forces to move and accelerate the player
-   Collision detection (and resolution) */
-void update(u8 i)
+
+void entity_update(ENTITY* e)
 {
-  bool wasLeft = player[i].dx < 0;
-  bool wasRight = player[i].dx > 0;
-  bool falling = player[i].falling ? (player[i].framesFalling > WORLD_FALLING_GRACE_FRAMES) : false;
+  bool wasLeft = e->dx < 0;
+  bool wasRight = e->dx > 0;
+  bool falling = e->falling;
 
-  player[i].ddx = 0;
-  player[i].ddy = WORLD_GRAVITY;
+  e->ddx = 0;
+  e->ddy = WORLD_GRAVITY;
 
-  if (player[i].left)
-    player[i].ddx -= WORLD_ACCEL; // player wants to go left
+  if (e->left)
+    e->ddx -= WORLD_ACCEL;    // entity wants to go left
   else if (wasLeft)
-    player[i].ddx += WORLD_FRICTION; // player was going left, but not anymore
+    e->ddx += WORLD_FRICTION; // entity was going left, but not anymore
 
-  if (player[i].right)
-    player[i].ddx += WORLD_ACCEL; // player wants to go right
+  if (e->right)
+    e->ddx += WORLD_ACCEL;    // entity wants to go right
   else if (wasRight)
-    player[i].ddx -= WORLD_FRICTION; // player was going right, but not anymore
+    e->ddx -= WORLD_FRICTION; // entity was going right, but not anymore
 
-  if (player[i].jump && !player[i].jumping && !falling) {
-    player[i].dy = 0;            // reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    player[i].ddy -= WORLD_JUMP; // apply an instantaneous (large) vertical impulse
-    player[i].jumping = true;
+  if (e->jump && !e->jumping && !falling) {
+    e->dy = 0;            // reset vertical velocity so jumps during grace period are consistent with jumps from ground
+    e->ddy -= WORLD_JUMP; // apply an instantaneous (large) vertical impulse
+    e->jumping = true;
   }
 
-  // Variable height jumping
-  if (player[i].jumping && (buttons[i].released & BTN_A) && (player[i].dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
-      player[i].dy = -WORLD_CUT_JUMP_SPEED_LIMIT;
-
-  // Clamp horizontal velocity to zero if we detect that the players direction has changed
-  if ((wasLeft && (player[i].dx > 0)) || (wasRight && (player[i].dx < 0))) {
-    player[i].dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
+  // Clamp horizontal velocity to zero if we detect that the entities direction has changed
+  if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0))) {
+    e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
   }
-
-  player[i].clamped = false;
 
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  player[i].x += (player[i].dx / WORLD_FPS);
-  player[i].dx += (player[i].ddx / WORLD_FPS);
-  if (player[i].dx < -WORLD_MAXDX)
-    player[i].dx = -WORLD_MAXDX;
-  else if (player[i].dx > WORLD_MAXDX)
-    player[i].dx = WORLD_MAXDX;
+  e->x += (e->dx / WORLD_FPS);
+  e->dx += (e->ddx / WORLD_FPS);
+  if (e->dx < -e->maxdx)
+    e->dx = -e->maxdx;
+  else if (e->dx > e->maxdx)
+    e->dx = e->maxdx;
 
   // Collision Detection for X
-  u8 tx = p2ht(player[i].x);
-  u8 ty = p2vt(player[i].y);
-  u8 nx = nh(player[i].x);  // true if player overlaps right
-  u8 ny = nv(player[i].y); // true if player overlaps below
+  u8 tx = p2ht(e->x);
+  u8 ty = p2vt(e->y);
+  u8 nx = nh(e->x);  // true if entity overlaps right
+  u8 ny = nv(e->y);  // true if entity overlaps below
   u8 cell      = isSolid[GetTile(tx,     ty)];
   u8 cellright = isSolid[GetTile(tx + 1, ty)];
   u8 celldown  = isSolid[GetTile(tx,     ty + 1)];
   u8 celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
 
-  if (player[i].dx > 0) {
+  if (e->dx > 0) {
     if ((cellright && !cell) ||
         (celldiag  && !celldown && ny)) {
-      player[i].clamped = true;
-      player[i].x = ht2p(tx);     // clamp the x position to avoid moving into the platform we just hit
-      player[i].dx = 0;           // stop horizontal velocity
-      nx = 0;                     // player no longer overlaps the adjacent cell
-      tx = p2ht(player[i].x);
+      e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform just hit
+      e->dx = 0;           // stop horizontal velocity
+      nx = 0;              // entity no longer overlaps the adjacent cell
+      tx = p2ht(e->x);
       celldown  = isSolid[GetTile(tx,     ty + 1)];
       celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
     }
-  } else if (player[i].dx < 0) {
+  } else if (e->dx < 0) {
     if ((cell     && !cellright) ||
         (celldown && !celldiag && ny)) {
-      player[i].clamped = true;
-      player[i].x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
-      player[i].dx = 0;           // stop horizontal velocity
-      nx = 0;                     // player no longer overlaps the adjacent cell
-      tx = p2ht(player[i].x);
+      e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform just hit
+      e->dx = 0;           // stop horizontal velocity
+      nx = 0;              // entity no longer overlaps the adjacent cell
+      tx = p2ht(e->x);
       celldown  = isSolid[GetTile(tx,     ty + 1)];
       celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
     }
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  player[i].y += (player[i].dy / WORLD_FPS);
-  player[i].dy += (player[i].ddy / WORLD_FPS);
-  if (player[i].dy < -WORLD_MAXDY)
-    player[i].dy = -WORLD_MAXDY;
-  else if (player[i].dy > WORLD_MAXDY)
-    player[i].dy = WORLD_MAXDY;
+  e->y += (e->dy / WORLD_FPS);
+  e->dy += (e->ddy / WORLD_FPS);
+  if (e->dy < -WORLD_MAXDY)
+    e->dy = -WORLD_MAXDY;
+  else if (e->dy > WORLD_MAXDY)
+    e->dy = WORLD_MAXDY;
 
   // Collision Detection for Y
-  tx = p2ht(player[i].x);
-  ty = p2vt(player[i].y);
-  nx = nh(player[i].x);  // true if player overlaps right
-  ny = nv(player[i].y); // true if player overlaps below
+  tx = p2ht(e->x);
+  ty = p2vt(e->y);
+  nx = nh(e->x);  // true if entity overlaps right
+  ny = nv(e->y);  // true if entity overlaps below
   cell      = isSolid[GetTile(tx,     ty)];
   cellright = isSolid[GetTile(tx + 1, ty)];
   celldown  = isSolid[GetTile(tx,     ty + 1)];
   celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
 
-  if (player[i].dy > 0) {
+  if (e->dy > 0) {
     if ((celldown && !cell) ||
         (celldiag && !cellright && nx)) {
-      player[i].clamped = true;
-      player[i].y = vt2p(ty);     // clamp the y position to avoid falling into platform below
-      player[i].dy = 0;           // stop downward velocity
-      player[i].falling = false;  // no longer falling
-      player[i].framesFalling = 0;
-      player[i].jumping = false;  // (or jumping)
-      ny = 0;                     // no longer overlaps the cells below
+      e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
+      e->dy = 0;           // stop downward velocity
+      e->falling = false;  // no longer falling
+      e->jumping = false;  // (or jumping)
+      ny = 0;              // no longer overlaps the cells below
     }
-  } else if (player[i].dy < 0) {
+  } else if (e->dy < 0) {
     if ((cell      && !celldown) ||
         (cellright && !celldiag && nx)) {
-      player[i].clamped = true;
-      player[i].y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
-      player[i].dy = 0;           // stop updard velocity
+      e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
+      e->dy = 0;           // stop updard velocity
+      ny = 0;              // no longer overlaps the cells below
+    }
+  }
+
+  e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
+}
+
+/* Calculate forces that apply to the player
+   Apply the forces to move and accelerate the player
+   Collision detection (and resolution) */
+void player_update(ENTITY* e)
+{
+  PLAYER* p = (PLAYER*)e; // upcast
+
+  bool wasLeft = e->dx < 0;
+  bool wasRight = e->dx > 0;
+  bool falling = e->falling ? (p->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false;
+
+  e->ddx = 0;
+  e->ddy = WORLD_GRAVITY;
+
+  if (e->left)
+    e->ddx -= WORLD_ACCEL; // player wants to go left
+  else if (wasLeft)
+    e->ddx += WORLD_FRICTION; // player was going left, but not anymore
+
+  if (e->right)
+    e->ddx += WORLD_ACCEL; // player wants to go right
+  else if (wasRight)
+    e->ddx -= WORLD_FRICTION; // player was going right, but not anymore
+
+  if (e->jump && !e->jumping && !falling) {
+    e->dy = 0;            // reset vertical velocity so jumps during grace period are consistent with jumps from ground
+    e->ddy -= WORLD_JUMP; // apply an instantaneous (large) vertical impulse
+    e->jumping = true;
+  }
+
+  // Variable height jumping
+  if (e->jumping && (buttons[e->tag].released & BTN_A) && (e->dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
+      e->dy = -WORLD_CUT_JUMP_SPEED_LIMIT;
+
+  // Clamp horizontal velocity to zero if we detect that the players direction has changed
+  if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0))) {
+    e->dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
+  }
+
+  p->clamped = false;
+
+  // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->x += (e->dx / WORLD_FPS);
+  e->dx += (e->ddx / WORLD_FPS);
+  if (e->dx < -e->maxdx)
+    e->dx = -e->maxdx;
+  else if (e->dx > e->maxdx)
+    e->dx = e->maxdx;
+
+  // Collision Detection for X
+  u8 tx = p2ht(e->x);
+  u8 ty = p2vt(e->y);
+  u8 nx = nh(e->x);  // true if player overlaps right
+  u8 ny = nv(e->y); // true if player overlaps below
+  u8 cell      = isSolid[GetTile(tx,     ty)];
+  u8 cellright = isSolid[GetTile(tx + 1, ty)];
+  u8 celldown  = isSolid[GetTile(tx,     ty + 1)];
+  u8 celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+
+  if (e->dx > 0) {
+    if ((cellright && !cell) ||
+        (celldiag  && !celldown && ny)) {
+      p->clamped = true;
+      e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform we just hit
+      e->dx = 0;           // stop horizontal velocity
+      nx = 0;                     // player no longer overlaps the adjacent cell
+      tx = p2ht(e->x);
+      celldown  = isSolid[GetTile(tx,     ty + 1)];
+      celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+    }
+  } else if (e->dx < 0) {
+    if ((cell     && !cellright) ||
+        (celldown && !celldiag && ny)) {
+      p->clamped = true;
+      e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
+      e->dx = 0;           // stop horizontal velocity
+      nx = 0;                     // player no longer overlaps the adjacent cell
+      tx = p2ht(e->x);
+      celldown  = isSolid[GetTile(tx,     ty + 1)];
+      celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+    }
+  }
+
+  // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->y += (e->dy / WORLD_FPS);
+  e->dy += (e->ddy / WORLD_FPS);
+  if (e->dy < -WORLD_MAXDY)
+    e->dy = -WORLD_MAXDY;
+  else if (e->dy > WORLD_MAXDY)
+    e->dy = WORLD_MAXDY;
+
+  // Collision Detection for Y
+  tx = p2ht(e->x);
+  ty = p2vt(e->y);
+  nx = nh(e->x);  // true if player overlaps right
+  ny = nv(e->y); // true if player overlaps below
+  cell      = isSolid[GetTile(tx,     ty)];
+  cellright = isSolid[GetTile(tx + 1, ty)];
+  celldown  = isSolid[GetTile(tx,     ty + 1)];
+  celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+
+  if (e->dy > 0) {
+    if ((celldown && !cell) ||
+        (celldiag && !cellright && nx)) {
+      p->clamped = true;
+      e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
+      e->dy = 0;           // stop downward velocity
+      e->falling = false;  // no longer falling
+      p->framesFalling = 0;
+      e->jumping = false;  // (or jumping)
+      ny = 0;                     // no longer overlaps the cells below
+    }
+  } else if (e->dy < 0) {
+    if ((cell      && !celldown) ||
+        (cellright && !celldiag && nx)) {
+      p->clamped = true;
+      e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
+      e->dy = 0;           // stop updard velocity
       ny = 0;                     // player no longer overlaps the cells below
     }
   }
 
-  player[i].falling = !(celldown || (nx && celldiag)) && !player[i].jumping; // detect if we're now falling or not
-  if (player[i].falling)
-    player[i].framesFalling++;
+  e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
+  if (e->falling)
+    p->framesFalling++;
+}
+
+void player_input(ENTITY* e)
+{
+  PLAYER* p = (PLAYER*)e; // upcast
+
+  uint8_t i = e->tag;
+
+  // Read the current state of the player's controller
+  buttons[i].prev = buttons[i].held;
+  buttons[i].held = ReadJoypad(i);
+  buttons[i].pressed = buttons[i].held & (buttons[i].held ^ buttons[i].prev);
+  buttons[i].released = buttons[i].prev & (buttons[i].held ^ buttons[i].prev);
+
+  e->left = (buttons[i].held & BTN_LEFT);
+  e->right = (buttons[i].held & BTN_RIGHT);
+
+  // Improve the user experience, by allowing players to jump by holding the jump
+  // button before landing, but require them to release it before jumping again
+  if (p->jumpAllowed) {                                      // Jumping multiple times requires releasing the jump button between jumps
+    e->jump = (buttons[i].held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
+    if (e->jump && !(e->jumping || (e->falling && p->framesFalling > WORLD_FALLING_GRACE_FRAMES))) { // if player[i] is currently holding BTN_A, (and is on the ground)
+      p->jumpAllowed = false;                                // a jump will occur during the next call to update(), so clear the jumpAllowed flag.
+      TriggerFx(0, 128, false);
+    }
+  } else {                                                           // Otherwise, it means that we just jumped, and BTN_A is still being held down
+    e->jump = false;                                          // so explicitly disallow any additional jumps until
+    if (buttons[i].released & BTN_A)                                 // BTN_A is released again
+      p->jumpAllowed = true;                                 // at which point reset the jumpAllowed flag so another jump may occur.
+  }
+}
+
+void player_render(ENTITY* e)
+{
+  PLAYER* p = (PLAYER*)e; // upcast
+
+  uint8_t i = e->tag;
+
+  if (e->left == e->right) {
+    if (p->clamped)
+      MapSprite2(i, orange_front, 0);
+    else
+      MapSprite2(i, yellow_front, 0);
+  } else {
+    if (p->clamped)
+      MapSprite2(i, orange_side, e->right ? SPRITE_FLIP_X : 0);
+    else
+      MapSprite2(i, yellow_side, e->right ? SPRITE_FLIP_X : 0);
+  }
+  MoveSprite(i, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+}
+
+void monster_input(ENTITY* e)
+{
+  // Collision Detection for X
+  u8 tx;
+  if (e->left)
+    tx = p2ht(e->x - (1 << FP_SHIFT) + 1);
+  else
+    tx = p2ht(e->x);
+  u8 ty = p2vt(e->y);
+  u8 cellleft  = isSolid[GetTile(tx , ty)];
+  u8 cellright = isSolid[GetTile(tx + 1, ty)];
+
+  if (e->left) {
+    if (cellleft) {
+      e->left = false;
+      e->right = true;
+    }
+  } else if (e->right) {
+    if (cellright) {
+      e->right = false;
+      e->left = true;
+    }
+  }
+}
+
+void monster_render(ENTITY* e)
+{
+  MapSprite2(e->tag, monster_side, e->right ? SPRITE_FLIP_X : 0);
+  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 int main()
@@ -276,21 +499,37 @@ int main()
 
   InitMusicPlayer(patches);
 
-  for (u8 i = 0; i < PLAYERS; ++i) {
-    /* player[i].w = PLAYER_START_WIDTH; */
-    /* player[i].h = PLAYER_START_HEIGHT; */
-    if (i == 0) {
-      player[i].x = PLAYER_0_START_X;
-      player[i].y = PLAYER_0_START_Y;
-    } else if (i == 1) {
-      player[i].x = PLAYER_1_START_X;
-      player[i].y = PLAYER_1_START_Y;
-    }
-
-    player[i].jumpAllowed = true; // we haven't jumped yet, so this is true
-    player[i].framesFalling = 0;
+  // Initialize players
+  for (uint8_t i = 0; i < PLAYERS; ++i) {
+    if (i == 0)
+      player_init(&player[i], player_input, player_update, player_render, i, PLAYER_0_START_X, PLAYER_0_START_Y, WORLD_MAXDX);
+    else if (i == 1)
+      player_init(&player[i], player_input, player_update, player_render, i, PLAYER_1_START_X, PLAYER_1_START_Y, WORLD_MAXDX);
 
     MapSprite2(i, yellow_front, 0);
+  }
+
+  // Initialize monsters
+  for (uint8_t i = 0; i < MONSTERS; ++i) {
+    entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
+                monster_start_x[i],
+                monster_start_y[i],
+                WORLD_METER * 2);
+    monster[i].left = true;
+  }
+
+  /* entities[0] = (ENTITY*)&player[0]; */
+  /* entities[1] = (ENTITY*)&player[1]; */
+  /* entities[2] = &monster[0]; */
+
+  // Initialize entities array
+  if (PLAYERS > 0)
+    entities[0] = (ENTITY*)&player[0];
+  if (PLAYERS > 1)
+    entities[1] = (ENTITY*)&player[1];
+
+  for (uint8_t i = PLAYERS; i < PLAYERS + MONSTERS; ++i) {
+    entities[i] = &monster[i - PLAYERS];
   }
 
   // Fills the video RAM with the first tile (0, 0)
@@ -319,50 +558,19 @@ int main()
     WaitVsync(1);
 
     // Read the current state of each controller
-    for (u8 i = 0; i < PLAYERS; ++i) {
-      buttons[i].prev = buttons[i].held;
-      buttons[i].held = ReadJoypad(i);
-      buttons[i].pressed = buttons[i].held & (buttons[i].held ^ buttons[i].prev);
-      buttons[i].released = buttons[i].prev & (buttons[i].held ^ buttons[i].prev);
-
-      player[i].left = (buttons[i].held & BTN_LEFT);
-      player[i].right = (buttons[i].held & BTN_RIGHT);
-
-      // Improve the user experience, by allowing players to jump by holding the jump
-      // button before landing, but require them to release it before jumping again
-      if (player[i].jumpAllowed) {                                      // Jumping multiple times requires releasing the jump button between jumps
-        player[i].jump = (buttons[i].held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
-        if (player[i].jump && !(player[i].jumping || (player[i].falling && player[i].framesFalling > WORLD_FALLING_GRACE_FRAMES))) { // if player[i] is currently holding BTN_A, (and is on the ground)
-          player[i].jumpAllowed = false;                                // a jump will occur during the next call to update(), so clear the jumpAllowed flag.
-          TriggerFx(0, 128, false);
-        }
-      } else {                                                           // Otherwise, it means that we just jumped, and BTN_A is still being held down
-        player[i].jump = false;                                          // so explicitly disallow any additional jumps until
-        if (buttons[i].released & BTN_A)                                 // BTN_A is released again
-          player[i].jumpAllowed = true;                                 // at which point reset the jumpAllowed flag so another jump may occur.
-      }
-
+    for (u8 i = 0; i < NELEMS(entities); ++i) {
+      if (entities[i])
+        entities[i]->input(entities[i]);
     }
 
     // Update the state of the players
-    for (u8 i = 0; i < PLAYERS; ++i) {
-      update(i);
+    for (u8 i = 0; i < NELEMS(entities); ++i) {
+      entities[i]->update(entities[i]);
     }
     
     // Render the world
-    for (u8 i = 0; i < PLAYERS; ++i) {
-      if (player[i].left == player[i].right) {
-        if (player[i].clamped)
-          MapSprite2(i, orange_front, 0);
-        else
-          MapSprite2(i, yellow_front, 0);
-      } else {
-        if (player[i].clamped)
-          MapSprite2(i, orange_side, player[i].right ? SPRITE_FLIP_X : 0);
-        else
-          MapSprite2(i, yellow_side, player[i].right ? SPRITE_FLIP_X : 0);
-      }
-      MoveSprite(i, (player[i].x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (player[i].y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+    for (u8 i = 0; i < NELEMS(entities); ++i) {
+      entities[i]->render(entities[i]);
     }
   }
 
