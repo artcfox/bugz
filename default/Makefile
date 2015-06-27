@@ -14,7 +14,9 @@ UZEBIN_DIR=../../../bin
 ## Kernel settings
 KERNEL_DIR = ../../../kernel
 KERNEL_OPTIONS  = -DVIDEO_MODE=3 -DINTRO_LOGO=0 -DSCROLLING=0
-KERNEL_OPTIONS += -DMAX_SPRITES=10 -DRAM_TILES_COUNT=16 -DSCREEN_TILES_V=28
+KERNEL_OPTIONS += -DMAX_SPRITES=6 -DRAM_TILES_COUNT=24 -DSCREEN_TILES_V=28
+# -DSOUND_CHANNEL_4_ENABLE=0
+# -DSCREEN_TILES_V=28
 # -DSCREEN_TILES_V=26 -DFIRST_RENDER_LINE=28
 #-DSOUND_CHANNEL_4_ENABLE=0 
 
@@ -37,8 +39,8 @@ ASMFLAGS += -x assembler-with-cpp -Wa,-gdwarf2
 LDFLAGS = $(COMMON)
 LDFLAGS += -Wl,-Map=$(GAME).map
 #LDFLAGS += -Wl,-gc-sections
-LDFLAGS += -Wl,--section-start,.noinit=0x800100 -Wl,--section-start,.data=0x800500
-#LDFLAGS += -Wl,--section-start,.noinit=0x800100 -Wl,--section-start,.data=0x800300
+#LDFLAGS += -Wl,--section-start,.noinit=0x800100 -Wl,--section-start,.data=0x800500
+LDFLAGS += -Wl,--section-start,.noinit=0x800100 -Wl,--section-start,.data=0x800300
 
 ## Intel Hex file production flags
 HEX_FLASH_FLAGS = -R .eeprom

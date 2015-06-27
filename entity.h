@@ -29,13 +29,13 @@ struct ENTITY {
   int16_t dy;
   int16_t ddx;
   int16_t ddy;
-  bool falling;
-  bool jumping;
-  bool left;
-  bool right;
-  bool jump;
   int16_t maxdx;
-};
+  unsigned int falling : 1;
+  unsigned int jumping : 1;
+  unsigned int left : 1;
+  unsigned int right : 1;
+  unsigned int jump : 1;
+} __attribute__ ((packed));
 
 // Default functions that do nothing
 void null_input(ENTITY* e);
@@ -51,14 +51,14 @@ struct PLAYER { ENTITY entity;
   // Enhancement to improve jumping experience
   bool jumpAllowed; // if BTN_A was released, then set this to true
 
-  uint16_t framesFalling;
+  uint8_t framesFalling;
 
   // Debugging purposes
-  bool clamped;
+  /* bool clamped; */
 
   /* u8 w; */
   /* u8 h; */
-};
+} __attribute__ ((packed));
 
 void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx);
 

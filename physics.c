@@ -64,6 +64,7 @@
 #include <string.h>
 
 #include "data/level.inc"
+#include "data/sprites.inc"
 #include "data/patches.inc"
 
 #include "entity.h"
@@ -71,7 +72,7 @@
 #define NELEMS(x) (sizeof(x)/sizeof(x[0]))
 
 #define PLAYERS 1
-#define MONSTERS 2
+#define MONSTERS 5
 
 struct BUTTON_INFO;
 typedef struct BUTTON_INFO BUTTON_INFO;
@@ -109,16 +110,10 @@ struct BUTTON_INFO {
 /*   /\* u8 h; *\/ */
 /* }; */
 
-PLAYER player[PLAYERS];
 BUTTON_INFO buttons[PLAYERS];
 
-ENTITY monster[MONSTERS];
-
-/* ENTITY* entities[] = { 0, 0, 0 }; */
-ENTITY* entities[PLAYERS + MONSTERS] = {(ENTITY*)&player[0]}; // for some reason this has to point to something at compile time
-
 // Maps tile number to solidity
-u8 isSolid[] = {0, 0, 1, 0, 1, 1};
+const uint8_t isSolid[] PROGMEM = {0, 0, 1, 0, 1, 1};
 
 #define FP_SHIFT   2
 #define PLAYER_START_WIDTH  8
@@ -149,21 +144,21 @@ u8 isSolid[] = {0, 0, 1, 0, 1, 1};
 // parameter used for variable jumping (gravity / 10 is a good default)
 #define WORLD_CUT_JUMP_SPEED_LIMIT (WORLD_GRAVITY / 10)
 
-uint16_t monster_start_x[] = {
-  ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT) - (PLAYER_START_WIDTH << FP_SHIFT)),
-  ((SCREEN_TILES_H - 7) * (TILE_WIDTH << FP_SHIFT) - (PLAYER_START_WIDTH << FP_SHIFT)),
-  (2 * (TILE_WIDTH << FP_SHIFT)),
-  (17 * (TILE_WIDTH << FP_SHIFT)),
-  (6 * (TILE_WIDTH << FP_SHIFT)),
-};
+/* uint16_t monster_start_x[] = { */
+/*   ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT) - (PLAYER_START_WIDTH << FP_SHIFT)), */
+/*   ((SCREEN_TILES_H - 7) * (TILE_WIDTH << FP_SHIFT) - (PLAYER_START_WIDTH << FP_SHIFT)), */
+/*   (2 * (TILE_WIDTH << FP_SHIFT)), */
+/*   (17 * (TILE_WIDTH << FP_SHIFT)), */
+/*   (6 * (TILE_WIDTH << FP_SHIFT)), */
+/* }; */
 
-uint16_t monster_start_y[] = {
-  ((SCREEN_TILES_V - 6) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-  ((SCREEN_TILES_V - 19) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-  ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-  ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-  ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-};
+/* uint16_t monster_start_y[] = { */
+/*   ((SCREEN_TILES_V - 5) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)), */
+/*   ((SCREEN_TILES_V - 19) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)), */
+/*   ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)), */
+/*   ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)), */
+/*   ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)), */
+/* }; */
 
 #define vt2p(t) ((t) * (TILE_HEIGHT << FP_SHIFT))
 #define ht2p(t) ((t) * (TILE_WIDTH << FP_SHIFT))
@@ -216,10 +211,10 @@ void entity_update(ENTITY* e)
   u8 ty = p2vt(e->y);
   u8 nx = nh(e->x);  // true if entity overlaps right
   u8 ny = nv(e->y);  // true if entity overlaps below
-  u8 cell      = isSolid[GetTile(tx,     ty)];
-  u8 cellright = isSolid[GetTile(tx + 1, ty)];
-  u8 celldown  = isSolid[GetTile(tx,     ty + 1)];
-  u8 celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+  u8 cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
+  u8 cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  u8 celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+  u8 celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
 
   if (e->dx > 0) {
     if ((cellright && !cell) ||
@@ -228,8 +223,8 @@ void entity_update(ENTITY* e)
       e->dx = 0;           // stop horizontal velocity
       nx = 0;              // entity no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      celldown  = isSolid[GetTile(tx,     ty + 1)];
-      celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+      celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+      celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
     }
   } else if (e->dx < 0) {
     if ((cell     && !cellright) ||
@@ -238,8 +233,8 @@ void entity_update(ENTITY* e)
       e->dx = 0;           // stop horizontal velocity
       nx = 0;              // entity no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      celldown  = isSolid[GetTile(tx,     ty + 1)];
-      celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+      celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+      celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
     }
   }
 
@@ -256,10 +251,10 @@ void entity_update(ENTITY* e)
   ty = p2vt(e->y);
   nx = nh(e->x);  // true if entity overlaps right
   ny = nv(e->y);  // true if entity overlaps below
-  cell      = isSolid[GetTile(tx,     ty)];
-  cellright = isSolid[GetTile(tx + 1, ty)];
-  celldown  = isSolid[GetTile(tx,     ty + 1)];
-  celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+  cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
+  cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+  celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
 
   if (e->dy > 0) {
     if ((celldown && !cell) ||
@@ -321,7 +316,7 @@ void player_update(ENTITY* e)
     e->dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
   }
 
-  p->clamped = false;
+  /* p->clamped = false; */
 
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
@@ -336,32 +331,32 @@ void player_update(ENTITY* e)
   u8 ty = p2vt(e->y);
   u8 nx = nh(e->x);  // true if player overlaps right
   u8 ny = nv(e->y); // true if player overlaps below
-  u8 cell      = isSolid[GetTile(tx,     ty)];
-  u8 cellright = isSolid[GetTile(tx + 1, ty)];
-  u8 celldown  = isSolid[GetTile(tx,     ty + 1)];
-  u8 celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+  u8 cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
+  u8 cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  u8 celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+  u8 celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
 
   if (e->dx > 0) {
     if ((cellright && !cell) ||
         (celldiag  && !celldown && ny)) {
-      p->clamped = true;
+      /* p->clamped = true; */
       e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform we just hit
       e->dx = 0;           // stop horizontal velocity
       nx = 0;                     // player no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      celldown  = isSolid[GetTile(tx,     ty + 1)];
-      celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+      celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+      celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
     }
   } else if (e->dx < 0) {
     if ((cell     && !cellright) ||
         (celldown && !celldiag && ny)) {
-      p->clamped = true;
+      /* p->clamped = true; */
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
       e->dx = 0;           // stop horizontal velocity
       nx = 0;                     // player no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      celldown  = isSolid[GetTile(tx,     ty + 1)];
-      celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+      celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+      celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
     }
   }
 
@@ -378,15 +373,15 @@ void player_update(ENTITY* e)
   ty = p2vt(e->y);
   nx = nh(e->x);  // true if player overlaps right
   ny = nv(e->y); // true if player overlaps below
-  cell      = isSolid[GetTile(tx,     ty)];
-  cellright = isSolid[GetTile(tx + 1, ty)];
-  celldown  = isSolid[GetTile(tx,     ty + 1)];
-  celldiag  = isSolid[GetTile(tx + 1, ty + 1)];
+  cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
+  cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+  celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
 
   if (e->dy > 0) {
     if ((celldown && !cell) ||
         (celldiag && !cellright && nx)) {
-      p->clamped = true;
+      /* p->clamped = true; */
       e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
       e->dy = 0;           // stop downward velocity
       e->falling = false;  // no longer falling
@@ -397,7 +392,7 @@ void player_update(ENTITY* e)
   } else if (e->dy < 0) {
     if ((cell      && !celldown) ||
         (cellright && !celldiag && nx)) {
-      p->clamped = true;
+      /* p->clamped = true; */
       e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
       e->dy = 0;           // stop updard velocity
       ny = 0;                     // player no longer overlaps the cells below
@@ -421,13 +416,13 @@ void player_input(ENTITY* e)
   buttons[i].pressed = buttons[i].held & (buttons[i].held ^ buttons[i].prev);
   buttons[i].released = buttons[i].prev & (buttons[i].held ^ buttons[i].prev);
 
-  e->left = (buttons[i].held & BTN_LEFT);
-  e->right = (buttons[i].held & BTN_RIGHT);
+  e->left = (bool)(buttons[i].held & BTN_LEFT);
+  e->right = (bool)(buttons[i].held & BTN_RIGHT);
 
   // Improve the user experience, by allowing players to jump by holding the jump
   // button before landing, but require them to release it before jumping again
   if (p->jumpAllowed) {                                      // Jumping multiple times requires releasing the jump button between jumps
-    e->jump = (buttons[i].held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
+    e->jump = (bool)(buttons[i].held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
     if (e->jump && !(e->jumping || (e->falling && p->framesFalling > WORLD_FALLING_GRACE_FRAMES))) { // if player[i] is currently holding BTN_A, (and is on the ground)
       p->jumpAllowed = false;                                // a jump will occur during the next call to update(), so clear the jumpAllowed flag.
       TriggerFx(0, 128, false);
@@ -441,22 +436,22 @@ void player_input(ENTITY* e)
 
 void player_render(ENTITY* e)
 {
-  PLAYER* p = (PLAYER*)e; // upcast
+  /* PLAYER* p = (PLAYER*)e; // upcast */
 
-  uint8_t i = e->tag;
+  /* uint8_t i = e->tag; */
 
   if (e->left == e->right) {
-    if (p->clamped)
-      MapSprite2(i, orange_front, 0);
-    else
-      MapSprite2(i, yellow_front, 0);
+    /* if (p->clamped) */
+    /*   MapSprite2(i, orange_front, 0); */
+    /* else */
+      MapSprite2(e->tag, yellow_front, 0);
   } else {
-    if (p->clamped)
-      MapSprite2(i, orange_side, e->right ? SPRITE_FLIP_X : 0);
-    else
-      MapSprite2(i, yellow_side, e->right ? SPRITE_FLIP_X : 0);
+    /* if (p->clamped) */
+    /*   MapSprite2(i, orange_side, e->right ? SPRITE_FLIP_X : 0); */
+    /* else */
+      MapSprite2(e->tag, yellow_side, e->right ? SPRITE_FLIP_X : 0);
   }
-  MoveSprite(i, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 void monster_input(ENTITY* e)
@@ -468,8 +463,8 @@ void monster_input(ENTITY* e)
   else
     tx = p2ht(e->x);
   u8 ty = p2vt(e->y);
-  u8 cellleft  = isSolid[GetTile(tx , ty)];
-  u8 cellright = isSolid[GetTile(tx + 1, ty)];
+  u8 cellleft  = pgm_read_byte(&isSolid[GetTile(tx , ty)]);
+  u8 cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
 
   if (e->left) {
     if (cellleft) {
@@ -492,30 +487,65 @@ void monster_render(ENTITY* e)
 
 int main()
 {
-  // Sets tile table to the specified tilesheet
-  SetTileTable(tiles);
+  PLAYER player[PLAYERS];
+  ENTITY monster[MONSTERS];
 
-  SetSpritesTileBank(0, tiles);
+  /* memset(player, 0, sizeof(PLAYER) * PLAYERS); */
+  
+  /* ENTITY* entities[] = { (void*)0, (void*)0, (void*)0 }; */
+  /* ENTITY* entities[1] = {(ENTITY*)&player[0]}; // for some reason this has to point to something at compile time */
+  /* ENTITY* entities[] = {(ENTITY*)&player[0], (ENTITY*)&monster[0]}; // for some reason this has to point to something at compile time */
+  /* ENTITY* entities[] = {(ENTITY*)&player[0], (ENTITY*)&monster[0], (ENTITY*)&monster[1]}; // for some reason this has to point to something at compile time */
+
+  // Sets tile table to the specified tilesheet
+  SetTileTable(level);
+
+  SetSpritesTileBank(0, mysprites);
 
   InitMusicPlayer(patches);
 
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
     if (i == 0)
-      player_init(&player[i], player_input, player_update, player_render, i, PLAYER_0_START_X, PLAYER_0_START_Y, WORLD_MAXDX);
+      player_init(&player[i], player_input, player_update, player_render, 0, PLAYER_0_START_X, PLAYER_0_START_Y, WORLD_MAXDX);
     else if (i == 1)
-      player_init(&player[i], player_input, player_update, player_render, i, PLAYER_1_START_X, PLAYER_1_START_Y, WORLD_MAXDX);
+      player_init(&player[i], player_input, player_update, player_render, 1, PLAYER_1_START_X, PLAYER_1_START_Y, WORLD_MAXDX);
 
     MapSprite2(i, yellow_front, 0);
   }
 
   // Initialize monsters
   for (uint8_t i = 0; i < MONSTERS; ++i) {
-    entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
-                monster_start_x[i],
-                monster_start_y[i],
-                WORLD_METER * 2);
+    if (i == 0)
+      entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
+                  PLAYER_1_START_X,
+                  PLAYER_1_START_Y,
+                  WORLD_METER * 2);
+    else if (i == 1)
+      entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
+                  PLAYER_0_START_X,
+                  PLAYER_1_START_Y,
+                  WORLD_METER * 2);
+    else if (i == 2)
+      entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
+                  (9 * (TILE_WIDTH << FP_SHIFT)),
+                  PLAYER_1_START_Y,
+                  WORLD_METER * 2);
+    else if (i == 3)
+      entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
+                  (16 * (TILE_WIDTH << FP_SHIFT)),
+                  PLAYER_1_START_Y,
+                  WORLD_METER * 2);
+    else if (i == 4)
+      entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
+                  (19 * (TILE_WIDTH << FP_SHIFT)),
+                  PLAYER_1_START_Y,
+                  WORLD_METER * 2);
+
     monster[i].left = true;
+    monster[i].right = false;
+    MapSprite2(monster[i].tag, monster_side, monster[i].left ? 0 : SPRITE_FLIP_X);
+    MoveSprite(monster[i].tag, (monster[i].x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (monster[i].y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
   }
 
   /* entities[0] = (ENTITY*)&player[0]; */
@@ -523,14 +553,14 @@ int main()
   /* entities[2] = &monster[0]; */
 
   // Initialize entities array
-  if (PLAYERS > 0)
-    entities[0] = (ENTITY*)&player[0];
-  if (PLAYERS > 1)
-    entities[1] = (ENTITY*)&player[1];
+  /* if (PLAYERS > 0) */
+  /*   entities[0] = (ENTITY*)&player[0]; */
+  /* if (PLAYERS > 1) */
+  /*   entities[1] = (ENTITY*)&player[1]; */
 
-  for (uint8_t i = PLAYERS; i < PLAYERS + MONSTERS; ++i) {
-    entities[i] = &monster[i - PLAYERS];
-  }
+  /* for (uint8_t i = PLAYERS; i < PLAYERS + MONSTERS; ++i) { */
+  /*   entities[i] = &monster[i - PLAYERS]; */
+  /* } */
 
   // Fills the video RAM with the first tile (0, 0)
   ClearVram();
@@ -549,7 +579,7 @@ int main()
   /*     SetTile(i, j, 3); */
   /*   } */
   /* } */
-  DrawMap(0, 0, level);
+  DrawMap(0, 0, level1);
 
   //  struct BUTTON_INFO buttons[PLAYERS];
   memset(buttons, 0, sizeof(buttons));
@@ -557,20 +587,49 @@ int main()
   for (;;) {
     WaitVsync(1);
 
-    // Read the current state of each controller
-    for (u8 i = 0; i < NELEMS(entities); ++i) {
-      if (entities[i])
-        entities[i]->input(entities[i]);
-    }
+    /* // Read the current state of each controller */
+    /* for (uint8_t i = 0; i < PLAYERS + MONSTERS; ++i) { */
+    /*   //if (entities[i]) */
+    /*     entities[i]->input(entities[i]); */
+    /* } */
 
+    /* // Update the state of the players */
+    /* for (uint8_t i = 0; i < PLAYERS + MONSTERS; ++i) { */
+    /*   //if (entities[i]) */
+    /*     entities[i]->update(entities[i]); */
+    /* } */
+    
+    /* // Render the world */
+    /* for (uint8_t i = 0; i < PLAYERS + MONSTERS; ++i) { */
+    /*   //if (entities[i]) */
+    /*     entities[i]->render(entities[i]); */
+    /* } */
+
+
+
+    // Read the current state of each controller
+    for (uint8_t i = 0; i < PLAYERS; ++i) {
+      ((ENTITY*)(&player[i]))->input((ENTITY*)(&player[i]));
+    }
+    for (uint8_t i = 0; i < MONSTERS; ++i) {
+      ((ENTITY*)(&monster[i]))->input((ENTITY*)(&monster[i]));
+    }
+ 
+    
     // Update the state of the players
-    for (u8 i = 0; i < NELEMS(entities); ++i) {
-      entities[i]->update(entities[i]);
+    for (uint8_t i = 0; i < PLAYERS; ++i) {
+      ((ENTITY*)(&player[i]))->update((ENTITY*)(&player[i]));
+    }
+    for (uint8_t i = 0; i < MONSTERS; ++i) {
+      ((ENTITY*)(&monster[i]))->update((ENTITY*)(&monster[i]));
     }
     
     // Render the world
-    for (u8 i = 0; i < NELEMS(entities); ++i) {
-      entities[i]->render(entities[i]);
+    for (uint8_t i = 0; i < PLAYERS; ++i) {
+      ((ENTITY*)(&player[i]))->render((ENTITY*)(&player[i]));
+    }
+    for (uint8_t i = 0; i < MONSTERS; ++i) {
+      ((ENTITY*)(&monster[i]))->render((ENTITY*)(&monster[i]));
     }
   }
 
