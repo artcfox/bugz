@@ -84,32 +84,6 @@ struct BUTTON_INFO {
   int prev;
 };
 
-/* struct PLAYER_INFO { */
-/*   u16 x; */
-/*   u16 y; */
-/*   int16_t dx; */
-/*   int16_t dy; */
-/*   int16_t ddx; */
-/*   int16_t ddy; */
-/*   bool falling; */
-/*   bool jumping; */
-
-/*   bool left; // if the input was BTN_LEFT, then set this to true */
-/*   bool right; // if the input was BTN_RIGHT, then set this to true */
-/*   bool jump; // if the input was BTN_A, then set this to true */
-
-/*   // Enhancement to improve jumping experience */
-/*   bool jumpAllowed; // if BTN_A was released, then set this to true */
-
-/*   uint16_t framesFalling; */
-
-/*   // Debugging purposes */
-/*   bool clamped; */
-
-/*   /\* u8 w; *\/ */
-/*   /\* u8 h; *\/ */
-/* }; */
-
 BUTTON_INFO buttons[PLAYERS];
 
 // Maps tile number to solidity
@@ -481,7 +455,7 @@ void monster_input(ENTITY* e)
 
 void monster_render(ENTITY* e)
 {
-  MapSprite2(e->tag, monster_side, e->right ? SPRITE_FLIP_X : 0);
+  MapSprite2(e->tag, ant_side, e->right ? SPRITE_FLIP_X : 0);
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
@@ -489,14 +463,8 @@ int main()
 {
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
-
-  /* memset(player, 0, sizeof(PLAYER) * PLAYERS); */
+  //uint8_t* entities[6] = {0};
   
-  /* ENTITY* entities[] = { (void*)0, (void*)0, (void*)0 }; */
-  /* ENTITY* entities[1] = {(ENTITY*)&player[0]}; // for some reason this has to point to something at compile time */
-  /* ENTITY* entities[] = {(ENTITY*)&player[0], (ENTITY*)&monster[0]}; // for some reason this has to point to something at compile time */
-  /* ENTITY* entities[] = {(ENTITY*)&player[0], (ENTITY*)&monster[0], (ENTITY*)&monster[1]}; // for some reason this has to point to something at compile time */
-
   // Sets tile table to the specified tilesheet
   SetTileTable(level);
 
@@ -552,24 +520,16 @@ int main()
       monster[i].left = true;
 
     }
-    /* monster[i].left = true; */
-    /* monster[i].right = false; */
-    MapSprite2(monster[i].tag, monster_side, monster[i].left ? 0 : SPRITE_FLIP_X);
-    MoveSprite(monster[i].tag, (monster[i].x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (monster[i].y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
   }
 
-  /* entities[0] = (ENTITY*)&player[0]; */
-  /* entities[1] = (ENTITY*)&player[1]; */
-  /* entities[2] = &monster[0]; */
-
-  // Initialize entities array
+  // XXX: BROKEN - Initialize entities array
   /* if (PLAYERS > 0) */
-  /*   entities[0] = (ENTITY*)&player[0]; */
+  /*   entities[0] = (uint8_t*)(&player[0]); */
   /* if (PLAYERS > 1) */
-  /*   entities[1] = (ENTITY*)&player[1]; */
+  /*   entities[1] = (uint8_t*)(&player[1]); */
 
   /* for (uint8_t i = PLAYERS; i < PLAYERS + MONSTERS; ++i) { */
-  /*   entities[i] = &monster[i - PLAYERS]; */
+  /*   entities[i] = (uint8_t*)(&monster[i - PLAYERS]); */
   /* } */
 
   // Fills the video RAM with the first tile (0, 0)
@@ -597,24 +557,23 @@ int main()
   for (;;) {
     WaitVsync(1);
 
-    /* // Read the current state of each controller */
+    /* // XXX: BROKEN - Read the current state of each controller */
     /* for (uint8_t i = 0; i < PLAYERS + MONSTERS; ++i) { */
-    /*   //if (entities[i]) */
-    /*     entities[i]->input(entities[i]); */
+    /*   if (entities[i]) */
+    /*     ((ENTITY*)(&entities + i))->input((ENTITY*)(&entities + i)); */
     /* } */
 
     /* // Update the state of the players */
     /* for (uint8_t i = 0; i < PLAYERS + MONSTERS; ++i) { */
-    /*   //if (entities[i]) */
-    /*     entities[i]->update(entities[i]); */
+    /*   if (entities[i]) */
+    /*     ((ENTITY*)(&entities + i))->update((ENTITY*)(&entities + i)); */
     /* } */
     
     /* // Render the world */
     /* for (uint8_t i = 0; i < PLAYERS + MONSTERS; ++i) { */
-    /*   //if (entities[i]) */
-    /*     entities[i]->render(entities[i]); */
+    /*   if (entities[i]) */
+    /*     ((ENTITY*)(&entities + i))->render((ENTITY*)(&entities + i)); */
     /* } */
-
 
 
     // Read the current state of each controller

@@ -30,6 +30,7 @@ struct ENTITY {
   int16_t ddx;
   int16_t ddy;
   int16_t maxdx;
+  unsigned int enabled : 1;
   unsigned int falling : 1;
   unsigned int jumping : 1;
   unsigned int left : 1;

@@ -8,7 +8,8 @@
       <map var-name="yellow_front" left="1" top="0" width="1" height="1"/>
       <map var-name="orange_side" left="2" top="0" width="1" height="1"/>
       <map var-name="orange_front" left="3" top="0" width="1" height="1"/>
-      <map var-name="monster_side" left="4" top="0" width="1" height="1"/>
+      <map var-name="ladybug_side" left="4" top="0" width="1" height="1"/>
+      <map var-name="ant_side" left="5" top="0" width="1" height="1"/>
     </maps>
   </output>
 </gfx-xform>
