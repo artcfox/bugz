@@ -516,34 +516,44 @@ int main()
 
   // Initialize monsters
   for (uint8_t i = 0; i < MONSTERS; ++i) {
-    if (i == 0)
+    if (i == 0) {
       entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
                   PLAYER_1_START_X,
-                  PLAYER_1_START_Y,
+                  ((SCREEN_TILES_V - 15) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
                   WORLD_METER * 2);
-    else if (i == 1)
+      monster[i].right = true;
+    }
+    else if (i == 1) {
       entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
-                  PLAYER_0_START_X,
-                  PLAYER_1_START_Y,
+                  (28 * (TILE_WIDTH << FP_SHIFT)),
+                  ((SCREEN_TILES_V - 5) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
                   WORLD_METER * 2);
-    else if (i == 2)
+      monster[i].left = true;
+    }
+    else if (i == 2) {
       entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
                   (9 * (TILE_WIDTH << FP_SHIFT)),
-                  PLAYER_1_START_Y,
+                  ((SCREEN_TILES_V - 8) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
                   WORLD_METER * 2);
-    else if (i == 3)
+      monster[i].left = true;
+    }
+    else if (i == 3) {
       entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
                   (16 * (TILE_WIDTH << FP_SHIFT)),
-                  PLAYER_1_START_Y,
+                  ((SCREEN_TILES_V - 10) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
                   WORLD_METER * 2);
-    else if (i == 4)
+      monster[i].left = true;
+    }
+    else if (i == 4) {
       entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
                   (19 * (TILE_WIDTH << FP_SHIFT)),
-                  PLAYER_1_START_Y,
+                  ((SCREEN_TILES_V - 19) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
                   WORLD_METER * 2);
+      monster[i].left = true;
 
-    monster[i].left = true;
-    monster[i].right = false;
+    }
+    /* monster[i].left = true; */
+    /* monster[i].right = false; */
     MapSprite2(monster[i].tag, monster_side, monster[i].left ? 0 : SPRITE_FLIP_X);
     MoveSprite(monster[i].tag, (monster[i].x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (monster[i].y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
   }
