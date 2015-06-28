@@ -41,29 +41,11 @@
 extern const char mysprites[] PROGMEM;
 extern const struct PatchStruct patches[] PROGMEM;
 
-const uint16_t monsterInitialX[] PROGMEM = {
-  ((SCREEN_TILES_H - 4) * (TILE_WIDTH << FP_SHIFT) - (8 << FP_SHIFT)),
-  ((TILE_WIDTH << FP_SHIFT) * 28),
-  ((TILE_WIDTH << FP_SHIFT) * 9),
-  ((TILE_WIDTH << FP_SHIFT) * 16),
-  ((TILE_WIDTH << FP_SHIFT) * 19),
-};
-
-const uint16_t monsterInitialY[] PROGMEM = {
-  ((SCREEN_TILES_V - 15) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-  ((SCREEN_TILES_V - 5) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-  ((SCREEN_TILES_V - 8) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-  ((SCREEN_TILES_V - 10) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-  ((SCREEN_TILES_V - 19) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-};
-
-const uint8_t monsterInitialDirection[] PROGMEM = {
-  1,
-  0,
-  0,
-  0,
-  0,
-};
+const uint8_t  playerInitialX[] PROGMEM = {  4, 25 };
+const uint8_t  playerInitialY[] PROGMEM = { 26, 25 };
+const uint8_t monsterInitialX[] PROGMEM = { 25, 28,  9, 16, 19 };
+const uint8_t monsterInitialY[] PROGMEM = { 12, 22, 19, 17,  8 };
+const uint8_t monsterInitialD[] PROGMEM = {  1,  0,  0,  0,  0 };
 
 int main()
 {
@@ -76,19 +58,19 @@ int main()
 
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
-    if (i == 0)
-      player_init(&player[i], player_input, player_update, player_render, 0, PLAYER_0_START_X, PLAYER_0_START_Y, WORLD_MAXDX);
-    else if (i == 1)
-      player_init(&player[i], player_input, player_update, player_render, 1, PLAYER_1_START_X, PLAYER_1_START_Y, WORLD_MAXDX);
+    player_init(&player[i], player_input, player_update, player_render, i,
+                  pgm_read_byte(&playerInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
+                  pgm_read_byte(&playerInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
+                WORLD_MAXDX);
   }
 
   // Initialize monsters
   for (uint8_t i = 0; i < MONSTERS; ++i) {
       entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
-                  pgm_read_word(&monsterInitialX[i]),
-                  pgm_read_word(&monsterInitialY[i]),
+                  pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
+                  pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
                   WORLD_METER * 2);
-      if (pgm_read_byte(&monsterInitialDirection[i]))
+      if (pgm_read_byte(&monsterInitialD[i]))
         monster[i].right = true;
       else
         monster[i].left = true;
