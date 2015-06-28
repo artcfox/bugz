@@ -61,7 +61,6 @@
 #include <stdlib.h>
 #include <avr/pgmspace.h>
 #include <uzebox.h>
-#include <string.h>
 
 #include "data/level.inc"
 #include "data/sprites.inc"
@@ -69,22 +68,8 @@
 
 #include "entity.h"
 
-#define NELEMS(x) (sizeof(x)/sizeof(x[0]))
-
 #define PLAYERS 1
 #define MONSTERS 5
-
-struct BUTTON_INFO;
-typedef struct BUTTON_INFO BUTTON_INFO;
-
-struct BUTTON_INFO {
-  int held;
-  int pressed;
-  int released;
-  int prev;
-};
-
-BUTTON_INFO buttons[PLAYERS];
 
 // Maps tile number to solidity
 const uint8_t isSolid[] PROGMEM = {0, 0, 1, 0, 1, 1};
@@ -141,7 +126,6 @@ const uint8_t isSolid[] PROGMEM = {0, 0, 1, 0, 1, 1};
 #define nv(p) ((p) % (TILE_HEIGHT << FP_SHIFT))
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
-
 void entity_update(ENTITY* e)
 {
   bool wasLeft = e->dx < 0;
@@ -181,14 +165,14 @@ void entity_update(ENTITY* e)
     e->dx = e->maxdx;
 
   // Collision Detection for X
-  u8 tx = p2ht(e->x);
-  u8 ty = p2vt(e->y);
-  u8 nx = nh(e->x);  // true if entity overlaps right
-  u8 ny = nv(e->y);  // true if entity overlaps below
-  u8 cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
-  u8 cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
-  u8 celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-  u8 celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+  uint8_t tx = p2ht(e->x);
+  uint8_t ty = p2vt(e->y);
+  uint8_t nx = nh(e->x);  // true if entity overlaps right
+  uint8_t ny = nv(e->y);  // true if entity overlaps below
+  uint8_t cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
+  uint8_t cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  uint8_t celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+  uint8_t celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
 
   if (e->dx > 0) {
     if ((cellright && !cell) ||
@@ -282,7 +266,7 @@ void player_update(ENTITY* e)
   }
 
   // Variable height jumping
-  if (e->jumping && (buttons[e->tag].released & BTN_A) && (e->dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
+  if (e->jumping && p->jumpReleased && (e->dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
       e->dy = -WORLD_CUT_JUMP_SPEED_LIMIT;
 
   // Clamp horizontal velocity to zero if we detect that the players direction has changed
@@ -301,14 +285,14 @@ void player_update(ENTITY* e)
     e->dx = e->maxdx;
 
   // Collision Detection for X
-  u8 tx = p2ht(e->x);
-  u8 ty = p2vt(e->y);
-  u8 nx = nh(e->x);  // true if player overlaps right
-  u8 ny = nv(e->y); // true if player overlaps below
-  u8 cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
-  u8 cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
-  u8 celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-  u8 celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+  uint8_t tx = p2ht(e->x);
+  uint8_t ty = p2vt(e->y);
+  uint8_t nx = nh(e->x);  // true if player overlaps right
+  uint8_t ny = nv(e->y); // true if player overlaps below
+  uint8_t cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
+  uint8_t cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  uint8_t celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+  uint8_t celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
 
   if (e->dx > 0) {
     if ((cellright && !cell) ||
@@ -382,29 +366,27 @@ void player_input(ENTITY* e)
 {
   PLAYER* p = (PLAYER*)e; // upcast
 
-  uint8_t i = e->tag;
-
   // Read the current state of the player's controller
-  buttons[i].prev = buttons[i].held;
-  buttons[i].held = ReadJoypad(i);
-  buttons[i].pressed = buttons[i].held & (buttons[i].held ^ buttons[i].prev);
-  buttons[i].released = buttons[i].prev & (buttons[i].held ^ buttons[i].prev);
+  p->buttons.prev = p->buttons.held;
+  p->buttons.held = ReadJoypad(e->tag); // tag will be set to 0 or 1, depending on which player we are
+  p->buttons.pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
+  p->buttons.released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
 
-  e->left = (bool)(buttons[i].held & BTN_LEFT);
-  e->right = (bool)(buttons[i].held & BTN_RIGHT);
+  e->left = (bool)(p->buttons.held & BTN_LEFT);
+  e->right = (bool)(p->buttons.held & BTN_RIGHT);
 
   // Improve the user experience, by allowing players to jump by holding the jump
   // button before landing, but require them to release it before jumping again
-  if (p->jumpAllowed) {                                      // Jumping multiple times requires releasing the jump button between jumps
-    e->jump = (bool)(buttons[i].held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
+  if (p->jumpReleased) {                                      // Jumping multiple times requires releasing the jump button between jumps
+    e->jump = (bool)(p->buttons.held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
     if (e->jump && !(e->jumping || (e->falling && p->framesFalling > WORLD_FALLING_GRACE_FRAMES))) { // if player[i] is currently holding BTN_A, (and is on the ground)
-      p->jumpAllowed = false;                                // a jump will occur during the next call to update(), so clear the jumpAllowed flag.
+      p->jumpReleased = false;                                // a jump will occur during the next call to update(), so clear the jumpReleased flag.
       TriggerFx(0, 128, false);
     }
   } else {                                                           // Otherwise, it means that we just jumped, and BTN_A is still being held down
     e->jump = false;                                          // so explicitly disallow any additional jumps until
-    if (buttons[i].released & BTN_A)                                 // BTN_A is released again
-      p->jumpAllowed = true;                                 // at which point reset the jumpAllowed flag so another jump may occur.
+    if (p->buttons.released & BTN_A)                                 // BTN_A is released again
+      p->jumpReleased = true;                                 // at which point reset the jumpReleased flag so another jump may occur.
   }
 }
 
@@ -431,14 +413,14 @@ void player_render(ENTITY* e)
 void monster_input(ENTITY* e)
 {
   // Collision Detection for X
-  u8 tx;
+  uint8_t tx;
   if (e->left)
     tx = p2ht(e->x - (1 << FP_SHIFT) + 1);
   else
     tx = p2ht(e->x);
-  u8 ty = p2vt(e->y);
-  u8 cellleft  = pgm_read_byte(&isSolid[GetTile(tx , ty)]);
-  u8 cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  uint8_t ty = p2vt(e->y);
+  uint8_t cellleft  = pgm_read_byte(&isSolid[GetTile(tx , ty)]);
+  uint8_t cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
 
   if (e->left) {
     if (cellleft) {
@@ -536,8 +518,8 @@ int main()
   ClearVram();
 
   /* // Draw a solid border around the edges of the screen */
-  /* for (u8 i = 0; i < SCREEN_TILES_H; i++) { */
-  /*   for (u8 j = 0; j < SCREEN_TILES_V; j++) { */
+  /* for (uint8_t i = 0; i < SCREEN_TILES_H; i++) { */
+  /*   for (uint8_t j = 0; j < SCREEN_TILES_V; j++) { */
   /*     if (i == 0 || i == SCREEN_TILES_H - 1) { */
   /*       SetTile(i, j, 2); */
   /*       continue; */
@@ -550,9 +532,6 @@ int main()
   /*   } */
   /* } */
   DrawMap(0, 0, level1);
-
-  //  struct BUTTON_INFO buttons[PLAYERS];
-  memset(buttons, 0, sizeof(buttons));
 
   for (;;) {
     WaitVsync(1);

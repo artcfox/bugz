@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
+#include <string.h>
 
 /*
   One way of implementing everthing is to extend the idea that I'm
@@ -45,14 +45,25 @@ void null_render(ENTITY* e);
 
 void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx);
 
+struct BUTTON_INFO;
+typedef struct BUTTON_INFO BUTTON_INFO;
+
+struct BUTTON_INFO {
+  uint16_t held;
+  uint16_t pressed;
+  uint16_t released;
+  uint16_t prev;
+};
+
 struct PLAYER;
 typedef struct PLAYER PLAYER;
 
 struct PLAYER { ENTITY entity;
-  // Enhancement to improve jumping experience
-  bool jumpAllowed; // if BTN_A was released, then set this to true
+  BUTTON_INFO buttons;
 
-  uint8_t framesFalling;
+  bool jumpReleased; // state variable used for allowing jump to be pressed early, and for implementing variable jumping
+
+  uint16_t framesFalling; // used for allowing late jumps immediately after falling
 
   // Debugging purposes
   /* bool clamped; */
