@@ -36,39 +36,42 @@
 #include <stdlib.h>
 
 #include "entity.h"
-
 #include "data/level.inc"
 
 extern const char mysprites[] PROGMEM;
 extern const struct PatchStruct patches[] PROGMEM;
 
-/* uint16_t monster_start_x[] = { */
-/*   ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT) - (PLAYER_START_WIDTH << FP_SHIFT)), */
-/*   ((SCREEN_TILES_H - 7) * (TILE_WIDTH << FP_SHIFT) - (PLAYER_START_WIDTH << FP_SHIFT)), */
-/*   (2 * (TILE_WIDTH << FP_SHIFT)), */
-/*   (17 * (TILE_WIDTH << FP_SHIFT)), */
-/*   (6 * (TILE_WIDTH << FP_SHIFT)), */
-/* }; */
+const uint16_t monsterInitialX[] PROGMEM = {
+  ((SCREEN_TILES_H - 4) * (TILE_WIDTH << FP_SHIFT) - (8 << FP_SHIFT)),
+  ((TILE_WIDTH << FP_SHIFT) * 28),
+  ((TILE_WIDTH << FP_SHIFT) * 9),
+  ((TILE_WIDTH << FP_SHIFT) * 16),
+  ((TILE_WIDTH << FP_SHIFT) * 19),
+};
 
-/* uint16_t monster_start_y[] = { */
-/*   ((SCREEN_TILES_V - 5) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)), */
-/*   ((SCREEN_TILES_V - 19) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)), */
-/*   ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)), */
-/*   ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)), */
-/*   ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)), */
-/* }; */
+const uint16_t monsterInitialY[] PROGMEM = {
+  ((SCREEN_TILES_V - 15) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
+  ((SCREEN_TILES_V - 5) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
+  ((SCREEN_TILES_V - 8) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
+  ((SCREEN_TILES_V - 10) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
+  ((SCREEN_TILES_V - 19) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
+};
 
+const uint8_t monsterInitialDirection[] PROGMEM = {
+  1,
+  0,
+  0,
+  0,
+  0,
+};
 
 int main()
 {
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
   
-  // Sets tile table to the specified tilesheet
   SetTileTable(level);
-
   SetSpritesTileBank(0, mysprites);
-
   InitMusicPlayer(patches);
 
   // Initialize players
@@ -79,71 +82,19 @@ int main()
       player_init(&player[i], player_input, player_update, player_render, 1, PLAYER_1_START_X, PLAYER_1_START_Y, WORLD_MAXDX);
   }
 
-  const uint16_t monsterX[] PROGMEM = {
-    
-  };
-
-  const uint16_t monsterY[] PROGMEM = {
-
-  };
-
   // Initialize monsters
   for (uint8_t i = 0; i < MONSTERS; ++i) {
-    if (i == 0) {
       entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
-                  PLAYER_1_START_X,
-                  ((SCREEN_TILES_V - 15) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
+                  pgm_read_word(&monsterInitialX[i]),
+                  pgm_read_word(&monsterInitialY[i]),
                   WORLD_METER * 2);
-      monster[i].right = true;
-    }
-    else if (i == 1) {
-      entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
-                  (28 * (TILE_WIDTH << FP_SHIFT)),
-                  ((SCREEN_TILES_V - 5) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-                  WORLD_METER * 2);
-      monster[i].left = true;
-    }
-    else if (i == 2) {
-      entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
-                  (9 * (TILE_WIDTH << FP_SHIFT)),
-                  ((SCREEN_TILES_V - 8) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-                  WORLD_METER * 2);
-      monster[i].left = true;
-    }
-    else if (i == 3) {
-      entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
-                  (16 * (TILE_WIDTH << FP_SHIFT)),
-                  ((SCREEN_TILES_V - 10) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-                  WORLD_METER * 2);
-      monster[i].left = true;
-    }
-    else if (i == 4) {
-      entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
-                  (19 * (TILE_WIDTH << FP_SHIFT)),
-                  ((SCREEN_TILES_V - 19) * (TILE_HEIGHT << FP_SHIFT) - (8 << FP_SHIFT)),
-                  WORLD_METER * 2);
-      monster[i].left = true;
-
-    }
+      if (pgm_read_byte(&monsterInitialDirection[i]))
+        monster[i].right = true;
+      else
+        monster[i].left = true;
   }
 
-  // Fills the video RAM with the first tile (0, 0)
   ClearVram();
-
-  /* // Draw a solid border around the edges of the screen */
-  /* for (uint8_t i = 0; i < SCREEN_TILES_H; i++) { */
-  /*   for (uint8_t j = 0; j < SCREEN_TILES_V; j++) { */
-  /*     if (i == 0 || i == SCREEN_TILES_H - 1) { */
-  /*       SetTile(i, j, 2); */
-  /*       continue; */
-  /*     } */
-  /*     if (j == 0 || j == SCREEN_TILES_V - 1) { */
-  /*       SetTile(i, j, 2); */
-  /*       continue; */
-  /*     } */
-  /*     SetTile(i, j, 3); */
-  /*   } */
-  /* } */
   DrawMap(0, 0, level1);
 
   for (;;) {
@@ -173,6 +124,4 @@ int main()
       ((ENTITY*)(&monster[i]))->render((ENTITY*)(&monster[i]));
     }
   }
-
-
 }
