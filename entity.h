@@ -106,9 +106,11 @@ void null_update(ENTITY* e);
 void null_render(ENTITY* e);
 
 void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx);
-void monster_input(ENTITY* e);
+void ai_walk_until_blocked(ENTITY* e);
+void ai_walk_until_blocked_or_ledge(ENTITY* e);
 void entity_update(ENTITY* e);
-void monster_render(ENTITY* e);
+void ladybug_render(ENTITY* e);
+void ant_render(ENTITY* e);
 
 struct BUTTON_INFO;
 typedef struct BUTTON_INFO BUTTON_INFO;

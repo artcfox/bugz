@@ -85,7 +85,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->jump = 0;
 }
 
-void monster_input(ENTITY* e)
+void ai_walk_until_blocked(ENTITY* e)
 {
   // Collision Detection for X
   uint8_t tx;
@@ -94,16 +94,43 @@ void monster_input(ENTITY* e)
   else
     tx = p2ht(e->x);
   uint8_t ty = p2vt(e->y);
-  uint8_t cellleft  = pgm_read_byte(&isSolid[GetTile(tx , ty)]);
+  uint8_t cell      = pgm_read_byte(&isSolid[GetTile(tx    , ty)]);
   uint8_t cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
 
   if (e->left) {
-    if (cellleft) {
+    if (cell) {
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
     if (cellright) {
+      e->right = false;
+      e->left = true;
+    }
+  }
+}
+
+void ai_walk_until_blocked_or_ledge(ENTITY* e)
+{
+  // Collision Detection for X and Y
+  uint8_t tx;
+  if (e->left)
+    tx = p2ht(e->x - (1 << FP_SHIFT) + 1);
+  else
+    tx = p2ht(e->x);
+  uint8_t ty = p2vt(e->y);
+  uint8_t cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
+  uint8_t cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  uint8_t celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+  uint8_t celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+
+  if (e->left) {
+    if (cell || !celldown) {
+      e->left = false;
+      e->right = true;
+    }
+  } else if (e->right) {
+    if (cellright || !celldiag) {
       e->right = false;
       e->left = true;
     }
@@ -219,7 +246,13 @@ void entity_update(ENTITY* e)
   e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
 }
 
-void monster_render(ENTITY* e)
+void ladybug_render(ENTITY* e)
+{
+  MapSprite2(e->tag, ladybug_side, e->right ? SPRITE_FLIP_X : 0);
+  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+}
+
+void ant_render(ENTITY* e)
 {
   MapSprite2(e->tag, ant_side, e->right ? SPRITE_FLIP_X : 0);
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);

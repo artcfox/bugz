@@ -66,7 +66,13 @@ int main()
 
   // Initialize monsters
   for (uint8_t i = 0; i < MONSTERS; ++i) {
-      entity_init(&monster[i], monster_input, entity_update, monster_render, PLAYERS + i,
+    if (i == 2)
+      entity_init(&monster[i], ai_walk_until_blocked_or_ledge, entity_update, ladybug_render, PLAYERS + i,
+                  pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
+                  pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
+                  WORLD_METER * 1);
+    else
+      entity_init(&monster[i], ai_walk_until_blocked, entity_update, ant_render, PLAYERS + i,
                   pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
                   pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
                   WORLD_METER * 2);
