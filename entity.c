@@ -299,6 +299,7 @@ void player_input(ENTITY* e)
 
   e->left = (bool)(p->buttons.held & BTN_LEFT);
   e->right = (bool)(p->buttons.held & BTN_RIGHT);
+  e->turbo = (bool)(p->buttons.held & BTN_B);
 
   // Improve the user experience, by allowing players to jump by holding the jump
   // button before landing, but require them to release it before jumping again
@@ -359,10 +360,17 @@ void player_update(ENTITY* e)
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
   e->dx += (e->ddx / WORLD_FPS);
-  if (e->dx < -e->maxdx)
-    e->dx = -e->maxdx;
-  else if (e->dx > e->maxdx)
-    e->dx = e->maxdx;
+  if (e->turbo) {
+    if (e->dx < -(e->maxdx + WORLD_METER))
+      e->dx = -(e->maxdx + WORLD_METER);
+    else if (e->dx > (e->maxdx + WORLD_METER))
+      e->dx = (e->maxdx + WORLD_METER);
+  } else {
+    if (e->dx < -e->maxdx)
+      e->dx = -e->maxdx;
+    else if (e->dx > e->maxdx)
+      e->dx = e->maxdx;
+  }
 
   // Collision Detection for X
   uint8_t tx = p2ht(e->x);

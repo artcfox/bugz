@@ -99,6 +99,7 @@ struct ENTITY {
   unsigned int left : 1;
   unsigned int right : 1;
   unsigned int jump : 1;
+  unsigned int turbo : 1;
 } __attribute__ ((packed));
 
 // Default functions that do nothing
