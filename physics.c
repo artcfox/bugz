@@ -28,31 +28,6 @@
   OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
   SUCH DAMAGE.
 
-  This file incorporates work covered by the following copyright and
-  permission notice:
-
-    Copyright (c) 2013 Jake Gordon and contributors
-
-    Permission is hereby granted, free of charge, to any person
-    obtaining a copy of this software and associated documentation
-    files (the "Software"), to deal in the Software without
-    restriction, including without limitation the rights to use, copy,
-    modify, merge, publish, distribute, sublicense, and/or sell copies
-    of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be
-    included in all copies or substantial portions of the Software.
-  
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-    DEALINGS IN THE SOFTWARE.
-  
 */
 
 #include <stdint.h>
@@ -88,7 +63,6 @@ int main()
 {
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
-  //uint8_t* entities[6] = {0};
   
   // Sets tile table to the specified tilesheet
   SetTileTable(level);
@@ -104,6 +78,14 @@ int main()
     else if (i == 1)
       player_init(&player[i], player_input, player_update, player_render, 1, PLAYER_1_START_X, PLAYER_1_START_Y, WORLD_MAXDX);
   }
+
+  const uint16_t monsterX[] PROGMEM = {
+    
+  };
+
+  const uint16_t monsterY[] PROGMEM = {
+
+  };
 
   // Initialize monsters
   for (uint8_t i = 0; i < MONSTERS; ++i) {
@@ -145,16 +127,6 @@ int main()
     }
   }
 
-  // XXX: BROKEN - Initialize entities array
-  /* if (PLAYERS > 0) */
-  /*   entities[0] = (uint8_t*)(&player[0]); */
-  /* if (PLAYERS > 1) */
-  /*   entities[1] = (uint8_t*)(&player[1]); */
-
-  /* for (uint8_t i = PLAYERS; i < PLAYERS + MONSTERS; ++i) { */
-  /*   entities[i] = (uint8_t*)(&monster[i - PLAYERS]); */
-  /* } */
-
   // Fills the video RAM with the first tile (0, 0)
   ClearVram();
 
@@ -176,25 +148,6 @@ int main()
 
   for (;;) {
     WaitVsync(1);
-
-    /* // XXX: BROKEN - Read the current state of each controller */
-    /* for (uint8_t i = 0; i < PLAYERS + MONSTERS; ++i) { */
-    /*   if (entities[i]) */
-    /*     ((ENTITY*)(&entities + i))->input((ENTITY*)(&entities + i)); */
-    /* } */
-
-    /* // Update the state of the players */
-    /* for (uint8_t i = 0; i < PLAYERS + MONSTERS; ++i) { */
-    /*   if (entities[i]) */
-    /*     ((ENTITY*)(&entities + i))->update((ENTITY*)(&entities + i)); */
-    /* } */
-    
-    /* // Render the world */
-    /* for (uint8_t i = 0; i < PLAYERS + MONSTERS; ++i) { */
-    /*   if (entities[i]) */
-    /*     ((ENTITY*)(&entities + i))->render((ENTITY*)(&entities + i)); */
-    /* } */
-
 
     // Get the inputs for every entity
     for (uint8_t i = 0; i < PLAYERS; ++i) {
