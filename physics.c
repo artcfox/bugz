@@ -45,7 +45,7 @@ const uint8_t  playerInitialX[] PROGMEM = {  4, 25 };
 const uint8_t  playerInitialY[] PROGMEM = { 26, 25 };
 const uint8_t monsterInitialX[] PROGMEM = { 25, 28,  9, 16, 19 };
 const uint8_t monsterInitialY[] PROGMEM = { 12, 22, 19, 17,  8 };
-const uint8_t monsterInitialD[] PROGMEM = {  1,  0,  0,  0,  0 };
+const uint8_t monsterInitialD[] PROGMEM = {  0,  0,  0,  0,  0 };
 
 int main()
 {

@@ -125,12 +125,12 @@ void ai_walk_until_blocked_or_ledge(ENTITY* e)
   uint8_t celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
 
   if (e->left) {
-    if (cell || !celldown) {
+    if (cell || (!celldown && !e->falling)) {
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
-    if (cellright || !celldiag) {
+    if (cellright || (!celldiag && !e->falling)) {
       e->right = false;
       e->left = true;
     }
