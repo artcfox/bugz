@@ -111,6 +111,8 @@ void ai_walk_until_blocked_or_ledge(ENTITY* e);
 void entity_update(ENTITY* e);
 void ladybug_render(ENTITY* e);
 void ant_render(ENTITY* e);
+void cricket_render(ENTITY* e);
+void grasshopper_render(ENTITY* e);
 
 struct BUTTON_INFO;
 typedef struct BUTTON_INFO BUTTON_INFO;

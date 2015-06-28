@@ -10,6 +10,8 @@
       <map var-name="orange_front" left="3" top="0" width="1" height="1"/>
       <map var-name="ladybug_side" left="4" top="0" width="1" height="1"/>
       <map var-name="ant_side" left="5" top="0" width="1" height="1"/>
+      <map var-name="cricket_side" left="6" top="0" width="1" height="1"/>
+      <map var-name="grasshopper_side" left="7" top="0" width="1" height="1"/>
     </maps>
   </output>
 </gfx-xform>

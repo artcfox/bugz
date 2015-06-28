@@ -258,6 +258,18 @@ void ant_render(ENTITY* e)
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
+void cricket_render(ENTITY* e)
+{
+  MapSprite2(e->tag, cricket_side, e->right ? SPRITE_FLIP_X : 0);
+  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+}
+
+void grasshopper_render(ENTITY* e)
+{
+  MapSprite2(e->tag, grasshopper_side, e->right ? SPRITE_FLIP_X : 0);
+  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+}
+
 // ---------- PLAYER
 
 void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx)
