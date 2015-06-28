@@ -59,33 +59,38 @@ int main()
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
     player_init(&player[i], player_input, player_update, player_render, i,
-                  pgm_read_byte(&playerInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
-                  pgm_read_byte(&playerInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
-                WORLD_MAXDX);
+                pgm_read_byte(&playerInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
+                pgm_read_byte(&playerInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
+                WORLD_MAXDX,
+                WORLD_JUMP_IMPULSE);
   }
 
   // Initialize monsters
   for (uint8_t i = 0; i < MONSTERS; ++i) {
-    if (i == 0)
-      entity_init(&monster[i], ai_walk_until_blocked, entity_update, cricket_render, PLAYERS + i,
+    if (i == 1)
+      entity_init(&monster[i], ai_hop_until_blocked, entity_update, cricket_render, PLAYERS + i,
                   pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
                   pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
-                  WORLD_METER * 1);
-    else if (i == 1)
-      entity_init(&monster[i], ai_walk_until_blocked_or_ledge, entity_update, grasshopper_render, PLAYERS + i,
+                  WORLD_METER * 1,
+                  WORLD_JUMP_IMPULSE >> 1);
+    else if (i == 0)
+      entity_init(&monster[i], ai_hop_until_blocked, entity_update, grasshopper_render, PLAYERS + i,
                   pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
                   pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
-                  WORLD_METER * 1);
+                  WORLD_METER * 2,
+                  WORLD_JUMP_IMPULSE);
     else if (i == 2)
       entity_init(&monster[i], ai_walk_until_blocked_or_ledge, entity_update, ladybug_render, PLAYERS + i,
                   pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
                   pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
-                  WORLD_METER * 1);
+                  WORLD_METER * 1,
+                  0);
     else
       entity_init(&monster[i], ai_walk_until_blocked, entity_update, ant_render, PLAYERS + i,
                   pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
                   pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
-                  WORLD_METER * 2);
+                  WORLD_METER * 2,
+                  0);
       if (pgm_read_byte(&monsterInitialD[i]))
         monster[i].right = true;
       else

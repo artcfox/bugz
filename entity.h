@@ -59,7 +59,7 @@
 // horizontal friction - take 1/6 second to stop from maxdx
 #define WORLD_FRICTION (WORLD_MAXDX * 4)
 // (a large) instantaneous jump impulse
-#define WORLD_JUMP (WORLD_METER * 382)
+#define WORLD_JUMP_IMPULSE (WORLD_METER * 382)
 // how many frames you can be falling and still jump
 #define WORLD_FALLING_GRACE_FRAMES 6
 // parameter used for variable jumping (gravity / 10 is a good default)
@@ -92,6 +92,7 @@ struct ENTITY {
   int16_t ddx;
   int16_t ddy;
   int16_t maxdx;
+  int16_t impulse;
   unsigned int enabled : 1;
   unsigned int falling : 1;
   unsigned int jumping : 1;
@@ -105,8 +106,9 @@ void null_input(ENTITY* e);
 void null_update(ENTITY* e);
 void null_render(ENTITY* e);
 
-void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx);
+void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse);
 void ai_walk_until_blocked(ENTITY* e);
+void ai_hop_until_blocked(ENTITY* e);
 void ai_walk_until_blocked_or_ledge(ENTITY* e);
 void entity_update(ENTITY* e);
 void ladybug_render(ENTITY* e);
@@ -141,7 +143,7 @@ struct PLAYER { ENTITY entity;
   /* u8 h; */
 } __attribute__ ((packed));
 
-void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx);
+void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse);
 void player_input(ENTITY* e);
 void player_update(ENTITY* e);
 void player_render(ENTITY* e);

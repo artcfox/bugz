@@ -73,7 +73,7 @@ void null_input(ENTITY* e) { }
 void null_update(ENTITY* e) { }
 void null_render(ENTITY* e) { }
 
-void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx)
+void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
 {
   e->input = input;
   e->update = update;
@@ -82,6 +82,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->x = x;
   e->y = y;
   e->maxdx = maxdx;
+  e->impulse = impulse;
   e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->jump = 0;
 }
 
@@ -108,6 +109,12 @@ void ai_walk_until_blocked(ENTITY* e)
       e->left = true;
     }
   }
+}
+
+void ai_hop_until_blocked(ENTITY* e)
+{
+  ai_walk_until_blocked(e);
+  e->jump = true;
 }
 
 void ai_walk_until_blocked_or_ledge(ENTITY* e)
@@ -158,7 +165,7 @@ void entity_update(ENTITY* e)
 
   if (e->jump && !e->jumping && !falling) {
     e->dy = 0;            // reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    e->ddy -= WORLD_JUMP; // apply an instantaneous (large) vertical impulse
+    e->ddy -= e->impulse; // apply an instantaneous (large) vertical impulse
     e->jumping = true;
   }
 
@@ -272,9 +279,9 @@ void grasshopper_render(ENTITY* e)
 
 // ---------- PLAYER
 
-void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx)
+void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
 {
-  entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx);
+  entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx, impulse);
   memset(&p->buttons, 0, sizeof(p->buttons));
   p->jumpReleased = true;
   p->framesFalling = 0;
@@ -334,7 +341,7 @@ void player_update(ENTITY* e)
 
   if (e->jump && !e->jumping && !falling) {
     e->dy = 0;            // reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    e->ddy -= WORLD_JUMP; // apply an instantaneous (large) vertical impulse
+    e->ddy -= WORLD_JUMP_IMPULSE; // apply an instantaneous (large) vertical impulse
     e->jumping = true;
   }
 
