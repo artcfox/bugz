@@ -40,7 +40,20 @@ const char patch00[] PROGMEM ={
 1,PC_NOTE_CUT,0,
 0,PATCH_END
 };
+
+//FX: overlap
+const char patch01[] PROGMEM ={
+0,PC_WAVE,4,
+0,PC_ENV_SPEED,-8,
+1,PC_PITCH,84,
+1,PC_PITCH,80,
+1,PC_PITCH,81,
+1,PC_PITCH,80,
+1,PC_NOTE_CUT,0,
+0,PATCH_END
+};
 	
 const struct PatchStruct patches[] PROGMEM = {
 {0,NULL,patch00,0,0},
+{0,NULL,patch01,0,0},
 };

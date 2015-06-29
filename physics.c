@@ -56,6 +56,10 @@ int main()
   SetSpritesTileBank(0, mysprites);
   InitMusicPlayer(patches);
 
+  ClearVram();
+  DrawMap(0, 0, level1);
+
+ start:
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
     player_init(&player[i], player_input, player_update, player_render, i,
@@ -63,6 +67,8 @@ int main()
                 pgm_read_byte(&playerInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
                 WORLD_MAXDX,
                 WORLD_JUMP_IMPULSE);
+    ((ENTITY*)(&player[i]))->enabled = true;
+
   }
 
   // Initialize monsters
@@ -95,10 +101,8 @@ int main()
         monster[i].right = true;
       else
         monster[i].left = true;
+      monster[i].enabled = true;
   }
-
-  ClearVram();
-  DrawMap(0, 0, level1);
 
   for (;;) {
     WaitVsync(1);
@@ -126,5 +130,42 @@ int main()
     for (uint8_t i = 0; i < MONSTERS; ++i) {
       ((ENTITY*)(&monster[i]))->render((ENTITY*)(&monster[i]));
     }
+
+    // Check for collisions with monsters
+    for (uint8_t p = 0; p < PLAYERS; ++p) {
+      if (((ENTITY*)(&player[p]))->enabled == true) {
+        for (uint8_t i = 0; i < MONSTERS; ++i) {
+          if (((ENTITY*)(&monster[i]))->enabled == true) {
+            // The calculation below assumes each sprite is WORLD_METER wide
+            if (overlap(((ENTITY*)(&player[p]))->x,
+                        ((ENTITY*)(&player[p]))->y,
+                        WORLD_METER,
+                        WORLD_METER,
+                        ((ENTITY*)(&monster[i]))->x,
+                        ((ENTITY*)(&monster[i]))->y,
+                        WORLD_METER,
+                        WORLD_METER)) {
+              if ( (((ENTITY*)(&player[p]))->dy > 0) &&
+                   (((ENTITY*)(&monster[i]))->y - ((ENTITY*)(&player[p]))->y > WORLD_METER / 2)) {
+                TriggerFx(1, 128, false);
+                ((ENTITY*)(&monster[i]))->enabled = false;
+                ((ENTITY*)(&monster[i]))->update = null_update;
+                ((ENTITY*)(&player[p]))->monsterhop = true;
+              } else {
+                TriggerFx(1, 128, false);
+                ((ENTITY*)(&player[p]))->enabled = false;
+                ((ENTITY*)(&player[p]))->input = null_input;
+                ((ENTITY*)(&player[p]))->update = null_update;
+                while (ReadJoypad(((ENTITY*)(&player[p]))->tag) != BTN_START) {
+                  // TODO: figure out how to get note to stop playing
+                }
+                goto start;
+              }
+            }
+          }
+        }
+      }
+    }
+
   }
 }

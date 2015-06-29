@@ -67,11 +67,19 @@
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
 // Maps tile number to solidity
-const uint8_t isSolid[] PROGMEM = {0, 0, 1, 0, 1, 1};
+const uint8_t isSolid[] PROGMEM = { 0, 1, 1, 0, 0, 0, 1 };
 
 void null_input(ENTITY* e) { }
 void null_update(ENTITY* e) { }
 void null_render(ENTITY* e) { }
+
+bool overlap(uint16_t x1, uint16_t y1, uint8_t w1, uint8_t h1, uint16_t x2, uint16_t y2, uint8_t w2, uint8_t h2)
+{
+  return !(((x1 + w1 - 1) < x2) ||
+           ((x2 + w2 - 1) < x1) ||
+           ((y1 + h1 - 1) < y2) ||
+           ((y2 + h2 - 1) < y1));
+}
 
 void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
 {
@@ -342,8 +350,16 @@ void player_update(ENTITY* e)
 
   if (e->jump && !e->jumping && !falling) {
     e->dy = 0;            // reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    e->ddy -= WORLD_JUMP_IMPULSE; // apply an instantaneous (large) vertical impulse
+    e->ddy -= e->impulse; // apply an instantaneous (large) vertical impulse
     e->jumping = true;
+  }
+
+  // Bounce a bit when you stomp a monster
+  if (e->monsterhop) {
+    e->monsterhop = e->jumping = e->falling = false;
+    p->jumpReleased = true;
+    e->dy = p->framesFalling = 0;
+    e->ddy -= (e->impulse / 2);
   }
 
   // Variable height jumping
