@@ -47,6 +47,14 @@ const uint8_t monsterInitialX[] PROGMEM = { 25, 28,  9, 16, 19 };
 const uint8_t monsterInitialY[] PROGMEM = { 12, 22, 19, 17,  8 };
 const uint8_t monsterInitialD[] PROGMEM = {  0,  0,  0,  0,  0 };
 
+#define TREASURE_COUNT 10
+const uint8_t  treasureX[] PROGMEM = {  1,  7,  4, 12, 18,  6, 24, 27, 21, 28, };
+const uint8_t  treasureY[] PROGMEM = { 26,  5,  8, 11, 17,  3,  4, 18,  7, 12, };
+const uint8_t treasureFG[] PROGMEM = {  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4, };
+const uint8_t treasureBG[] PROGMEM = {  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3, };
+
+uint8_t treasureCollected[TREASURE_COUNT] = {0};
+
 int main()
 {
   PLAYER player[PLAYERS];
@@ -89,7 +97,7 @@ int main()
       entity_init(&monster[i], ai_walk_until_blocked_or_ledge, entity_update, ladybug_render, PLAYERS + i,
                   pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
                   pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
-                  WORLD_METER * 1,
+                  WORLD_METER * 3,
                   0);
     else
       entity_init(&monster[i], ai_walk_until_blocked, entity_update, ant_render, PLAYERS + i,
@@ -102,6 +110,12 @@ int main()
       else
         monster[i].left = true;
       monster[i].enabled = true;
+  }
+
+  // Initialize treasure
+  for (uint8_t i = 0; i < TREASURE_COUNT; ++i) {
+    SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)pgm_read_byte(&treasureFG[i]));
+    treasureCollected[i] = 0;
   }
 
   for (;;) {
@@ -167,5 +181,60 @@ int main()
       }
     }
 
+    // Animate treasure
+    static uint8_t frameCount = 0;
+#define TREASURE_FRAME_SKIP 15
+    for (uint8_t i = 0; i < TREASURE_COUNT; ++i) {
+      if (treasureCollected[i])
+        SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)pgm_read_byte(&treasureBG[i]));
+      else {
+        if (frameCount == TREASURE_FRAME_SKIP * 0)
+          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 0));
+        else if (frameCount == TREASURE_FRAME_SKIP * 1)
+          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 1));
+        else if (frameCount == TREASURE_FRAME_SKIP * 2)
+          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 2));
+        else if (frameCount == TREASURE_FRAME_SKIP * 3)
+          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 3));
+        else if (frameCount == TREASURE_FRAME_SKIP * 4)
+          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 4));
+        else if (frameCount == TREASURE_FRAME_SKIP * 5)
+          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 3));
+        else if (frameCount == TREASURE_FRAME_SKIP * 6)
+          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 2));
+        else if (frameCount == TREASURE_FRAME_SKIP * 7)
+          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 1));
+      }
+    }
+
+    if (++frameCount == TREASURE_FRAME_SKIP * 8)
+      frameCount = 0;
+
+    // Check for collisions with treasure
+    for (uint8_t p = 0; p < PLAYERS; ++p) {
+      if (((ENTITY*)(&player[p]))->enabled == true) {
+        for (uint8_t i = 0; i < TREASURE_COUNT; ++i) {
+          if (treasureCollected[i])
+            continue;
+
+          // The calculation below assumes each sprite is WORLD_METER wide
+          if (overlap(((ENTITY*)(&player[p]))->x,
+                      ((ENTITY*)(&player[p]))->y,
+                      WORLD_METER,
+                      WORLD_METER,
+                      (uint16_t)pgm_read_byte(&treasureX[i]) * (TILE_WIDTH << FP_SHIFT),
+                      (uint16_t)pgm_read_byte(&treasureY[i]) * (TILE_HEIGHT << FP_SHIFT),
+                      WORLD_METER,
+                      WORLD_METER)) {
+              TriggerFx(1, 128, false);
+              treasureCollected[i] = true;
+          }
+          
+        }
+      }
+    }
+
+    if (ReadJoypad(0) & BTN_START)
+      goto start;
   }
 }

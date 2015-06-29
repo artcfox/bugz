@@ -67,7 +67,7 @@
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
 // Maps tile number to solidity
-const uint8_t isSolid[] PROGMEM = { 0, 1, 1, 0, 0, 0, 1 };
+const uint8_t isSolid[] PROGMEM = { 0, 1, 1, 0, 0, 0, 0, 0, 0 };
 
 void null_input(ENTITY* e) { }
 void null_update(ENTITY* e) { }
@@ -91,7 +91,8 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->y = y;
   e->maxdx = maxdx;
   e->impulse = impulse;
-  e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->jump = 0;
+  e->visible = true;
+  e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->jump = e->dead = 0;
 }
 
 void ai_walk_until_blocked(ENTITY* e)
