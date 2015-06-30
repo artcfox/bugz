@@ -29,9 +29,9 @@ const char orange_front[] PROGMEM ={
 1,1
 ,0x3};
 
-#define LADYBUG_SIDE_WIDTH 1
-#define LADYBUG_SIDE_HEIGHT 1
-const char ladybug_side[] PROGMEM ={
+#define LADYBUG_WIDTH 1
+#define LADYBUG_HEIGHT 1
+const char ladybug[] PROGMEM ={
 1,1
 ,0x4};
 
@@ -41,9 +41,9 @@ const char ladybug_dead[] PROGMEM ={
 1,1
 ,0x16};
 
-#define ANT_SIDE_WIDTH 1
-#define ANT_SIDE_HEIGHT 1
-const char ant_side[] PROGMEM ={
+#define ANT_WIDTH 1
+#define ANT_HEIGHT 1
+const char ant[] PROGMEM ={
 1,1
 ,0x5};
 
@@ -53,9 +53,9 @@ const char ant_dead[] PROGMEM ={
 1,1
 ,0x17};
 
-#define CRICKET_SIDE_WIDTH 1
-#define CRICKET_SIDE_HEIGHT 1
-const char cricket_side[] PROGMEM ={
+#define CRICKET_WIDTH 1
+#define CRICKET_HEIGHT 1
+const char cricket[] PROGMEM ={
 1,1
 ,0x6};
 
@@ -65,9 +65,9 @@ const char cricket_dead[] PROGMEM ={
 1,1
 ,0x18};
 
-#define GRASSHOPPER_SIDE_WIDTH 1
-#define GRASSHOPPER_SIDE_HEIGHT 1
-const char grasshopper_side[] PROGMEM ={
+#define GRASSHOPPER_WIDTH 1
+#define GRASSHOPPER_HEIGHT 1
+const char grasshopper[] PROGMEM ={
 1,1
 ,0x7};
 

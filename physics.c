@@ -47,13 +47,25 @@ const uint8_t monsterInitialX[] PROGMEM = { 25, 28,  9, 16, 19 };
 const uint8_t monsterInitialY[] PROGMEM = { 12, 22, 19, 17,  8 };
 const uint8_t monsterInitialD[] PROGMEM = {  0,  0,  0,  0,  0 };
 
-#define TREASURE_COUNT 10
-const uint8_t  treasureX[] PROGMEM = {  1,  7,  4, 12, 18,  6, 24, 27, 21, 28, };
-const uint8_t  treasureY[] PROGMEM = { 26,  5,  8, 11, 17,  3,  4, 18,  7, 12, };
-const uint8_t treasureFG[] PROGMEM = {  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4, };
-const uint8_t treasureBG[] PROGMEM = {  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3, };
+#define NELEMS(x) (sizeof(x)/sizeof(x[0]))
 
-uint8_t treasureCollected[TREASURE_COUNT] = {0};
+// How many treasures are in the level
+#define TREASURE_COUNT 10
+// How many frames to wait between 
+#define TREASURE_FRAME_SKIP 15
+// X coordinates of each treasure for this level
+const uint8_t  treasureX[] PROGMEM = {  1,  7,  4, 12, 18,  6, 24, 27, 21, 28, };
+// Y coordinates of each treasure for this level
+const uint8_t  treasureY[] PROGMEM = { 26,  5,  8, 11, 17,  3,  4, 18,  7, 12, };
+// Starting tile number of each treasure tile to render (animation frames follow directly after this number)
+const uint8_t treasureFG[] PROGMEM = {  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4, };
+// Background tile number that should be used to replace each treasure after collected
+const uint8_t treasureBG[] PROGMEM = {  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3, };
+// As the animation frame counter advances, this array will be indexed, and its value will be added to the
+// treasureFG value for each treasure to compute the next tile number that the treasure will use
+const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 3, 4, 3, 2, 1 };
+
+uint16_t g_frames; // global frame counter that entities can use for ai/animations
 
 int main()
 {
@@ -68,6 +80,9 @@ int main()
   DrawMap(0, 0, level1);
 
  start:
+  // Reset global frame counter
+  g_frames = 0;
+
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
     player_init(&player[i], player_input, player_update, player_render, i,
@@ -82,7 +97,7 @@ int main()
   // Initialize monsters
   for (uint8_t i = 0; i < MONSTERS; ++i) {
     if (i == 1)
-      entity_init(&monster[i], ai_hop_until_blocked, entity_update, cricket_render, PLAYERS + i,
+      entity_init(&monster[i], ai_hop_until_blocked, entity_update, bee_render, PLAYERS + i,
                   pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
                   pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
                   WORLD_METER * 1,
@@ -112,10 +127,12 @@ int main()
       monster[i].enabled = true;
   }
 
+  bool treasureCollected[TREASURE_COUNT];
+
   // Initialize treasure
   for (uint8_t i = 0; i < TREASURE_COUNT; ++i) {
     SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)pgm_read_byte(&treasureFG[i]));
-    treasureCollected[i] = 0;
+    treasureCollected[i] = false;
   }
 
   for (;;) {
@@ -186,33 +203,18 @@ int main()
     }
 
     // Animate treasure
-    static uint8_t frameCount = 0;
-#define TREASURE_FRAME_SKIP 15
+    static uint8_t treasureFrameCounter = 0;
     for (uint8_t i = 0; i < TREASURE_COUNT; ++i) {
-      if (treasureCollected[i])
+      if (treasureCollected[i]) {
         SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)pgm_read_byte(&treasureBG[i]));
-      else {
-        if (frameCount == TREASURE_FRAME_SKIP * 0)
-          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 0));
-        else if (frameCount == TREASURE_FRAME_SKIP * 1)
-          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 1));
-        else if (frameCount == TREASURE_FRAME_SKIP * 2)
-          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 2));
-        else if (frameCount == TREASURE_FRAME_SKIP * 3)
-          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 3));
-        else if (frameCount == TREASURE_FRAME_SKIP * 4)
-          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 4));
-        else if (frameCount == TREASURE_FRAME_SKIP * 5)
-          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 3));
-        else if (frameCount == TREASURE_FRAME_SKIP * 6)
-          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 2));
-        else if (frameCount == TREASURE_FRAME_SKIP * 7)
-          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)(pgm_read_byte(&treasureFG[i]) + 1));
+      } else {
+        if (treasureFrameCounter % TREASURE_FRAME_SKIP == 0)
+          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]),
+                  (uint16_t)(pgm_read_byte(&treasureFG[i]) + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP])));
       }
     }
-
-    if (++frameCount == TREASURE_FRAME_SKIP * 8)
-      frameCount = 0;
+    if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
+      treasureFrameCounter = 0;
 
     // Check for collisions with treasure
     for (uint8_t p = 0; p < PLAYERS; ++p) {

@@ -8,13 +8,13 @@
       <map var-name="yellow_front" left="1" top="0" width="1" height="1"/>
       <map var-name="orange_side" left="2" top="0" width="1" height="1"/>
       <map var-name="orange_front" left="3" top="0" width="1" height="1"/>
-      <map var-name="ladybug_side" left="4" top="0" width="1" height="1"/>
+      <map var-name="ladybug" left="4" top="0" width="1" height="1"/>
       <map var-name="ladybug_dead" left="4" top="1" width="1" height="1"/>
-      <map var-name="ant_side" left="5" top="0" width="1" height="1"/>
+      <map var-name="ant" left="5" top="0" width="1" height="1"/>
       <map var-name="ant_dead" left="5" top="1" width="1" height="1"/>
-      <map var-name="cricket_side" left="6" top="0" width="1" height="1"/>
+      <map var-name="cricket" left="6" top="0" width="1" height="1"/>
       <map var-name="cricket_dead" left="6" top="1" width="1" height="1"/>
-      <map var-name="grasshopper_side" left="7" top="0" width="1" height="1"/>
+      <map var-name="grasshopper" left="7" top="0" width="1" height="1"/>
       <map var-name="grasshopper_dead" left="7" top="1" width="1" height="1"/>
       <map var-name="fruitfly1" left="8" top="0" width="1" height="1"/>
       <map var-name="fruitfly2" left="9" top="0" width="1" height="1"/>

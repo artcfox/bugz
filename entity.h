@@ -93,6 +93,7 @@ struct ENTITY {
   int16_t ddy;
   int16_t maxdx;
   int16_t impulse;
+  uint8_t animationFrames;
   unsigned int enabled : 1;
   unsigned int falling : 1;
   unsigned int jumping : 1;
@@ -124,6 +125,8 @@ void ladybug_render(ENTITY* e);
 void ant_render(ENTITY* e);
 void cricket_render(ENTITY* e);
 void grasshopper_render(ENTITY* e);
+void bee_render(ENTITY* e);
+
 
 struct BUTTON_INFO;
 typedef struct BUTTON_INFO BUTTON_INFO;

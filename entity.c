@@ -92,7 +92,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->maxdx = maxdx;
   e->impulse = impulse;
   e->visible = true;
-  e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = 0;
+  e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->animationFrames = 0;
 }
 
 void ai_walk_until_blocked(ENTITY* e)
@@ -392,7 +392,7 @@ void ladybug_render(ENTITY* e)
   if (e->update == entity_update_dying)
     MapSprite2(e->tag, ladybug_dead, e->right ? SPRITE_FLIP_X : 0);
   else
-    MapSprite2(e->tag, ladybug_side, e->right ? SPRITE_FLIP_X : 0);
+    MapSprite2(e->tag, ladybug, e->right ? SPRITE_FLIP_X : 0);
 
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
@@ -402,7 +402,7 @@ void ant_render(ENTITY* e)
   if (e->update == entity_update_dying)
     MapSprite2(e->tag, ant_dead, e->right ? SPRITE_FLIP_X : 0);
   else
-    MapSprite2(e->tag, ant_side, e->right ? SPRITE_FLIP_X : 0);
+    MapSprite2(e->tag, ant, e->right ? SPRITE_FLIP_X : 0);
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
@@ -411,7 +411,7 @@ void cricket_render(ENTITY* e)
   if (e->update == entity_update_dying)
     MapSprite2(e->tag, cricket_dead, e->right ? SPRITE_FLIP_X : 0);
   else
-    MapSprite2(e->tag, cricket_side, e->right ? SPRITE_FLIP_X : 0);
+    MapSprite2(e->tag, cricket, e->right ? SPRITE_FLIP_X : 0);
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
@@ -420,7 +420,17 @@ void grasshopper_render(ENTITY* e)
   if (e->update == entity_update_dying)
     MapSprite2(e->tag, grasshopper_dead, e->right ? SPRITE_FLIP_X : 0);
   else
-    MapSprite2(e->tag, grasshopper_side, e->right ? SPRITE_FLIP_X : 0);
+    MapSprite2(e->tag, grasshopper, e->right ? SPRITE_FLIP_X : 0);
+  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+}
+
+void bee_render(ENTITY* e)
+{
+  if (e->update == entity_update_dying) {
+    MapSprite2(e->tag, bee_dead, e->right ? SPRITE_FLIP_X : 0);
+  } else {
+    MapSprite2(e->tag, bee1, e->right ? SPRITE_FLIP_X : 0);
+  }
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
