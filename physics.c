@@ -150,7 +150,7 @@ int main()
       if (((ENTITY*)(&player[p]))->enabled == true) {
         for (uint8_t i = 0; i < MONSTERS; ++i) {
           if (((ENTITY*)(&monster[i]))->enabled == true) {
-            // The calculation below assumes each sprite is WORLD_METER wide
+            // The calculation below assumes each sprite is WORLD_METER wide (this calculation needs work to use proper AABB read from the entity itself)
             if (overlap(((ENTITY*)(&player[p]))->x,
                         ((ENTITY*)(&player[p]))->y,
                         WORLD_METER,
@@ -161,10 +161,11 @@ int main()
                         WORLD_METER)) {
               if ( (((ENTITY*)(&player[p]))->dy > 0) &&
                    (((ENTITY*)(&monster[i]))->y - ((ENTITY*)(&player[p]))->y > WORLD_METER / 2)) {
-                TriggerFx(1, 128, false);
-                ((ENTITY*)(&monster[i]))->enabled = false;
-                ((ENTITY*)(&monster[i]))->update = null_update;
-                ((ENTITY*)(&player[p]))->monsterhop = true;
+                TriggerFx(1, 128, false);                               // play the monster death sound
+                ((ENTITY*)(&monster[i]))->enabled = false;              // make sure we don't consider the entity again for collisions
+                ((ENTITY*)(&monster[i]))->input = null_input;           // disable the entity's ai
+                ((ENTITY*)(&monster[i]))->update = entity_update_dying; // disable normal physics
+                ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
               } else {
                 TriggerFx(1, 128, false);
                 ((ENTITY*)(&player[p]))->enabled = false;

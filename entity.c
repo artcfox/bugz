@@ -92,7 +92,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->maxdx = maxdx;
   e->impulse = impulse;
   e->visible = true;
-  e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->jump = e->dead = 0;
+  e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->jump = 0;
 }
 
 void ai_walk_until_blocked(ENTITY* e)
@@ -262,27 +262,73 @@ void entity_update(ENTITY* e)
   e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
 }
 
+void entity_update_dying(ENTITY* e)
+{
+  // Check to see if we should hide the entity now
+  if (!e->visible) {
+    sprites[e->tag].x = OFF_SCREEN;
+    e->render = null_render;
+    return;
+  }
+
+  e->ddy = WORLD_GRAVITY;
+
+  // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->y += (e->dy / WORLD_FPS);
+  e->dy += (e->ddy / WORLD_FPS);
+  if (e->dy < -WORLD_MAXDY)
+    e->dy = -WORLD_MAXDY;
+  else if (e->dy > WORLD_MAXDY)
+    e->dy = WORLD_MAXDY;
+
+  // Clamp Y to within screen bounds
+  if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
+    e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
+    e->dy = 0;
+    e->visible = false; // we hit the edge of the screen, so now hide the entity
+    
+  }
+  if (e->y < ((1) * (TILE_HEIGHT << FP_SHIFT))) { // y is unsigned, so we can't check if < 0
+    e->y = 0;
+    e->dy = 0;
+    e->visible = false; // we hit the edge of the screen, so now hide the entity
+  }
+}
+
 void ladybug_render(ENTITY* e)
 {
-  MapSprite2(e->tag, ladybug_side, e->right ? SPRITE_FLIP_X : 0);
+  if (e->update == entity_update_dying)
+    MapSprite2(e->tag, ladybug_dead, e->right ? SPRITE_FLIP_X : 0);
+  else
+    MapSprite2(e->tag, ladybug_side, e->right ? SPRITE_FLIP_X : 0);
+
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 void ant_render(ENTITY* e)
 {
-  MapSprite2(e->tag, ant_side, e->right ? SPRITE_FLIP_X : 0);
+  if (e->update == entity_update_dying)
+    MapSprite2(e->tag, ant_dead, e->right ? SPRITE_FLIP_X : 0);
+  else
+    MapSprite2(e->tag, ant_side, e->right ? SPRITE_FLIP_X : 0);
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 void cricket_render(ENTITY* e)
 {
-  MapSprite2(e->tag, cricket_side, e->right ? SPRITE_FLIP_X : 0);
+  if (e->update == entity_update_dying)
+    MapSprite2(e->tag, cricket_dead, e->right ? SPRITE_FLIP_X : 0);
+  else
+    MapSprite2(e->tag, cricket_side, e->right ? SPRITE_FLIP_X : 0);
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 void grasshopper_render(ENTITY* e)
 {
-  MapSprite2(e->tag, grasshopper_side, e->right ? SPRITE_FLIP_X : 0);
+  if (e->update == entity_update_dying)
+    MapSprite2(e->tag, grasshopper_dead, e->right ? SPRITE_FLIP_X : 0);
+  else
+    MapSprite2(e->tag, grasshopper_side, e->right ? SPRITE_FLIP_X : 0);
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 

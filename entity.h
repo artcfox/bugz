@@ -103,7 +103,7 @@ struct ENTITY {
   unsigned int monsterhop : 1;
   // unused
   unsigned int visible : 1;
-  unsigned int dead : 1;
+  /* unsigned int dead : 1; */
 } __attribute__ ((packed));
 
 bool overlap(uint16_t x1, uint16_t y1, uint8_t w1, uint8_t h1, uint16_t x2, uint16_t y2, uint8_t w2, uint8_t h2);
@@ -118,6 +118,7 @@ void ai_walk_until_blocked(ENTITY* e);
 void ai_hop_until_blocked(ENTITY* e);
 void ai_walk_until_blocked_or_ledge(ENTITY* e);
 void entity_update(ENTITY* e);
+void entity_update_dying(ENTITY* e);
 void ladybug_render(ENTITY* e);
 void ant_render(ENTITY* e);
 void cricket_render(ENTITY* e);
