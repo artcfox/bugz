@@ -94,7 +94,7 @@ struct ENTITY {
   int16_t ddx;
   int16_t ddy;
   int16_t maxdx;
-  int16_t impulse;
+  int16_t impulse; // used for jumping, and since flying entities don't jump, the high/low bytes are used to store flying limits
   uint8_t animationFrameCounter;
   unsigned int enabled : 1;
   unsigned int falling : 1;

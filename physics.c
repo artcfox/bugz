@@ -63,8 +63,6 @@ const uint8_t treasureBG[] PROGMEM = {  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  
 // treasureFG value for each treasure to compute the next tile number that the treasure will use
 const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 3, 4, 3, 2, 1 };
 
-uint16_t g_frames; // global frame counter that entities can use for ai/animations
-
 int main()
 {
   PLAYER player[PLAYERS];
@@ -78,9 +76,6 @@ int main()
   DrawMap(0, 0, level1);
 
  start:
-  // Reset global frame counter
-  g_frames = 0;
-
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
     player_init(&player[i], player_input, player_update, player_render, i,
@@ -166,6 +161,8 @@ int main()
         for (uint8_t i = 0; i < MONSTERS; ++i) {
           if (((ENTITY*)(&monster[i]))->enabled == true) {
             // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
+            // If the player is moving down really fast, and an entity is moving up really fast, there is a slight chance
+            // that it will kill you, because the entity might pass far enough through you that it's y position is above you
             if (overlap(((ENTITY*)(&player[p]))->x,
                         ((ENTITY*)(&player[p]))->y,
                         WORLD_METER,
