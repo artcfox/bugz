@@ -167,7 +167,7 @@ int main()
                 ((ENTITY*)(&monster[i]))->update = entity_update_dying; // disable normal physics
                 ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
               } else {
-                TriggerFx(1, 128, false);
+                TriggerFx(3, 128, false);
                 ((ENTITY*)(&player[p]))->enabled = false;
                 ((ENTITY*)(&player[p]))->input = null_input;
                 ((ENTITY*)(&player[p]))->update = null_update;
@@ -227,7 +227,7 @@ int main()
                       (uint16_t)pgm_read_byte(&treasureY[i]) * (TILE_HEIGHT << FP_SHIFT),
                       WORLD_METER,
                       WORLD_METER)) {
-              TriggerFx(1, 128, false);
+              TriggerFx(2, 128, false);
               treasureCollected[i] = true;
           }
           
