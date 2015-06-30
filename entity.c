@@ -92,7 +92,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->maxdx = maxdx;
   e->impulse = impulse;
   e->visible = true;
-  e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->animationFrames = 0;
+  e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->animationFrameCounter = 0;
 }
 
 void ai_walk_until_blocked(ENTITY* e)
@@ -424,12 +424,22 @@ void grasshopper_render(ENTITY* e)
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
+#define BEE_ANIMATION_START 12
+#define BEE_ANIMATION_FRAME_SKIP 2
+const uint8_t beeAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
+
 void bee_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
     MapSprite2(e->tag, bee_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
-    MapSprite2(e->tag, bee1, e->right ? SPRITE_FLIP_X : 0);
+    if ((e->animationFrameCounter % BEE_ANIMATION_FRAME_SKIP) == 0)
+      sprites[e->tag].tileIndex = BEE_ANIMATION_START + pgm_read_byte(&beeAnimation[e->animationFrameCounter / BEE_ANIMATION_FRAME_SKIP]);
+    if (++e->animationFrameCounter == BEE_ANIMATION_FRAME_SKIP * NELEMS(beeAnimation))
+      e->animationFrameCounter = 0;
+
+    sprites[e->tag].flags = e->right ? SPRITE_FLIP_X : 0;    
+    //MapSprite2(e->tag, bee1, e->right ? SPRITE_FLIP_X : 0);
   }
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }

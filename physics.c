@@ -47,8 +47,6 @@ const uint8_t monsterInitialX[] PROGMEM = { 25, 28,  9, 16, 19 };
 const uint8_t monsterInitialY[] PROGMEM = { 12, 22, 19, 17,  8 };
 const uint8_t monsterInitialD[] PROGMEM = {  0,  0,  0,  0,  0 };
 
-#define NELEMS(x) (sizeof(x)/sizeof(x[0]))
-
 // How many treasures are in the level
 #define TREASURE_COUNT 10
 // How many frames to wait between 
@@ -97,13 +95,13 @@ int main()
   // Initialize monsters
   for (uint8_t i = 0; i < MONSTERS; ++i) {
     if (i == 1)
-      entity_init(&monster[i], ai_hop_until_blocked, entity_update, bee_render, PLAYERS + i,
+      entity_init(&monster[i], ai_hop_until_blocked, entity_update, cricket_render, PLAYERS + i,
                   pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
                   pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
                   WORLD_METER * 1,
                   WORLD_JUMP_IMPULSE >> 1);
     else if (i == 0)
-      entity_init(&monster[i], ai_hop_until_blocked, entity_update, grasshopper_render, PLAYERS + i,
+      entity_init(&monster[i], ai_hop_until_blocked, entity_update, bee_render, PLAYERS + i,
                   pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
                   pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
                   WORLD_METER * 2,

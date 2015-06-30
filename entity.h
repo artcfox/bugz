@@ -39,6 +39,8 @@
 #include <avr/pgmspace.h>
 #include <uzebox.h>
 
+#define NELEMS(x) (sizeof(x)/sizeof(x[0]))
+
 #define PLAYERS 1
 #define MONSTERS 5
 
@@ -93,7 +95,7 @@ struct ENTITY {
   int16_t ddy;
   int16_t maxdx;
   int16_t impulse;
-  uint8_t animationFrames;
+  uint8_t animationFrameCounter;
   unsigned int enabled : 1;
   unsigned int falling : 1;
   unsigned int jumping : 1;
