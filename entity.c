@@ -338,10 +338,17 @@ void entity_update_flying(ENTITY* e)
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
   e->dx += (e->ddx / WORLD_FPS);
-  if (e->dx < -e->maxdx)
-    e->dx = -e->maxdx;
-  else if (e->dx > e->maxdx)
-    e->dx = e->maxdx;
+  if (e->turbo) {
+    if (e->dx < -(e->maxdx + WORLD_METER))
+      e->dx = -(e->maxdx + WORLD_METER);
+    else if (e->dx > (e->maxdx + WORLD_METER))
+      e->dx = (e->maxdx + WORLD_METER);
+  } else {
+    if (e->dx < -e->maxdx)
+      e->dx = -e->maxdx;
+    else if (e->dx > e->maxdx)
+      e->dx = e->maxdx;
+  }
 
   // Clamp X to within screen bounds
   if (e->x > ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT))) {
@@ -356,10 +363,17 @@ void entity_update_flying(ENTITY* e)
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->y += (e->dy / WORLD_FPS);
   e->dy += (e->ddy / WORLD_FPS);
-  if (e->dy < -e->maxdx)
-    e->dy = -e->maxdx;
-  else if (e->dy > e->maxdx)
-    e->dy = e->maxdx;
+  if (e->turbo) {
+    if (e->dy < -(e->maxdx + WORLD_METER)) // uses e->maxdx as maxdy, since there is no gravity
+      e->dy = -(e->maxdx + WORLD_METER);
+    else if (e->dy > (e->maxdx + WORLD_METER))
+      e->dy = (e->maxdx + WORLD_METER);
+  } else {
+    if (e->dy < -e->maxdx)
+      e->dy = -e->maxdx;
+    else if (e->dy > e->maxdx)
+      e->dy = e->maxdx;
+  }
 
   // Clamp Y to within screen bounds
   if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {

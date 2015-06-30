@@ -145,7 +145,7 @@ int main()
       ((ENTITY*)(&monster[i]))->render((ENTITY*)(&monster[i]));
     }
 
-    // Check for collisions with monsters
+    // Check for player collisions with monsters
     for (uint8_t p = 0; p < PLAYERS; ++p) {
       if (((ENTITY*)(&player[p]))->enabled == true) {
         for (uint8_t i = 0; i < MONSTERS; ++i) {
