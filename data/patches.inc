@@ -67,8 +67,8 @@ const char patch02[] PROGMEM ={
 //FX: player death
 const char patch03[] PROGMEM ={
 0,PC_WAVE,4,
-0,PC_ENV_SPEED,-8,
-1,PC_PITCH,64,
+0,PC_ENV_SPEED,-16,
+1,PC_PITCH,54,
 1,PC_NOTE_DOWN,2,
 1,PC_NOTE_DOWN,3,
 1,PC_NOTE_CUT,0,

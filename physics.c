@@ -150,22 +150,25 @@ int main()
       if (((ENTITY*)(&player[p]))->enabled == true) {
         for (uint8_t i = 0; i < MONSTERS; ++i) {
           if (((ENTITY*)(&monster[i]))->enabled == true) {
-            // The calculation below assumes each sprite is WORLD_METER wide (this calculation needs work to use proper AABB read from the entity itself)
+            // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
             if (overlap(((ENTITY*)(&player[p]))->x,
                         ((ENTITY*)(&player[p]))->y,
                         WORLD_METER,
                         WORLD_METER,
-                        ((ENTITY*)(&monster[i]))->x,
-                        ((ENTITY*)(&monster[i]))->y,
-                        WORLD_METER,
-                        WORLD_METER)) {
+                        ((ENTITY*)(&monster[i]))->x + (1 << FP_SHIFT),
+                        ((ENTITY*)(&monster[i]))->y + (3 << FP_SHIFT),
+                        WORLD_METER - (2 << FP_SHIFT),
+                        WORLD_METER - (4 << FP_SHIFT))) {
               if ( (((ENTITY*)(&player[p]))->dy > 0) &&
-                   (((ENTITY*)(&monster[i]))->y - ((ENTITY*)(&player[p]))->y > WORLD_METER / 2)) {
+                   ((((ENTITY*)(&monster[i]))->y + (3 << FP_SHIFT) - ((ENTITY*)(&player[p]))->y) > (WORLD_METER - (4 << FP_SHIFT)))) {
                 TriggerFx(1, 128, false);                               // play the monster death sound
                 ((ENTITY*)(&monster[i]))->enabled = false;              // make sure we don't consider the entity again for collisions
                 ((ENTITY*)(&monster[i]))->input = null_input;           // disable the entity's ai
                 ((ENTITY*)(&monster[i]))->update = entity_update_dying; // disable normal physics
                 ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
+                /* while (ReadJoypad(((ENTITY*)(&player[p]))->tag) != BTN_B) { */
+                /*   // TODO: figure out how to get note to stop playing */
+                /* } */
               } else {
                 TriggerFx(3, 128, false);
                 ((ENTITY*)(&player[p]))->enabled = false;
