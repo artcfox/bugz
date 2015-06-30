@@ -120,6 +120,9 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
 void ai_walk_until_blocked(ENTITY* e);
 void ai_hop_until_blocked(ENTITY* e);
 void ai_walk_until_blocked_or_ledge(ENTITY* e);
+void ai_hop_until_blocked_or_ledge(ENTITY* e); // hop should be small enough that the ledge detection doesn't trigger while hopping, and maxdx doesn't hop you off the ledge
+void ai_fly_horizontal(ENTITY* e);
+void ai_fly_vertical(ENTITY* e);
 void entity_update(ENTITY* e);
 void entity_update_dying(ENTITY* e);
 void entity_update_flying(ENTITY* e);
@@ -127,6 +130,7 @@ void ladybug_render(ENTITY* e);
 void ant_render(ENTITY* e);
 void cricket_render(ENTITY* e);
 void grasshopper_render(ENTITY* e);
+void fruitfly_render(ENTITY* e);
 void bee_render(ENTITY* e);
 
 

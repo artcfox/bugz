@@ -63,6 +63,54 @@ const uint8_t treasureBG[] PROGMEM = {  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  
 // treasureFG value for each treasure to compute the next tile number that the treasure will use
 const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 3, 4, 3, 2, 1 };
 
+bool detectKills(PLAYER* player, ENTITY* monster)
+{
+    // Check for player collisions with monsters
+    for (uint8_t p = 0; p < PLAYERS; ++p) {
+      if (((ENTITY*)(&player[p]))->enabled == true) {
+        for (uint8_t i = 0; i < MONSTERS; ++i) {
+          if (((ENTITY*)(&monster[i]))->enabled == true) {
+            // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
+            // If the player is moving down really fast, and an entity is moving up really fast, there is a slight chance
+            // that it will kill you, because the entity might pass far enough through you that it's y position is above
+            // you. To fix this, we might have to also check for collisions before updating the monsters positions (or cache
+            // the previous x and y, and check that first)
+            if (overlap(((ENTITY*)(&player[p]))->x,
+                        ((ENTITY*)(&player[p]))->y,
+                        WORLD_METER,
+                        WORLD_METER,
+                        ((ENTITY*)(&monster[i]))->x + (1 << FP_SHIFT),
+                        ((ENTITY*)(&monster[i]))->y + (3 << FP_SHIFT),
+                        WORLD_METER - (2 << FP_SHIFT),
+                        WORLD_METER - (4 << FP_SHIFT))) {
+              if ( (((ENTITY*)(&player[p]))->dy > 0) &&
+                   ((((ENTITY*)(&monster[i]))->y + (3 << FP_SHIFT) - ((ENTITY*)(&player[p]))->y) > (WORLD_METER - (4 << FP_SHIFT)))) {
+                TriggerFx(1, 128, false);                               // play the monster death sound
+                ((ENTITY*)(&monster[i]))->enabled = false;              // make sure we don't consider the entity again for collisions
+                ((ENTITY*)(&monster[i]))->input = null_input;           // disable the entity's ai
+                ((ENTITY*)(&monster[i]))->update = entity_update_dying; // disable normal physics
+                ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
+                /* while (ReadJoypad(((ENTITY*)(&player[p]))->tag) != BTN_B) { */
+                /*   // TODO: figure out how to get note to stop playing */
+                /* } */
+              } else {
+                TriggerFx(3, 128, false);
+                ((ENTITY*)(&player[p]))->enabled = false;
+                ((ENTITY*)(&player[p]))->input = null_input;
+                ((ENTITY*)(&player[p]))->update = null_update;
+                while (ReadJoypad(((ENTITY*)(&player[p]))->tag) != BTN_START) {
+                  // TODO: figure out how to get note to stop playing
+                }
+                return true;
+              }
+            }
+          }
+        }
+      }
+    }
+    return false;
+}
+
 int main()
 {
   PLAYER player[PLAYERS];
@@ -96,7 +144,7 @@ int main()
                   WORLD_METER * 1,
                   WORLD_JUMP_IMPULSE >> 1);
     else if (i == 0)
-      entity_init(&monster[i], ai_hop_until_blocked, entity_update, bee_render, PLAYERS + i,
+      entity_init(&monster[i], ai_hop_until_blocked, entity_update, grasshopper_render, PLAYERS + i,
                   pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT),
                   pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT),
                   WORLD_METER * 2,
@@ -143,6 +191,11 @@ int main()
     for (uint8_t i = 0; i < PLAYERS; ++i) {
       ((ENTITY*)(&player[i]))->update((ENTITY*)(&player[i]));
     }
+
+    // First detect any kills when only the player is moved
+    if (detectKills(player, monster))
+      goto start;
+
     for (uint8_t i = 0; i < MONSTERS; ++i) {
       ((ENTITY*)(&monster[i]))->update((ENTITY*)(&monster[i]));
     }
@@ -155,47 +208,9 @@ int main()
       ((ENTITY*)(&monster[i]))->render((ENTITY*)(&monster[i]));
     }
 
-    // Check for player collisions with monsters
-    for (uint8_t p = 0; p < PLAYERS; ++p) {
-      if (((ENTITY*)(&player[p]))->enabled == true) {
-        for (uint8_t i = 0; i < MONSTERS; ++i) {
-          if (((ENTITY*)(&monster[i]))->enabled == true) {
-            // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
-            // If the player is moving down really fast, and an entity is moving up really fast, there is a slight chance
-            // that it will kill you, because the entity might pass far enough through you that it's y position is above you
-            if (overlap(((ENTITY*)(&player[p]))->x,
-                        ((ENTITY*)(&player[p]))->y,
-                        WORLD_METER,
-                        WORLD_METER,
-                        ((ENTITY*)(&monster[i]))->x + (1 << FP_SHIFT),
-                        ((ENTITY*)(&monster[i]))->y + (3 << FP_SHIFT),
-                        WORLD_METER - (2 << FP_SHIFT),
-                        WORLD_METER - (4 << FP_SHIFT))) {
-              if ( (((ENTITY*)(&player[p]))->dy > 0) &&
-                   ((((ENTITY*)(&monster[i]))->y + (3 << FP_SHIFT) - ((ENTITY*)(&player[p]))->y) > (WORLD_METER - (4 << FP_SHIFT)))) {
-                TriggerFx(1, 128, false);                               // play the monster death sound
-                ((ENTITY*)(&monster[i]))->enabled = false;              // make sure we don't consider the entity again for collisions
-                ((ENTITY*)(&monster[i]))->input = null_input;           // disable the entity's ai
-                ((ENTITY*)(&monster[i]))->update = entity_update_dying; // disable normal physics
-                ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
-                /* while (ReadJoypad(((ENTITY*)(&player[p]))->tag) != BTN_B) { */
-                /*   // TODO: figure out how to get note to stop playing */
-                /* } */
-              } else {
-                TriggerFx(3, 128, false);
-                ((ENTITY*)(&player[p]))->enabled = false;
-                ((ENTITY*)(&player[p]))->input = null_input;
-                ((ENTITY*)(&player[p]))->update = null_update;
-                while (ReadJoypad(((ENTITY*)(&player[p]))->tag) != BTN_START) {
-                  // TODO: figure out how to get note to stop playing
-                }
-                goto start;
-              }
-            }
-          }
-        }
-      }
-    }
+    // Now detect any kills when only the monster is moved
+    if (detectKills(player, monster))
+      goto start;
 
     // Animate treasure
     static uint8_t treasureFrameCounter = 0;

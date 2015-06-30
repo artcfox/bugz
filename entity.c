@@ -153,6 +153,15 @@ void ai_walk_until_blocked_or_ledge(ENTITY* e)
   }
 }
 
+void ai_hop_until_blocked_or_ledge(ENTITY* e)
+{
+  if (!e->jumping)
+    ai_walk_until_blocked_or_ledge(e);
+  else
+    ai_walk_until_blocked(e);
+  e->jump = true;
+}
+
 void entity_update(ENTITY* e)
 {
   bool wasLeft = e->dx < 0;
@@ -421,6 +430,26 @@ void grasshopper_render(ENTITY* e)
     MapSprite2(e->tag, grasshopper_dead, e->right ? SPRITE_FLIP_X : 0);
   else
     MapSprite2(e->tag, grasshopper, e->right ? SPRITE_FLIP_X : 0);
+  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+}
+
+#define FRUITFLY_ANIMATION_START 8
+#define FRUITFLY_ANIMATION_FRAME_SKIP 2
+const uint8_t fruitflyAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
+
+void fruitfly_render(ENTITY* e)
+{
+  if (e->update == entity_update_dying) {
+    MapSprite2(e->tag, fruitfly_dead, e->right ? SPRITE_FLIP_X : 0);
+  } else {
+    if ((e->animationFrameCounter % FRUITFLY_ANIMATION_FRAME_SKIP) == 0)
+      sprites[e->tag].tileIndex = FRUITFLY_ANIMATION_START + pgm_read_byte(&fruitflyAnimation[e->animationFrameCounter / FRUITFLY_ANIMATION_FRAME_SKIP]);
+    if (++e->animationFrameCounter == FRUITFLY_ANIMATION_FRAME_SKIP * NELEMS(fruitflyAnimation))
+      e->animationFrameCounter = 0;
+
+    sprites[e->tag].flags = e->right ? SPRITE_FLIP_X : 0;    
+    //MapSprite2(e->tag, fruitfly1, e->right ? SPRITE_FLIP_X : 0);
+  }
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
