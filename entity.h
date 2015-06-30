@@ -85,8 +85,8 @@ struct ENTITY {
   void (*update)(ENTITY*);
   void (*render)(ENTITY*);
   uint8_t tag;
-  uint16_t x;
-  uint16_t y;
+  int16_t x;
+  int16_t y;
   int16_t dx;
   int16_t dy;
   int16_t ddx;
@@ -98,10 +98,11 @@ struct ENTITY {
   unsigned int jumping : 1;
   unsigned int left : 1;
   unsigned int right : 1;
+  unsigned int up : 1;
+  unsigned int down : 1;
   unsigned int jump : 1;
   unsigned int turbo : 1;
   unsigned int monsterhop : 1;
-  // unused
   unsigned int visible : 1;
   /* unsigned int dead : 1; */
 } __attribute__ ((packed));
@@ -119,6 +120,7 @@ void ai_hop_until_blocked(ENTITY* e);
 void ai_walk_until_blocked_or_ledge(ENTITY* e);
 void entity_update(ENTITY* e);
 void entity_update_dying(ENTITY* e);
+void entity_update_flying(ENTITY* e);
 void ladybug_render(ENTITY* e);
 void ant_render(ENTITY* e);
 void cricket_render(ENTITY* e);

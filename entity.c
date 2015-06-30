@@ -92,7 +92,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->maxdx = maxdx;
   e->impulse = impulse;
   e->visible = true;
-  e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->jump = 0;
+  e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = 0;
 }
 
 void ai_walk_until_blocked(ENTITY* e)
@@ -288,11 +288,89 @@ void entity_update_dying(ENTITY* e)
     e->visible = false; // we hit the edge of the screen, so now hide the entity
     
   }
-  if (e->y < ((1) * (TILE_HEIGHT << FP_SHIFT))) { // y is unsigned, so we can't check if < 0
+  if (e->y < 0) {
     e->y = 0;
     e->dy = 0;
     e->visible = false; // we hit the edge of the screen, so now hide the entity
   }
+}
+
+void entity_update_flying(ENTITY* e)
+{
+  bool wasLeft = e->dx < 0;
+  bool wasRight = e->dx > 0;
+  bool wasUp = e->dy < 0;
+  bool wasDown = e->dy > 0;
+
+  e->ddx = 0;
+  e->ddy = 0;
+
+  if (e->left)
+    e->ddx -= WORLD_ACCEL;    // entity wants to go left
+  else if (wasLeft)
+    e->ddx += WORLD_FRICTION; // entity was going left, but not anymore
+
+  if (e->right)
+    e->ddx += WORLD_ACCEL;    // entity wants to go right
+  else if (wasRight)
+    e->ddx -= WORLD_FRICTION; // entity was going right, but not anymore
+
+  if (e->up)
+    e->ddy -= WORLD_ACCEL;    // entity wants to go up
+  else if (wasUp)
+    e->ddy += WORLD_FRICTION; // entity was going up, but not anymore
+
+  if (e->down)
+    e->ddy += WORLD_ACCEL;    // entity wants to go down
+  else if (wasDown)
+    e->ddy -= WORLD_FRICTION; // entity was going down, but not anymore
+
+  // Clamp horizontal velocity to zero if we detect that the entities direction has changed
+  if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0))) {
+    e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
+  }
+
+  // Clamp vertical velocity to zero if we detect that the entities direction has changed
+  if ((wasUp && (e->dy > 0)) || (wasDown && (e->dy < 0))) {
+    e->dy = 0; // clamp at zero to prevent friction from making the entity jiggle up and down
+  }
+
+  // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->x += (e->dx / WORLD_FPS);
+  e->dx += (e->ddx / WORLD_FPS);
+  if (e->dx < -e->maxdx)
+    e->dx = -e->maxdx;
+  else if (e->dx > e->maxdx)
+    e->dx = e->maxdx;
+
+  // Clamp X to within screen bounds
+  if (e->x > ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT))) {
+    e->x = ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT));
+    e->dx = 0;
+  }
+  if (e->x < 0) {
+    e->x = 0;
+    e->dx = 0;
+  }
+
+  // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->y += (e->dy / WORLD_FPS);
+  e->dy += (e->ddy / WORLD_FPS);
+  if (e->dy < -e->maxdx)
+    e->dy = -e->maxdx;
+  else if (e->dy > e->maxdx)
+    e->dy = e->maxdx;
+
+  // Clamp Y to within screen bounds
+  if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
+    e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
+    e->dy = 0;
+  }
+  if (e->y < 0) {
+    e->y = 0;
+    e->dy = 0;
+  }
+
 }
 
 void ladybug_render(ENTITY* e)
@@ -354,6 +432,8 @@ void player_input(ENTITY* e)
 
   e->left = (bool)(p->buttons.held & BTN_LEFT);
   e->right = (bool)(p->buttons.held & BTN_RIGHT);
+  e->up = (bool)(p->buttons.held & BTN_UP);
+  e->down = (bool)(p->buttons.held & BTN_DOWN);
   e->turbo = (bool)(p->buttons.held & BTN_B);
 
   // Improve the user experience, by allowing players to jump by holding the jump
