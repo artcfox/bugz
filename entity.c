@@ -162,6 +162,48 @@ void ai_hop_until_blocked_or_ledge(ENTITY* e)
   e->jump = true;
 }
 
+void ai_fly_vertical(ENTITY* e)
+{
+  // Cast impulse back into Y limits
+  uint8_t yMin = (uint8_t)e->impulse;
+  uint8_t yMax = (uint8_t)(((uint16_t)e->impulse) >> 8);
+
+  if (e->up) {
+    int16_t yBound = vt2p(yMin);
+    if (e->y <= yBound) {
+      e->up = false;
+      e->down = true;
+    }
+  } else if (e->down) {
+    int16_t yBound = vt2p(yMax);
+    if (e->y >= yBound) {
+      e->down = false;
+      e->up = true;
+    }
+  }
+}
+
+void ai_fly_horizontal(ENTITY* e)
+{
+  // Cast impulse back into X limits
+  uint8_t xMin = (uint8_t)e->impulse;
+  uint8_t xMax = (uint8_t)(((uint16_t)e->impulse) >> 8);
+
+  if (e->left) {
+    int16_t xBound = ht2p(xMin);
+    if (e->x <= xBound) {
+      e->left = false;
+      e->right = true;
+    }
+  } else if (e->right) {
+    int16_t xBound = ht2p(xMax);
+    if (e->x >= xBound) {
+      e->right = false;
+      e->left = true;
+    }
+  }
+}
+
 void entity_update(ENTITY* e)
 {
   bool wasLeft = e->dx < 0;
@@ -417,23 +459,31 @@ void ant_render(ENTITY* e)
 
 void cricket_render(ENTITY* e)
 {
-  if (e->update == entity_update_dying)
+  if (e->update == entity_update_dying) {
     MapSprite2(e->tag, cricket_dead, e->right ? SPRITE_FLIP_X : 0);
-  else
-    MapSprite2(e->tag, cricket, e->right ? SPRITE_FLIP_X : 0);
+  } else {
+    if (e->dy > 0)
+      MapSprite2(e->tag, cricket1, e->right ? SPRITE_FLIP_X : 0);
+    else if (e->dy < 0)
+      MapSprite2(e->tag, cricket2, e->right ? SPRITE_FLIP_X : 0);
+  }
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 void grasshopper_render(ENTITY* e)
 {
-  if (e->update == entity_update_dying)
+  if (e->update == entity_update_dying) {
     MapSprite2(e->tag, grasshopper_dead, e->right ? SPRITE_FLIP_X : 0);
-  else
-    MapSprite2(e->tag, grasshopper, e->right ? SPRITE_FLIP_X : 0);
+  } else {
+    if (e->dy > 0)
+      MapSprite2(e->tag, grasshopper1, e->right ? SPRITE_FLIP_X : 0);
+    else if (e->dy < 0)
+      MapSprite2(e->tag, grasshopper2, e->right ? SPRITE_FLIP_X : 0);
+  }
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
-#define FRUITFLY_ANIMATION_START 8
+#define FRUITFLY_ANIMATION_START 15
 #define FRUITFLY_ANIMATION_FRAME_SKIP 2
 const uint8_t fruitflyAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 
@@ -448,12 +498,11 @@ void fruitfly_render(ENTITY* e)
       e->animationFrameCounter = 0;
 
     sprites[e->tag].flags = e->right ? SPRITE_FLIP_X : 0;    
-    //MapSprite2(e->tag, fruitfly1, e->right ? SPRITE_FLIP_X : 0);
   }
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
-#define BEE_ANIMATION_START 12
+#define BEE_ANIMATION_START 20
 #define BEE_ANIMATION_FRAME_SKIP 2
 const uint8_t beeAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 
@@ -468,7 +517,25 @@ void bee_render(ENTITY* e)
       e->animationFrameCounter = 0;
 
     sprites[e->tag].flags = e->right ? SPRITE_FLIP_X : 0;    
-    //MapSprite2(e->tag, bee1, e->right ? SPRITE_FLIP_X : 0);
+  }
+  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+}
+
+#define SPIDER_ANIMATION_START 25
+#define SPIDER_ANIMATION_FRAME_SKIP 8
+const uint8_t spiderAnimation[] PROGMEM = { 0, 1 };
+
+void spider_render(ENTITY* e)
+{
+  if (e->update == entity_update_dying) {
+    MapSprite2(e->tag, spider_dead, e->right ? SPRITE_FLIP_X : 0);
+  } else {
+    if ((e->animationFrameCounter % SPIDER_ANIMATION_FRAME_SKIP) == 0)
+      sprites[e->tag].tileIndex = SPIDER_ANIMATION_START + pgm_read_byte(&spiderAnimation[e->animationFrameCounter / SPIDER_ANIMATION_FRAME_SKIP]);
+    if (++e->animationFrameCounter == SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation))
+      e->animationFrameCounter = 0;
+
+    sprites[e->tag].flags = e->right ? SPRITE_FLIP_X : 0;    
   }
   MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }

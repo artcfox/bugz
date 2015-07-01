@@ -132,6 +132,7 @@ void cricket_render(ENTITY* e);
 void grasshopper_render(ENTITY* e);
 void fruitfly_render(ENTITY* e);
 void bee_render(ENTITY* e);
+void spider_render(ENTITY* e);
 
 
 struct BUTTON_INFO;
