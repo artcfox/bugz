@@ -63,6 +63,11 @@ const uint8_t treasureBG[] PROGMEM = {  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  
 // treasureFG value for each treasure to compute the next tile number that the treasure will use
 const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 3, 4, 3, 2, 1 };
 
+#define BitArray_numBits(bits) (((bits) >> 3) + 1 * (((bits) & 7) ? 1 : 0))
+#define BitArray_setBit(array, index) ((array)[(index) >> 3] |= (1 << ((index) & 7)))
+#define BitArray_clearBit(array, index) ((array)[(index) >> 3] &= ((1 << ((index) & 7)) ^ 0xFF))
+#define BitArray_readBit(array, index) ((bool)((array)[(index) >> 3] & (1 << ((index) & 7))))
+
 bool detectKills(PLAYER* player, ENTITY* monster)
 {
     // Check for player collisions with monsters
@@ -192,12 +197,12 @@ int main()
     monster[i].enabled = true;
   }
 
-  bool treasureCollected[TREASURE_COUNT];
+  //bool treasureCollected[TREASURE_COUNT];
+  uint8_t treasureCollected[BitArray_numBits(TREASURE_COUNT)] = {0}; // bit array
 
   // Initialize treasure
   for (uint8_t i = 0; i < TREASURE_COUNT; ++i) {
     SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)pgm_read_byte(&treasureFG[i]));
-    treasureCollected[i] = false;
   }
 
   for (;;) {
@@ -239,7 +244,7 @@ int main()
     // Animate treasure
     static uint8_t treasureFrameCounter = 0;
     for (uint8_t i = 0; i < TREASURE_COUNT; ++i) {
-      if (treasureCollected[i]) {
+      if (BitArray_readBit(treasureCollected, i)) {
         SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)pgm_read_byte(&treasureBG[i]));
       } else {
         if (treasureFrameCounter % TREASURE_FRAME_SKIP == 0)
@@ -254,7 +259,7 @@ int main()
     for (uint8_t p = 0; p < PLAYERS; ++p) {
       if (((ENTITY*)(&player[p]))->enabled == true) {
         for (uint8_t i = 0; i < TREASURE_COUNT; ++i) {
-          if (treasureCollected[i])
+          if (BitArray_readBit(treasureCollected, i))
             continue;
 
           // The calculation below assumes each sprite is WORLD_METER wide
@@ -267,7 +272,7 @@ int main()
                       WORLD_METER,
                       WORLD_METER)) {
               TriggerFx(2, 128, false);
-              treasureCollected[i] = true;
+              BitArray_setBit(treasureCollected, i);
           }
           
         }
