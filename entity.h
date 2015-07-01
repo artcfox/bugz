@@ -91,8 +91,6 @@ struct ENTITY {
   int16_t y;
   int16_t dx;
   int16_t dy;
-  int16_t ddx;
-  int16_t ddy;
   int16_t maxdx;
   int16_t impulse; // used for jumping, and since flying entities don't jump, the high/low bytes are used to store flying limits
   uint8_t animationFrameCounter;
@@ -122,8 +120,8 @@ void ai_walk_until_blocked(ENTITY* e);
 void ai_hop_until_blocked(ENTITY* e);
 void ai_walk_until_blocked_or_ledge(ENTITY* e);
 void ai_hop_until_blocked_or_ledge(ENTITY* e); // hop should be small enough that the ledge detection doesn't trigger while hopping, and maxdx doesn't hop you off the ledge
-void ai_fly_horizontal(ENTITY* e);
 void ai_fly_vertical(ENTITY* e);
+void ai_fly_horizontal(ENTITY* e);
 void entity_update(ENTITY* e);
 void entity_update_dying(ENTITY* e);
 void entity_update_flying(ENTITY* e);
@@ -151,11 +149,7 @@ typedef struct PLAYER PLAYER;
 
 struct PLAYER { ENTITY entity;
   BUTTON_INFO buttons;
-
-  /* bool jumpReleased; // state variable used for allowing jump to be pressed early, and for implementing variable jumping */
-
   uint8_t framesFalling; // used for allowing late jumps immediately after falling
-
 } __attribute__ ((packed));
 
 void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse);

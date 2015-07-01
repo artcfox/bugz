@@ -93,7 +93,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->impulse = impulse;
   e->visible = true;
   e->jumpReleased = true;
-  e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->animationFrameCounter = 0;
+  e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->animationFrameCounter = 0;
 }
 
 void ai_walk_until_blocked(ENTITY* e)
@@ -205,39 +205,54 @@ void ai_fly_horizontal(ENTITY* e)
   }
 }
 
+struct UPDATE_BITFLAGS;
+typedef struct UPDATE_BITFLAGS UPDATE_BITFLAGS;
+
+struct UPDATE_BITFLAGS {
+  unsigned int wasLeft : 1;
+  unsigned int wasRight : 1;
+  unsigned int nx : 1;
+  unsigned int ny : 1;
+  unsigned int cell : 1;
+  unsigned int cellright : 1;
+  unsigned int celldown : 1;
+  unsigned int celldiag : 1;
+};
+
 void entity_update(ENTITY* e)
 {
-  bool wasLeft = e->dx < 0;
-  bool wasRight = e->dx > 0;
-  bool falling = e->falling;
+  UPDATE_BITFLAGS u;
 
-  e->ddx = 0;
-  e->ddy = WORLD_GRAVITY;
+  u.wasLeft = (bool)(e->dx < 0);
+  u.wasRight = (bool)(e->dx > 0);
+
+  int16_t ddx = 0;
+  int16_t ddy = WORLD_GRAVITY;
 
   if (e->left)
-    e->ddx -= WORLD_ACCEL;    // entity wants to go left
-  else if (wasLeft)
-    e->ddx += WORLD_FRICTION; // entity was going left, but not anymore
+    ddx -= WORLD_ACCEL;    // entity wants to go left
+  else if (u.wasLeft)
+    ddx += WORLD_FRICTION; // entity was going left, but not anymore
 
   if (e->right)
-    e->ddx += WORLD_ACCEL;    // entity wants to go right
-  else if (wasRight)
-    e->ddx -= WORLD_FRICTION; // entity was going right, but not anymore
+    ddx += WORLD_ACCEL;    // entity wants to go right
+  else if (u.wasRight)
+    ddx -= WORLD_FRICTION; // entity was going right, but not anymore
 
-  if (e->jump && !e->jumping && !falling) {
+  if (e->jump && !e->jumping && !e->falling) {
     e->dy = 0;            // reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    e->ddy -= e->impulse; // apply an instantaneous (large) vertical impulse
+    ddy -= e->impulse; // apply an instantaneous (large) vertical impulse
     e->jumping = true;
   }
 
   // Clamp horizontal velocity to zero if we detect that the entities direction has changed
-  if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0))) {
+  if ((u.wasLeft && (e->dx > 0)) || (u.wasRight && (e->dx < 0))) {
     e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
   }
 
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
-  e->dx += (e->ddx / WORLD_FPS);
+  e->dx += (ddx / WORLD_FPS);
   if (e->dx < -e->maxdx)
     e->dx = -e->maxdx;
   else if (e->dx > e->maxdx)
@@ -246,38 +261,38 @@ void entity_update(ENTITY* e)
   // Collision Detection for X
   uint8_t tx = p2ht(e->x);
   uint8_t ty = p2vt(e->y);
-  uint8_t nx = nh(e->x);  // true if entity overlaps right
-  uint8_t ny = nv(e->y);  // true if entity overlaps below
-  uint8_t cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
-  uint8_t cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
-  uint8_t celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-  uint8_t celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+  u.nx = (bool)nh(e->x);  // true if entity overlaps right
+  u.ny = (bool)nv(e->y);  // true if entity overlaps below
+  u.cell      = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
+  u.cellright = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+  u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
 
   if (e->dx > 0) {
-    if ((cellright && !cell) ||
-        (celldiag  && !celldown && ny)) {
+    if ((u.cellright && !u.cell) ||
+        (u.celldiag  && !u.celldown && u.ny)) {
       e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
-      nx = 0;              // entity no longer overlaps the adjacent cell
+      u.nx = false;          // entity no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-      celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+      u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+      u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
     }
   } else if (e->dx < 0) {
-    if ((cell     && !cellright) ||
-        (celldown && !celldiag && ny)) {
+    if ((u.cell     && !u.cellright) ||
+        (u.celldown && !u.celldiag && u.ny)) {
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
-      nx = 0;              // entity no longer overlaps the adjacent cell
+      u.nx = false;              // entity no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-      celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+      u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+      u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
     }
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->y += (e->dy / WORLD_FPS);
-  e->dy += (e->ddy / WORLD_FPS);
+  e->dy += (ddy / WORLD_FPS);
   if (e->dy < -WORLD_MAXDY)
     e->dy = -WORLD_MAXDY;
   else if (e->dy > WORLD_MAXDY)
@@ -286,32 +301,32 @@ void entity_update(ENTITY* e)
   // Collision Detection for Y
   tx = p2ht(e->x);
   ty = p2vt(e->y);
-  nx = nh(e->x);  // true if entity overlaps right
-  ny = nv(e->y);  // true if entity overlaps below
-  cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
-  cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
-  celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-  celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+  u.nx = (bool)nh(e->x);  // true if entity overlaps right
+  u.ny = (bool)nv(e->y);  // true if entity overlaps below
+  u.cell      = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
+  u.cellright = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+  u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
 
   if (e->dy > 0) {
-    if ((celldown && !cell) ||
-        (celldiag && !cellright && nx)) {
+    if ((u.celldown && !u.cell) ||
+        (u.celldiag && !u.cellright && u.nx)) {
       e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
       e->dy = 0;           // stop downward velocity
       e->falling = false;  // no longer falling
       e->jumping = false;  // (or jumping)
-      ny = 0;              // no longer overlaps the cells below
+      u.ny = false;          // no longer overlaps the cells below
     }
   } else if (e->dy < 0) {
-    if ((cell      && !celldown) ||
-        (cellright && !celldiag && nx)) {
+    if ((u.cell      && !u.celldown) ||
+        (u.cellright && !u.celldiag && u.nx)) {
       e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
       e->dy = 0;           // stop updard velocity
-      ny = 0;              // no longer overlaps the cells below
+      u.ny = false;          // no longer overlaps the cells below
     }
   }
 
-  e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
+  e->falling = !(u.celldown || (u.nx && u.celldiag)) && !e->jumping; // detect if we're now falling or not
 }
 
 void entity_update_dying(ENTITY* e)
@@ -323,11 +338,11 @@ void entity_update_dying(ENTITY* e)
     return;
   }
 
-  e->ddy = WORLD_GRAVITY;
+  int16_t ddy = WORLD_GRAVITY;
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->y += (e->dy / WORLD_FPS);
-  e->dy += (e->ddy / WORLD_FPS);
+  e->dy += (ddy / WORLD_FPS);
   if (e->dy < -WORLD_MAXDY)
     e->dy = -WORLD_MAXDY;
   else if (e->dy > WORLD_MAXDY)
@@ -347,49 +362,61 @@ void entity_update_dying(ENTITY* e)
   }
 }
 
+struct UPDATE_FLYING_BITFLAGS;
+typedef struct UPDATE_FLYING_BITFLAGS UPDATE_FLYING_BITFLAGS;
+
+struct UPDATE_FLYING_BITFLAGS {
+  unsigned int wasLeft : 1;
+  unsigned int wasRight : 1;
+  unsigned int wasUp : 1;
+  unsigned int wasDown : 1;
+};
+
 void entity_update_flying(ENTITY* e)
 {
-  bool wasLeft = e->dx < 0;
-  bool wasRight = e->dx > 0;
-  bool wasUp = e->dy < 0;
-  bool wasDown = e->dy > 0;
+  UPDATE_FLYING_BITFLAGS u;
 
-  e->ddx = 0;
-  e->ddy = 0;
+  u.wasLeft = e->dx < 0;
+  u.wasRight = e->dx > 0;
+  u.wasUp = e->dy < 0;
+  u.wasDown = e->dy > 0;
+
+  int16_t ddx = 0;
+  int16_t ddy = 0;
 
   if (e->left)
-    e->ddx -= WORLD_ACCEL;    // entity wants to go left
-  else if (wasLeft)
-    e->ddx += WORLD_FRICTION; // entity was going left, but not anymore
+    ddx -= WORLD_ACCEL;    // entity wants to go left
+  else if (u.wasLeft)
+    ddx += WORLD_FRICTION; // entity was going left, but not anymore
 
   if (e->right)
-    e->ddx += WORLD_ACCEL;    // entity wants to go right
-  else if (wasRight)
-    e->ddx -= WORLD_FRICTION; // entity was going right, but not anymore
+    ddx += WORLD_ACCEL;    // entity wants to go right
+  else if (u.wasRight)
+    ddx -= WORLD_FRICTION; // entity was going right, but not anymore
 
   if (e->up)
-    e->ddy -= WORLD_ACCEL;    // entity wants to go up
-  else if (wasUp)
-    e->ddy += WORLD_FRICTION; // entity was going up, but not anymore
+    ddy -= WORLD_ACCEL;    // entity wants to go up
+  else if (u.wasUp)
+    ddy += WORLD_FRICTION; // entity was going up, but not anymore
 
   if (e->down)
-    e->ddy += WORLD_ACCEL;    // entity wants to go down
-  else if (wasDown)
-    e->ddy -= WORLD_FRICTION; // entity was going down, but not anymore
+    ddy += WORLD_ACCEL;    // entity wants to go down
+  else if (u.wasDown)
+    ddy -= WORLD_FRICTION; // entity was going down, but not anymore
 
   // Clamp horizontal velocity to zero if we detect that the entities direction has changed
-  if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0))) {
+  if ((u.wasLeft && (e->dx > 0)) || (u.wasRight && (e->dx < 0))) {
     e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
   }
 
   // Clamp vertical velocity to zero if we detect that the entities direction has changed
-  if ((wasUp && (e->dy > 0)) || (wasDown && (e->dy < 0))) {
+  if ((u.wasUp && (e->dy > 0)) || (u.wasDown && (e->dy < 0))) {
     e->dy = 0; // clamp at zero to prevent friction from making the entity jiggle up and down
   }
 
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
-  e->dx += (e->ddx / WORLD_FPS);
+  e->dx += (ddx / WORLD_FPS);
   if (e->turbo) {
     if (e->dx < -(e->maxdx + WORLD_METER))
       e->dx = -(e->maxdx + WORLD_METER);
@@ -414,7 +441,7 @@ void entity_update_flying(ENTITY* e)
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->y += (e->dy / WORLD_FPS);
-  e->dy += (e->ddy / WORLD_FPS);
+  e->dy += (ddy / WORLD_FPS);
   if (e->turbo) {
     if (e->dy < -(e->maxdx + WORLD_METER)) // uses e->maxdx as maxdy, since there is no gravity
       e->dy = -(e->maxdx + WORLD_METER);
@@ -436,7 +463,6 @@ void entity_update_flying(ENTITY* e)
     e->y = 0;
     e->dy = 0;
   }
-
 }
 
 #define LADYBUG_START 5
@@ -640,27 +666,27 @@ void player_input(ENTITY* e)
 void player_update(ENTITY* e)
 {
   PLAYER* p = (PLAYER*)e; // upcast
+  UPDATE_BITFLAGS u;
 
-  bool wasLeft = e->dx < 0;
-  bool wasRight = e->dx > 0;
-  bool falling = e->falling ? (p->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false;
+  u.wasLeft = e->dx < 0;
+  u.wasRight = e->dx > 0;
 
-  e->ddx = 0;
-  e->ddy = WORLD_GRAVITY;
+  int16_t ddx = 0;
+  int16_t ddy = WORLD_GRAVITY;
 
   if (e->left)
-    e->ddx -= WORLD_ACCEL; // player wants to go left
-  else if (wasLeft)
-    e->ddx += WORLD_FRICTION; // player was going left, but not anymore
+    ddx -= WORLD_ACCEL; // player wants to go left
+  else if (u.wasLeft)
+    ddx += WORLD_FRICTION; // player was going left, but not anymore
 
   if (e->right)
-    e->ddx += WORLD_ACCEL; // player wants to go right
-  else if (wasRight)
-    e->ddx -= WORLD_FRICTION; // player was going right, but not anymore
+    ddx += WORLD_ACCEL; // player wants to go right
+  else if (u.wasRight)
+    ddx -= WORLD_FRICTION; // player was going right, but not anymore
 
-  if (e->jump && !e->jumping && !falling) {
+  if (e->jump && !e->jumping && !(e->falling ? (p->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
     e->dy = 0;            // reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    e->ddy -= e->impulse; // apply an instantaneous (large) vertical impulse
+    ddy -= e->impulse; // apply an instantaneous (large) vertical impulse
     e->jumping = true;
   }
 
@@ -669,7 +695,7 @@ void player_update(ENTITY* e)
     e->monsterhop = e->jumping = e->falling = false;
     e->jumpReleased = true;
     e->dy = p->framesFalling = 0;
-    e->ddy -= (e->impulse / 2);
+    ddy -= (e->impulse / 2);
   }
 
   // Variable height jumping
@@ -677,13 +703,13 @@ void player_update(ENTITY* e)
       e->dy = -WORLD_CUT_JUMP_SPEED_LIMIT;
 
   // Clamp horizontal velocity to zero if we detect that the players direction has changed
-  if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0))) {
+  if ((u.wasLeft && (e->dx > 0)) || (u.wasRight && (e->dx < 0))) {
     e->dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
   }
 
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
-  e->dx += (e->ddx / WORLD_FPS);
+  e->dx += (ddx / WORLD_FPS);
   if (e->turbo) {
     if (e->dx < -(e->maxdx + WORLD_METER))
       e->dx = -(e->maxdx + WORLD_METER);
@@ -699,38 +725,38 @@ void player_update(ENTITY* e)
   // Collision Detection for X
   uint8_t tx = p2ht(e->x);
   uint8_t ty = p2vt(e->y);
-  uint8_t nx = nh(e->x);  // true if player overlaps right
-  uint8_t ny = nv(e->y); // true if player overlaps below
-  uint8_t cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
-  uint8_t cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
-  uint8_t celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-  uint8_t celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+  u.nx = (bool)nh(e->x);  // true if player overlaps right
+  u.ny = (bool)nv(e->y); // true if player overlaps below
+  u.cell      = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
+  u.cellright = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+  u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
 
   if (e->dx > 0) {
-    if ((cellright && !cell) ||
-        (celldiag  && !celldown && ny)) {
+    if ((u.cellright && !u.cell) ||
+        (u.celldiag  && !u.celldown && u.ny)) {
       e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform we just hit
       e->dx = 0;           // stop horizontal velocity
-      nx = 0;                     // player no longer overlaps the adjacent cell
+      u.nx = false;        // player no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-      celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+      u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+      u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
     }
   } else if (e->dx < 0) {
-    if ((cell     && !cellright) ||
-        (celldown && !celldiag && ny)) {
+    if ((u.cell     && !u.cellright) ||
+        (u.celldown && !u.celldiag && u.ny)) {
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
       e->dx = 0;           // stop horizontal velocity
-      nx = 0;                     // player no longer overlaps the adjacent cell
+      u.nx = false;        // player no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-      celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+      u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+      u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
     }
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->y += (e->dy / WORLD_FPS);
-  e->dy += (e->ddy / WORLD_FPS);
+  e->dy += (ddy / WORLD_FPS);
   if (e->dy < -WORLD_MAXDY)
     e->dy = -WORLD_MAXDY;
   else if (e->dy > WORLD_MAXDY)
@@ -739,33 +765,33 @@ void player_update(ENTITY* e)
   // Collision Detection for Y
   tx = p2ht(e->x);
   ty = p2vt(e->y);
-  nx = nh(e->x);  // true if player overlaps right
-  ny = nv(e->y); // true if player overlaps below
-  cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
-  cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
-  celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-  celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+  u.nx = (bool)nh(e->x);  // true if player overlaps right
+  u.ny = (bool)nv(e->y); // true if player overlaps below
+  u.cell      = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
+  u.cellright = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
+  u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
 
   if (e->dy > 0) {
-    if ((celldown && !cell) ||
-        (celldiag && !cellright && nx)) {
+    if ((u.celldown && !u.cell) ||
+        (u.celldiag && !u.cellright && u.nx)) {
       e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
       e->dy = 0;           // stop downward velocity
       e->falling = false;  // no longer falling
       p->framesFalling = 0;
       e->jumping = false;  // (or jumping)
-      ny = 0;                     // no longer overlaps the cells below
+      u.ny = false;        // no longer overlaps the cells below
     }
   } else if (e->dy < 0) {
-    if ((cell      && !celldown) ||
-        (cellright && !celldiag && nx)) {
+    if ((u.cell      && !u.celldown) ||
+        (u.cellright && !u.celldiag && u.nx)) {
       e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
       e->dy = 0;           // stop updard velocity
-      ny = 0;                     // player no longer overlaps the cells below
+      u.ny = false;        // player no longer overlaps the cells below
     }
   }
 
-  e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
+  e->falling = !(u.celldown || (u.nx && u.celldiag)) && !e->jumping; // detect if we're now falling or not
   if (e->falling && p->framesFalling < 255)
     p->framesFalling++;
 }

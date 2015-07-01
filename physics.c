@@ -160,11 +160,11 @@ int main()
                   WORLD_METER * 1,
                   WORLD_JUMP_IMPULSE >> 1);
     else if (i == 0)
-      entity_init(&monster[i], ai_fly_vertical, entity_update_flying, bee_render, PLAYERS + i,
+      entity_init(&monster[i], ai_fly_vertical, entity_update_flying, spider_render, PLAYERS + i,
                   (int16_t)(pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT)),
                   (int16_t)(pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT)),
-                  WORLD_METER * 2,
-                  (uint16_t)(23 << 8) | 16);
+                  WORLD_METER * 4,
+                  (uint16_t)((23) << 8) | 16);
     else if (i == 2)
       entity_init(&monster[i], ai_walk_until_blocked_or_ledge, entity_update, ladybug_render, PLAYERS + i,
                   (int16_t)(pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT)),
