@@ -122,15 +122,16 @@ int main()
 
   ClearVram();
 
- start:
   DrawMap(0, 0, level1);
+
+ start:
 
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
     player_init(&player[i], player_input, player_update, player_render, i,
                 (int16_t)(pgm_read_byte(&playerInitialX[i]) * (TILE_WIDTH << FP_SHIFT)),
                 (int16_t)(pgm_read_byte(&playerInitialY[i]) * (TILE_HEIGHT << FP_SHIFT)),
-                WORLD_MAXDX,
+                WORLD_MAXDX /*WORLD_METER * 12*/,
                 WORLD_JUMP_IMPULSE);
     ((ENTITY*)(&player[i]))->enabled = true;
 
@@ -154,10 +155,10 @@ int main()
                   WORLD_METER * 1,
                   WORLD_JUMP_IMPULSE >> 1);
     else if (i == 0)
-      entity_init(&monster[i], ai_fly_vertical, entity_update_flying, spider_render, PLAYERS + i,
+      entity_init(&monster[i], ai_fly_vertical, entity_update_flying, bee_render, PLAYERS + i,
                   (int16_t)(pgm_read_byte(&monsterInitialX[i]) * (TILE_WIDTH << FP_SHIFT)),
                   (int16_t)(pgm_read_byte(&monsterInitialY[i]) * (TILE_HEIGHT << FP_SHIFT)),
-                  WORLD_METER * 12,
+                  WORLD_METER * 2,
                   (uint16_t)(23 << 8) | 16);
     else if (i == 2)
       entity_init(&monster[i], ai_walk_until_blocked_or_ledge, entity_update, ladybug_render, PLAYERS + i,

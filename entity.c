@@ -438,49 +438,100 @@ void entity_update_flying(ENTITY* e)
 
 }
 
+#define LADYBUG_START 5
+
 void ladybug_render(ENTITY* e)
 {
-  if (e->update == entity_update_dying)
-    MapSprite2(e->tag, ladybug_dead, e->right ? SPRITE_FLIP_X : 0);
-  else
-    MapSprite2(e->tag, ladybug, e->right ? SPRITE_FLIP_X : 0);
+  if (e->update == entity_update_dying) {
+    sprites[e->tag].tileIndex = LADYBUG_START - 1; // assumes dead sprite comes directly before start
+    //MapSprite2(e->tag, ladybug_dead, e->right ? SPRITE_FLIP_X : 0);
+  } else {
+    sprites[e->tag].tileIndex = LADYBUG_START;
+   //MapSprite2(e->tag, ladybug, e->right ? SPRITE_FLIP_X : 0);
+  }
 
-  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+  if (e->left)
+    sprites[e->tag].flags = 0;
+  if (e->right)
+    sprites[e->tag].flags = SPRITE_FLIP_X;
+
+  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
+
+#define ANT_START 7
 
 void ant_render(ENTITY* e)
 {
-  if (e->update == entity_update_dying)
-    MapSprite2(e->tag, ant_dead, e->right ? SPRITE_FLIP_X : 0);
-  else
-    MapSprite2(e->tag, ant, e->right ? SPRITE_FLIP_X : 0);
-  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+  if (e->update == entity_update_dying) {
+    sprites[e->tag].tileIndex = ANT_START - 1; // assumes dead sprite comes directly before start
+    //MapSprite2(e->tag, ant_dead, e->right ? SPRITE_FLIP_X : 0);
+  } else {
+    sprites[e->tag].tileIndex = ANT_START;
+   //MapSprite2(e->tag, ant, e->right ? SPRITE_FLIP_X : 0);
+  }
+
+  if (e->left)
+    sprites[e->tag].flags = 0;
+  if (e->right)
+    sprites[e->tag].flags = SPRITE_FLIP_X;
+
+  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
+
+#define CRICKET_START 9
 
 void cricket_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
-    MapSprite2(e->tag, cricket_dead, e->right ? SPRITE_FLIP_X : 0);
+    sprites[e->tag].tileIndex = CRICKET_START - 1; // assumes dead sprite comes directly before start
+    //MapSprite2(e->tag, cricket_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
-    if (e->dy > 0)
-      MapSprite2(e->tag, cricket1, e->right ? SPRITE_FLIP_X : 0);
-    else if (e->dy < 0)
-      MapSprite2(e->tag, cricket2, e->right ? SPRITE_FLIP_X : 0);
+    if (e->dy >= 0)
+      sprites[e->tag].tileIndex = CRICKET_START;
+    //MapSprite2(e->tag, cricket1, e->right ? SPRITE_FLIP_X : 0);
+    else
+      sprites[e->tag].tileIndex = CRICKET_START + 1;
+    //MapSprite2(e->tag, cricket2, e->right ? SPRITE_FLIP_X : 0);
   }
-  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+
+  if (e->left)
+    sprites[e->tag].flags = 0;
+  if (e->right)
+    sprites[e->tag].flags = SPRITE_FLIP_X;
+
+  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
+
+#define GRASSHOPPER_START 12
 
 void grasshopper_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
-    MapSprite2(e->tag, grasshopper_dead, e->right ? SPRITE_FLIP_X : 0);
+    sprites[e->tag].tileIndex = GRASSHOPPER_START - 1; // assumes dead sprite comes directly before start
+    //MapSprite2(e->tag, grasshopper_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
-    if (e->dy > 0)
-      MapSprite2(e->tag, grasshopper1, e->right ? SPRITE_FLIP_X : 0);
-    else if (e->dy < 0)
-      MapSprite2(e->tag, grasshopper2, e->right ? SPRITE_FLIP_X : 0);
+    if (e->dy >= 0)
+      sprites[e->tag].tileIndex = GRASSHOPPER_START;
+    //MapSprite2(e->tag, grasshopper1, e->right ? SPRITE_FLIP_X : 0);
+    else
+      sprites[e->tag].tileIndex = GRASSHOPPER_START + 1;
+    //MapSprite2(e->tag, grasshopper2, e->right ? SPRITE_FLIP_X : 0);
   }
-  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+
+  if (e->left)
+    sprites[e->tag].flags = 0;
+  if (e->right)
+    sprites[e->tag].flags = SPRITE_FLIP_X;
+
+  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 #define FRUITFLY_ANIMATION_START 15
@@ -490,16 +541,23 @@ const uint8_t fruitflyAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 void fruitfly_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
-    MapSprite2(e->tag, fruitfly_dead, e->right ? SPRITE_FLIP_X : 0);
+    sprites[e->tag].tileIndex = FRUITFLY_ANIMATION_START - 1; // assumes dead sprite comes directly before animation
+    //MapSprite2(e->tag, fruitfly_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
     if ((e->animationFrameCounter % FRUITFLY_ANIMATION_FRAME_SKIP) == 0)
       sprites[e->tag].tileIndex = FRUITFLY_ANIMATION_START + pgm_read_byte(&fruitflyAnimation[e->animationFrameCounter / FRUITFLY_ANIMATION_FRAME_SKIP]);
     if (++e->animationFrameCounter == FRUITFLY_ANIMATION_FRAME_SKIP * NELEMS(fruitflyAnimation))
       e->animationFrameCounter = 0;
-
-    sprites[e->tag].flags = e->right ? SPRITE_FLIP_X : 0;    
   }
-  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+
+  if (e->left)
+    sprites[e->tag].flags = 0;
+  if (e->right)
+    sprites[e->tag].flags = SPRITE_FLIP_X;
+
+  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 #define BEE_ANIMATION_START 20
@@ -509,16 +567,23 @@ const uint8_t beeAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 void bee_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
-    MapSprite2(e->tag, bee_dead, e->right ? SPRITE_FLIP_X : 0);
+    sprites[e->tag].tileIndex = BEE_ANIMATION_START - 1; // assumes dead sprite comes directly before animation
+    //MapSprite2(e->tag, bee_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
     if ((e->animationFrameCounter % BEE_ANIMATION_FRAME_SKIP) == 0)
       sprites[e->tag].tileIndex = BEE_ANIMATION_START + pgm_read_byte(&beeAnimation[e->animationFrameCounter / BEE_ANIMATION_FRAME_SKIP]);
     if (++e->animationFrameCounter == BEE_ANIMATION_FRAME_SKIP * NELEMS(beeAnimation))
       e->animationFrameCounter = 0;
-
-    sprites[e->tag].flags = e->right ? SPRITE_FLIP_X : 0;    
   }
-  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+
+  if (e->left)
+    sprites[e->tag].flags = 0;
+  if (e->right)
+    sprites[e->tag].flags = SPRITE_FLIP_X;
+
+  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 #define SPIDER_ANIMATION_START 25
@@ -528,7 +593,8 @@ const uint8_t spiderAnimation[] PROGMEM = { 0, 1 };
 void spider_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
-    MapSprite2(e->tag, spider_dead, e->right ? SPRITE_FLIP_X : 0);
+    sprites[e->tag].tileIndex = SPIDER_ANIMATION_START - 1; // assumes dead sprite comes directly before animation
+    //MapSprite2(e->tag, spider_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
     if ((e->animationFrameCounter % SPIDER_ANIMATION_FRAME_SKIP) == 0)
       sprites[e->tag].tileIndex = SPIDER_ANIMATION_START + pgm_read_byte(&spiderAnimation[e->animationFrameCounter / SPIDER_ANIMATION_FRAME_SKIP]);
@@ -537,7 +603,15 @@ void spider_render(ENTITY* e)
 
     sprites[e->tag].flags = e->right ? SPRITE_FLIP_X : 0;    
   }
-  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+
+  if (e->left)
+    sprites[e->tag].flags = 0;
+  if (e->right)
+    sprites[e->tag].flags = SPRITE_FLIP_X;
+
+  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 // ---------- PLAYER
@@ -723,6 +797,8 @@ void player_update(ENTITY* e)
     p->framesFalling++;
 }
 
+#define PLAYER_START 0
+
 void player_render(ENTITY* e)
 {
   /* PLAYER* p = (PLAYER*)e; // upcast */
@@ -733,12 +809,22 @@ void player_render(ENTITY* e)
     /* if (p->clamped) */
     /*   MapSprite2(i, orange_front, 0); */
     /* else */
-      MapSprite2(e->tag, yellow_front, 0);
+    sprites[e->tag].tileIndex = 1 + PLAYER_START + (e->tag * 2);
+    sprites[e->tag].flags = 0;
+    //MapSprite2(e->tag, yellow_front, 0);
   } else {
     /* if (p->clamped) */
     /*   MapSprite2(i, orange_side, e->right ? SPRITE_FLIP_X : 0); */
     /* else */
-      MapSprite2(e->tag, yellow_side, e->right ? SPRITE_FLIP_X : 0);
+    sprites[e->tag].tileIndex = PLAYER_START + (e->tag * 2);
+    //MapSprite2(e->tag, yellow_side, e->right ? SPRITE_FLIP_X : 0);
+    if (e->left)
+      sprites[e->tag].flags = 0;
+    if (e->right)
+      sprites[e->tag].flags = SPRITE_FLIP_X;
   }
-  MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
+
+  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
