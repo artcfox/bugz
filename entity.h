@@ -104,6 +104,7 @@ struct ENTITY {
   unsigned int up : 1;
   unsigned int down : 1;
   unsigned int jump : 1;
+  unsigned int jumpReleased : 1; // state variable used for allowing jump to be pressed early, and for implementing variable jumping
   unsigned int turbo : 1;
   unsigned int monsterhop : 1;
   unsigned int visible : 1;
@@ -140,8 +141,8 @@ typedef struct BUTTON_INFO BUTTON_INFO;
 
 struct BUTTON_INFO {
   uint16_t held;
-  uint16_t pressed;
-  uint16_t released;
+  //uint16_t pressed;
+  //uint16_t released;
   uint16_t prev;
 };
 
@@ -151,15 +152,10 @@ typedef struct PLAYER PLAYER;
 struct PLAYER { ENTITY entity;
   BUTTON_INFO buttons;
 
-  bool jumpReleased; // state variable used for allowing jump to be pressed early, and for implementing variable jumping
+  /* bool jumpReleased; // state variable used for allowing jump to be pressed early, and for implementing variable jumping */
 
-  uint16_t framesFalling; // used for allowing late jumps immediately after falling
+  uint8_t framesFalling; // used for allowing late jumps immediately after falling
 
-  // Debugging purposes
-  /* bool clamped; */
-
-  /* u8 w; */
-  /* u8 h; */
 } __attribute__ ((packed));
 
 void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse);

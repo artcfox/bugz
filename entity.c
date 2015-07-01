@@ -92,6 +92,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->maxdx = maxdx;
   e->impulse = impulse;
   e->visible = true;
+  e->jumpReleased = true;
   e->dx = e->dy = e->ddx = e->ddy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->animationFrameCounter = 0;
 }
 
@@ -600,7 +601,7 @@ void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
 {
   entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx, impulse);
   memset(&p->buttons, 0, sizeof(p->buttons));
-  p->jumpReleased = true;
+  /* p->jumpReleased = true; */
   p->framesFalling = 0;
 }
 
@@ -611,8 +612,8 @@ void player_input(ENTITY* e)
   // Read the current state of the player's controller
   p->buttons.prev = p->buttons.held;
   p->buttons.held = ReadJoypad(e->tag); // tag will be set to 0 or 1, depending on which player we are
-  p->buttons.pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
-  p->buttons.released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
+  //p->buttons.pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
+  //p->buttons.released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
 
   e->left = (bool)(p->buttons.held & BTN_LEFT);
   e->right = (bool)(p->buttons.held & BTN_RIGHT);
@@ -622,16 +623,17 @@ void player_input(ENTITY* e)
 
   // Improve the user experience, by allowing players to jump by holding the jump
   // button before landing, but require them to release it before jumping again
-  if (p->jumpReleased) {                                      // Jumping multiple times requires releasing the jump button between jumps
+  if (e->jumpReleased) {                                      // Jumping multiple times requires releasing the jump button between jumps
     e->jump = (bool)(p->buttons.held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
     if (e->jump && !(e->jumping || (e->falling && p->framesFalling > WORLD_FALLING_GRACE_FRAMES))) { // if player[i] is currently holding BTN_A, (and is on the ground)
-      p->jumpReleased = false;                                // a jump will occur during the next call to update(), so clear the jumpReleased flag.
+      e->jumpReleased = false;                                // a jump will occur during the next call to update(), so clear the jumpReleased flag.
       TriggerFx(0, 128, false);
     }
   } else {                                                           // Otherwise, it means that we just jumped, and BTN_A is still being held down
     e->jump = false;                                          // so explicitly disallow any additional jumps until
-    if (p->buttons.released & BTN_A)                                 // BTN_A is released again
-      p->jumpReleased = true;                                 // at which point reset the jumpReleased flag so another jump may occur.
+    uint16_t released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
+    if (released & BTN_A)                                 // BTN_A is released again
+      e->jumpReleased = true;                                 // at which point reset the jumpReleased flag so another jump may occur.
   }
 }
 
@@ -665,13 +667,13 @@ void player_update(ENTITY* e)
   // Bounce a bit when you stomp a monster
   if (e->monsterhop) {
     e->monsterhop = e->jumping = e->falling = false;
-    p->jumpReleased = true;
+    e->jumpReleased = true;
     e->dy = p->framesFalling = 0;
     e->ddy -= (e->impulse / 2);
   }
 
   // Variable height jumping
-  if (e->jumping && p->jumpReleased && (e->dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
+  if (e->jumping && e->jumpReleased && (e->dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
       e->dy = -WORLD_CUT_JUMP_SPEED_LIMIT;
 
   // Clamp horizontal velocity to zero if we detect that the players direction has changed
@@ -764,7 +766,7 @@ void player_update(ENTITY* e)
   }
 
   e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
-  if (e->falling)
+  if (e->falling && p->framesFalling < 255)
     p->framesFalling++;
 }
 

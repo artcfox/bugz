@@ -83,7 +83,7 @@ bool detectKills(PLAYER* player, ENTITY* monster)
                         ((ENTITY*)(&monster[i]))->y + (3 << FP_SHIFT),
                         WORLD_METER - (2 << FP_SHIFT),
                         WORLD_METER - (4 << FP_SHIFT))) {
-              if ( (((ENTITY*)(&player[p]))->dy > 0) &&
+              if ( /*(((ENTITY*)(&player[p]))->dy > 0) && */
                    ((((ENTITY*)(&monster[i]))->y + (3 << FP_SHIFT) - ((ENTITY*)(&player[p]))->y) > (WORLD_METER - (4 << FP_SHIFT)))) {
                 TriggerFx(1, 128, false);                               // play the monster death sound
                 ((ENTITY*)(&monster[i]))->enabled = false;              // make sure we don't consider the entity again for collisions
