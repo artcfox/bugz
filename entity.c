@@ -444,10 +444,8 @@ void ladybug_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
     sprites[e->tag].tileIndex = LADYBUG_START - 1; // assumes dead sprite comes directly before start
-    //MapSprite2(e->tag, ladybug_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
     sprites[e->tag].tileIndex = LADYBUG_START;
-   //MapSprite2(e->tag, ladybug, e->right ? SPRITE_FLIP_X : 0);
   }
 
   if (e->left)
@@ -457,7 +455,6 @@ void ladybug_render(ENTITY* e)
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 #define ANT_START 7
@@ -466,10 +463,8 @@ void ant_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
     sprites[e->tag].tileIndex = ANT_START - 1; // assumes dead sprite comes directly before start
-    //MapSprite2(e->tag, ant_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
     sprites[e->tag].tileIndex = ANT_START;
-   //MapSprite2(e->tag, ant, e->right ? SPRITE_FLIP_X : 0);
   }
 
   if (e->left)
@@ -479,7 +474,6 @@ void ant_render(ENTITY* e)
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 #define CRICKET_START 9
@@ -488,14 +482,11 @@ void cricket_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
     sprites[e->tag].tileIndex = CRICKET_START - 1; // assumes dead sprite comes directly before start
-    //MapSprite2(e->tag, cricket_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
     if (e->dy >= 0)
       sprites[e->tag].tileIndex = CRICKET_START;
-    //MapSprite2(e->tag, cricket1, e->right ? SPRITE_FLIP_X : 0);
     else
       sprites[e->tag].tileIndex = CRICKET_START + 1;
-    //MapSprite2(e->tag, cricket2, e->right ? SPRITE_FLIP_X : 0);
   }
 
   if (e->left)
@@ -505,7 +496,6 @@ void cricket_render(ENTITY* e)
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 #define GRASSHOPPER_START 12
@@ -514,14 +504,11 @@ void grasshopper_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
     sprites[e->tag].tileIndex = GRASSHOPPER_START - 1; // assumes dead sprite comes directly before start
-    //MapSprite2(e->tag, grasshopper_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
     if (e->dy >= 0)
       sprites[e->tag].tileIndex = GRASSHOPPER_START;
-    //MapSprite2(e->tag, grasshopper1, e->right ? SPRITE_FLIP_X : 0);
     else
       sprites[e->tag].tileIndex = GRASSHOPPER_START + 1;
-    //MapSprite2(e->tag, grasshopper2, e->right ? SPRITE_FLIP_X : 0);
   }
 
   if (e->left)
@@ -531,7 +518,6 @@ void grasshopper_render(ENTITY* e)
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 #define FRUITFLY_ANIMATION_START 15
@@ -542,7 +528,6 @@ void fruitfly_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
     sprites[e->tag].tileIndex = FRUITFLY_ANIMATION_START - 1; // assumes dead sprite comes directly before animation
-    //MapSprite2(e->tag, fruitfly_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
     if ((e->animationFrameCounter % FRUITFLY_ANIMATION_FRAME_SKIP) == 0)
       sprites[e->tag].tileIndex = FRUITFLY_ANIMATION_START + pgm_read_byte(&fruitflyAnimation[e->animationFrameCounter / FRUITFLY_ANIMATION_FRAME_SKIP]);
@@ -557,7 +542,6 @@ void fruitfly_render(ENTITY* e)
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 #define BEE_ANIMATION_START 20
@@ -568,7 +552,6 @@ void bee_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
     sprites[e->tag].tileIndex = BEE_ANIMATION_START - 1; // assumes dead sprite comes directly before animation
-    //MapSprite2(e->tag, bee_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
     if ((e->animationFrameCounter % BEE_ANIMATION_FRAME_SKIP) == 0)
       sprites[e->tag].tileIndex = BEE_ANIMATION_START + pgm_read_byte(&beeAnimation[e->animationFrameCounter / BEE_ANIMATION_FRAME_SKIP]);
@@ -583,7 +566,6 @@ void bee_render(ENTITY* e)
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 #define SPIDER_ANIMATION_START 25
@@ -594,7 +576,6 @@ void spider_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
     sprites[e->tag].tileIndex = SPIDER_ANIMATION_START - 1; // assumes dead sprite comes directly before animation
-    //MapSprite2(e->tag, spider_dead, e->right ? SPRITE_FLIP_X : 0);
   } else {
     if ((e->animationFrameCounter % SPIDER_ANIMATION_FRAME_SKIP) == 0)
       sprites[e->tag].tileIndex = SPIDER_ANIMATION_START + pgm_read_byte(&spiderAnimation[e->animationFrameCounter / SPIDER_ANIMATION_FRAME_SKIP]);
@@ -611,7 +592,6 @@ void spider_render(ENTITY* e)
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
 
 // ---------- PLAYER
@@ -655,9 +635,6 @@ void player_input(ENTITY* e)
   }
 }
 
-/* Calculate forces that apply to the player
-   Apply the forces to move and accelerate the player
-   Collision detection (and resolution) */
 void player_update(ENTITY* e)
 {
   PLAYER* p = (PLAYER*)e; // upcast
@@ -702,8 +679,6 @@ void player_update(ENTITY* e)
     e->dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
   }
 
-  /* p->clamped = false; */
-
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
   e->dx += (e->ddx / WORLD_FPS);
@@ -732,7 +707,6 @@ void player_update(ENTITY* e)
   if (e->dx > 0) {
     if ((cellright && !cell) ||
         (celldiag  && !celldown && ny)) {
-      /* p->clamped = true; */
       e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform we just hit
       e->dx = 0;           // stop horizontal velocity
       nx = 0;                     // player no longer overlaps the adjacent cell
@@ -743,7 +717,6 @@ void player_update(ENTITY* e)
   } else if (e->dx < 0) {
     if ((cell     && !cellright) ||
         (celldown && !celldiag && ny)) {
-      /* p->clamped = true; */
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
       e->dx = 0;           // stop horizontal velocity
       nx = 0;                     // player no longer overlaps the adjacent cell
@@ -774,7 +747,6 @@ void player_update(ENTITY* e)
   if (e->dy > 0) {
     if ((celldown && !cell) ||
         (celldiag && !cellright && nx)) {
-      /* p->clamped = true; */
       e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
       e->dy = 0;           // stop downward velocity
       e->falling = false;  // no longer falling
@@ -785,7 +757,6 @@ void player_update(ENTITY* e)
   } else if (e->dy < 0) {
     if ((cell      && !celldown) ||
         (cellright && !celldiag && nx)) {
-      /* p->clamped = true; */
       e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
       e->dy = 0;           // stop updard velocity
       ny = 0;                     // player no longer overlaps the cells below
@@ -801,23 +772,12 @@ void player_update(ENTITY* e)
 
 void player_render(ENTITY* e)
 {
-  /* PLAYER* p = (PLAYER*)e; // upcast */
-
-  /* uint8_t i = e->tag; */
-
   if (e->left == e->right) {
-    /* if (p->clamped) */
-    /*   MapSprite2(i, orange_front, 0); */
-    /* else */
     sprites[e->tag].tileIndex = 1 + PLAYER_START + (e->tag * 2);
     sprites[e->tag].flags = 0;
-    //MapSprite2(e->tag, yellow_front, 0);
   } else {
-    /* if (p->clamped) */
-    /*   MapSprite2(i, orange_side, e->right ? SPRITE_FLIP_X : 0); */
-    /* else */
     sprites[e->tag].tileIndex = PLAYER_START + (e->tag * 2);
-    //MapSprite2(e->tag, yellow_side, e->right ? SPRITE_FLIP_X : 0);
+
     if (e->left)
       sprites[e->tag].flags = 0;
     if (e->right)
@@ -826,5 +786,4 @@ void player_render(ENTITY* e)
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  //MoveSprite(e->tag, (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT, 1, 1);
 }
