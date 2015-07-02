@@ -67,7 +67,7 @@
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
 // Maps tile number to solidity
-const uint8_t isSolid[] PROGMEM = { 0, 1, 1, 0, 0, 0, 0, 0, 0 };
+const uint8_t isSolid[] PROGMEM = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, };
 
 void null_input(ENTITY* e) { }
 void null_update(ENTITY* e) { }
@@ -93,7 +93,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->impulse = impulse;
   e->visible = true;
   e->jumpReleased = true;
-  e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->animationFrameCounter = 0;
+  e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->dead = e->animationFrameCounter = 0;
 }
 
 void ai_walk_until_blocked(ENTITY* e)
@@ -465,7 +465,7 @@ void entity_update_flying(ENTITY* e)
   }
 }
 
-#define LADYBUG_ANIMATION_START 7
+#define LADYBUG_ANIMATION_START 9
 #define LADYBUG_DEAD (LADYBUG_ANIMATION_START - 3)
 #define LADYBUG_STATIONARY (LADYBUG_ANIMATION_START - 2)
 #define LADYBUG_JUMP (LADYBUG_ANIMATION_START - 1)
@@ -474,7 +474,7 @@ const uint8_t ladybugAnimation[] PROGMEM = { 0, 1, 2 };
 
 void ladybug_render(ENTITY* e)
 {
-  if (e->update == entity_update_dying) {
+  if (e->dead) {
     sprites[e->tag].tileIndex = LADYBUG_DEAD;
   } else {
     if (e->jumping || e->falling) {
@@ -503,26 +503,7 @@ void ladybug_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-/* #define LADYBUG_START 5 */
-
-/* void ladybug_render(ENTITY* e) */
-/* { */
-/*   if (e->update == entity_update_dying) { */
-/*     sprites[e->tag].tileIndex = LADYBUG_START - 1; // assumes dead sprite comes directly before start */
-/*   } else { */
-/*     sprites[e->tag].tileIndex = LADYBUG_START; */
-/*   } */
-
-/*   if (e->left) */
-/*     sprites[e->tag].flags = 0; */
-/*   if (e->right) */
-/*     sprites[e->tag].flags = SPRITE_FLIP_X; */
-
-/*   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT; */
-/*   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT; */
-/* } */
-
-#define ANT_ANIMATION_START 13
+#define ANT_ANIMATION_START 15
 #define ANT_DEAD (ANT_ANIMATION_START - 3)
 #define ANT_STATIONARY (ANT_ANIMATION_START - 2)
 #define ANT_JUMP (ANT_ANIMATION_START - 1)
@@ -531,7 +512,7 @@ const uint8_t antAnimation[] PROGMEM = { 0, 1, 2 };
 
 void ant_render(ENTITY* e)
 {
-  if (e->update == entity_update_dying) {
+  if (e->dead) {
     sprites[e->tag].tileIndex = ANT_DEAD;
   } else {
     if (e->jumping || e->falling) {
@@ -560,24 +541,7 @@ void ant_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-/* void ant_render(ENTITY* e) */
-/* { */
-/*   if (e->update == entity_update_dying) { */
-/*     sprites[e->tag].tileIndex = ANT_START - 1; // assumes dead sprite comes directly before start */
-/*   } else { */
-/*     sprites[e->tag].tileIndex = ANT_START; */
-/*   } */
-
-/*   if (e->left) */
-/*     sprites[e->tag].flags = 0; */
-/*   if (e->right) */
-/*     sprites[e->tag].flags = SPRITE_FLIP_X; */
-
-/*   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT; */
-/*   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT; */
-/* } */
-
-#define CRICKET_ANIMATION_START 19
+#define CRICKET_ANIMATION_START 21
 #define CRICKET_DEAD (CRICKET_ANIMATION_START - 3)
 #define CRICKET_STATIONARY (CRICKET_ANIMATION_START - 2)
 #define CRICKET_JUMP (CRICKET_ANIMATION_START - 1)
@@ -586,7 +550,7 @@ const uint8_t cricketAnimation[] PROGMEM = { 0, 1, 2 };
 
 void cricket_render(ENTITY* e)
 {
-  if (e->update == entity_update_dying) {
+  if (e->dead) {
     sprites[e->tag].tileIndex = CRICKET_DEAD;
   } else {
     if (e->jumping || e->falling) {
@@ -615,7 +579,7 @@ void cricket_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define GRASSHOPPER_ANIMATION_START 25
+#define GRASSHOPPER_ANIMATION_START 27
 #define GRASSHOPPER_DEAD (GRASSHOPPER_ANIMATION_START - 3)
 #define GRASSHOPPER_STATIONARY (GRASSHOPPER_ANIMATION_START - 2)
 #define GRASSHOPPER_JUMP (GRASSHOPPER_ANIMATION_START - 1)
@@ -624,7 +588,7 @@ const uint8_t grasshopperAnimation[] PROGMEM = { 0, 1, 2 };
 
 void grasshopper_render(ENTITY* e)
 {
-  if (e->update == entity_update_dying) {
+  if (e->dead) {
     sprites[e->tag].tileIndex = GRASSHOPPER_DEAD;
   } else {
     if (e->jumping || e->falling) {
@@ -653,14 +617,14 @@ void grasshopper_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define FRUITFLY_ANIMATION_START 29
+#define FRUITFLY_ANIMATION_START 31
 #define FRUITFLY_DEAD (FRUITFLY_ANIMATION_START - 1)
 #define FRUITFLY_ANIMATION_FRAME_SKIP 2
 const uint8_t fruitflyAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 
 void fruitfly_render(ENTITY* e)
 {
-  if (e->update == entity_update_dying) {
+  if (e->dead) {
     sprites[e->tag].tileIndex = FRUITFLY_DEAD;
   } else {
     if ((e->animationFrameCounter % FRUITFLY_ANIMATION_FRAME_SKIP) == 0)
@@ -678,14 +642,14 @@ void fruitfly_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define BEE_ANIMATION_START 34
+#define BEE_ANIMATION_START 36
 #define BEE_DEAD (BEE_ANIMATION_START - 1)
 #define BEE_ANIMATION_FRAME_SKIP 2
 const uint8_t beeAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 
 void bee_render(ENTITY* e)
 {
-  if (e->update == entity_update_dying) {
+  if (e->dead) {
     sprites[e->tag].tileIndex = BEE_DEAD;
   } else {
     if ((e->animationFrameCounter % BEE_ANIMATION_FRAME_SKIP) == 0)
@@ -703,14 +667,14 @@ void bee_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define SPIDER_ANIMATION_START 39
+#define SPIDER_ANIMATION_START 41
 #define SPIDER_DEAD (SPIDER_ANIMATION_START - 1)
 #define SPIDER_ANIMATION_FRAME_SKIP 8
 const uint8_t spiderAnimation[] PROGMEM = { 0, 1 };
 
 void spider_render(ENTITY* e)
 {
-  if (e->update == entity_update_dying) {
+  if (e->dead) {
     sprites[e->tag].tileIndex = SPIDER_DEAD;
   } else {
     if ((e->animationFrameCounter % SPIDER_ANIMATION_FRAME_SKIP) == 0)
@@ -903,22 +867,60 @@ void player_update(ENTITY* e)
     p->framesFalling++;
 }
 
-#define PLAYER_START 0
+#define PLAYER_ANIMATION_START 3
+#define PLAYER_DEAD (PLAYER_ANIMATION_START - 3)
+#define PLAYER_STATIONARY (PLAYER_ANIMATION_START - 2)
+#define PLAYER_JUMP (PLAYER_ANIMATION_START - 1)
+#define PLAYER_ANIMATION_FRAME_SKIP 6
+const uint8_t playerAnimation[] PROGMEM = { 0, 1, 2, 1 };
 
 void player_render(ENTITY* e)
 {
-  if (e->left == e->right) {
-    sprites[e->tag].tileIndex = 1 + PLAYER_START + (e->tag * 2);
-    sprites[e->tag].flags = 0;
+  if (e->dead) {
+    sprites[e->tag].tileIndex = PLAYER_DEAD;
   } else {
-    sprites[e->tag].tileIndex = PLAYER_START + (e->tag * 2);
-
-    if (e->left)
-      sprites[e->tag].flags = 0;
-    if (e->right)
-      sprites[e->tag].flags = SPRITE_FLIP_X;
+    if (e->jumping || e->falling) {
+      if (e->dy >= 0)
+        sprites[e->tag].tileIndex = PLAYER_STATIONARY;
+      else
+        sprites[e->tag].tileIndex = PLAYER_JUMP;
+    } else {
+      if (!e->left && !e->right) {
+        sprites[e->tag].tileIndex = PLAYER_STATIONARY;
+      } else {
+        if ((e->animationFrameCounter % PLAYER_ANIMATION_FRAME_SKIP) == 0)
+          sprites[e->tag].tileIndex = PLAYER_ANIMATION_START + pgm_read_byte(&playerAnimation[e->animationFrameCounter / PLAYER_ANIMATION_FRAME_SKIP]);
+        if (++e->animationFrameCounter == PLAYER_ANIMATION_FRAME_SKIP * NELEMS(playerAnimation))
+          e->animationFrameCounter = 0;
+      }
+    }
   }
+
+  if (e->left)
+    sprites[e->tag].flags = 0;
+  if (e->right)
+    sprites[e->tag].flags = SPRITE_FLIP_X;
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
+
+/* #define PLAYER_START 0 */
+
+/* void player_render(ENTITY* e) */
+/* { */
+/*   if (e->left == e->right) { */
+/*     sprites[e->tag].tileIndex = 1 + PLAYER_START + (e->tag * 2); */
+/*     sprites[e->tag].flags = 0; */
+/*   } else { */
+/*     sprites[e->tag].tileIndex = PLAYER_START + (e->tag * 2); */
+
+/*     if (e->left) */
+/*       sprites[e->tag].flags = 0; */
+/*     if (e->right) */
+/*       sprites[e->tag].flags = SPRITE_FLIP_X; */
+/*   } */
+
+/*   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT; */
+/*   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT; */
+/* } */

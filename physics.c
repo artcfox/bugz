@@ -56,9 +56,9 @@ const uint8_t  treasureX[] PROGMEM = {  1,  7,  4, 12, 18,  6, 24, 27, 21, 28, }
 // Y coordinates of each treasure for this level
 const uint8_t  treasureY[] PROGMEM = { 26,  5,  8, 11, 17,  3,  4, 18,  7, 12, };
 // Starting tile number of each treasure tile to render (animation frames follow directly after this number)
-const uint8_t treasureFG[] PROGMEM = {  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4, };
+const uint8_t treasureFG[] PROGMEM = { 6,  6,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1, };
 // Background tile number that should be used to replace each treasure after collected
-const uint8_t treasureBG[] PROGMEM = {  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3, };
+const uint8_t treasureBG[] PROGMEM = { 14,  14,  11,  11,  11,  11,  11,  11,  11,  11,  11,  11,  11,  11,  11,  11, };
 // As the animation frame counter advances, this array will be indexed, and its value will be added to the
 // treasureFG value for each treasure to compute the next tile number that the treasure will use
 const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 3, 4, 3, 2, 1 };
@@ -91,6 +91,7 @@ bool detectKills(PLAYER* player, ENTITY* monster)
               if ( /*(((ENTITY*)(&player[p]))->dy > 0) && */
                    ((((ENTITY*)(&monster[i]))->y + (3 << FP_SHIFT) - ((ENTITY*)(&player[p]))->y) > (WORLD_METER - (4 << FP_SHIFT)))) {
                 TriggerFx(1, 128, false);                               // play the monster death sound
+                ((ENTITY*)(&monster[i]))->dead = true;                  // kill the monster
                 ((ENTITY*)(&monster[i]))->enabled = false;              // make sure we don't consider the entity again for collisions
                 ((ENTITY*)(&monster[i]))->input = null_input;           // disable the entity's ai
                 ((ENTITY*)(&monster[i]))->update = entity_update_dying; // disable normal physics
@@ -133,7 +134,7 @@ int main()
 
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
-    player_init(&player[i], player_input, player_update, bee_render, i,
+    player_init(&player[i], player_input, player_update, player_render, i,
                 (int16_t)(pgm_read_byte(&playerInitialX[i]) * (TILE_WIDTH << FP_SHIFT)),
                 (int16_t)(pgm_read_byte(&playerInitialY[i]) * (TILE_HEIGHT << FP_SHIFT)),
                 WORLD_MAXDX/*WORLD_METER * 12*/,
