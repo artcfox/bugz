@@ -9,32 +9,36 @@
       <map var-name="orange_side" left="2" top="0" width="1" height="1"/>
       <map var-name="orange_front" left="3" top="0" width="1" height="1"/>
       <map var-name="ladybug_dead" left="4" top="0" width="1" height="1"/>
-      <map var-name="ladybug" left="5" top="0" width="1" height="1"/>
-      <map var-name="ant_dead" left="6" top="0" width="1" height="1"/>
-      <map var-name="ant_stationary" left="7" top="0" width="1" height="1"/>
-      <map var-name="ant_jump" left="8" top="0" width="1" height="1"/>
-      <map var-name="ant1" left="9" top="0" width="1" height="1"/>
-      <map var-name="ant2" left="10" top="0" width="1" height="1"/>
-      <map var-name="ant3" left="11" top="0" width="1" height="1"/>
-      <map var-name="cricket_dead" left="12" top="0" width="1" height="1"/>
-      <map var-name="cricket1" left="13" top="0" width="1" height="1"/>
-      <map var-name="cricket2" left="14" top="0" width="1" height="1"/>
-      <map var-name="grasshopper_dead" left="15" top="0" width="1" height="1"/>
-      <map var-name="grasshopper1" left="16" top="0" width="1" height="1"/>
-      <map var-name="grasshopper2" left="17" top="0" width="1" height="1"/>
-      <map var-name="fruitfly_dead" left="18" top="0" width="1" height="1"/>
-      <map var-name="fruitfly1" left="19" top="0" width="1" height="1"/>
-      <map var-name="fruitfly2" left="20" top="0" width="1" height="1"/>
-      <map var-name="fruitfly3" left="21" top="0" width="1" height="1"/>
-      <map var-name="fruitfly4" left="22" top="0" width="1" height="1"/>
-      <map var-name="bee_dead" left="23" top="0" width="1" height="1"/>
-      <map var-name="bee1" left="24" top="0" width="1" height="1"/>
-      <map var-name="bee2" left="25" top="0" width="1" height="1"/>
-      <map var-name="bee3" left="26" top="0" width="1" height="1"/>
-      <map var-name="bee4" left="27" top="0" width="1" height="1"/>
-      <map var-name="spider_dead" left="28" top="0" width="1" height="1"/>
-      <map var-name="spider1" left="29" top="0" width="1" height="1"/>
-      <map var-name="spider2" left="30" top="0" width="1" height="1"/>
+      <map var-name="ladybug_stationary" left="5" top="0" width="1" height="1"/>
+      <map var-name="ladybug_jump" left="6" top="0" width="1" height="1"/>
+      <map var-name="ladybug1" left="7" top="0" width="1" height="1"/>
+      <map var-name="ladybug2" left="8" top="0" width="1" height="1"/>
+      <map var-name="ladybug3" left="9" top="0" width="1" height="1"/>
+      <map var-name="ant_dead" left="10" top="0" width="1" height="1"/>
+      <map var-name="ant_stationary" left="11" top="0" width="1" height="1"/>
+      <map var-name="ant_jump" left="12" top="0" width="1" height="1"/>
+      <map var-name="ant1" left="13" top="0" width="1" height="1"/>
+      <map var-name="ant2" left="14" top="0" width="1" height="1"/>
+      <map var-name="ant3" left="15" top="0" width="1" height="1"/>
+      <map var-name="cricket_dead" left="16" top="0" width="1" height="1"/>
+      <map var-name="cricket1" left="17" top="0" width="1" height="1"/>
+      <map var-name="cricket2" left="18" top="0" width="1" height="1"/>
+      <map var-name="grasshopper_dead" left="19" top="0" width="1" height="1"/>
+      <map var-name="grasshopper1" left="20" top="0" width="1" height="1"/>
+      <map var-name="grasshopper2" left="21" top="0" width="1" height="1"/>
+      <map var-name="fruitfly_dead" left="22" top="0" width="1" height="1"/>
+      <map var-name="fruitfly1" left="23" top="0" width="1" height="1"/>
+      <map var-name="fruitfly2" left="24" top="0" width="1" height="1"/>
+      <map var-name="fruitfly3" left="25" top="0" width="1" height="1"/>
+      <map var-name="fruitfly4" left="26" top="0" width="1" height="1"/>
+      <map var-name="bee_dead" left="27" top="0" width="1" height="1"/>
+      <map var-name="bee1" left="28" top="0" width="1" height="1"/>
+      <map var-name="bee2" left="29" top="0" width="1" height="1"/>
+      <map var-name="bee3" left="30" top="0" width="1" height="1"/>
+      <map var-name="bee4" left="31" top="0" width="1" height="1"/>
+      <map var-name="spider_dead" left="32" top="0" width="1" height="1"/>
+      <map var-name="spider1" left="33" top="0" width="1" height="1"/>
+      <map var-name="spider2" left="34" top="0" width="1" height="1"/>
     </maps>
   </output>
 </gfx-xform>

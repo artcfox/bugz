@@ -133,10 +133,10 @@ int main()
 
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
-    player_init(&player[i], player_input, player_update, ant_render, i,
+    player_init(&player[i], player_input, player_update, grasshopper_render, i,
                 (int16_t)(pgm_read_byte(&playerInitialX[i]) * (TILE_WIDTH << FP_SHIFT)),
                 (int16_t)(pgm_read_byte(&playerInitialY[i]) * (TILE_HEIGHT << FP_SHIFT)),
-                WORLD_MAXDX /*WORLD_METER * 12*/,
+                WORLD_MAXDX/*WORLD_METER * 12*/,
                 WORLD_JUMP_IMPULSE);
     ((ENTITY*)(&player[i]))->enabled = true;
 

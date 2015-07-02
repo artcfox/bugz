@@ -465,14 +465,33 @@ void entity_update_flying(ENTITY* e)
   }
 }
 
-#define LADYBUG_START 5
+#define LADYBUG_ANIMATION_START 7
+#define LADYBUG_DEAD (LADYBUG_ANIMATION_START - 3)
+#define LADYBUG_STATIONARY (LADYBUG_ANIMATION_START - 2)
+#define LADYBUG_JUMP (LADYBUG_ANIMATION_START - 1)
+#define LADYBUG_ANIMATION_FRAME_SKIP 6
+const uint8_t ladybugAnimation[] PROGMEM = { 0, 1, 2 };
 
 void ladybug_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
-    sprites[e->tag].tileIndex = LADYBUG_START - 1; // assumes dead sprite comes directly before start
+    sprites[e->tag].tileIndex = LADYBUG_DEAD;
   } else {
-    sprites[e->tag].tileIndex = LADYBUG_START;
+    if (e->jumping || e->falling) {
+      if (e->dy >= 0)
+        sprites[e->tag].tileIndex = LADYBUG_STATIONARY;
+      else
+        sprites[e->tag].tileIndex = LADYBUG_JUMP;
+    } else {
+      if (!e->left && !e->right) {
+        sprites[e->tag].tileIndex = LADYBUG_STATIONARY;
+      } else {
+        if ((e->animationFrameCounter % LADYBUG_ANIMATION_FRAME_SKIP) == 0)
+          sprites[e->tag].tileIndex = LADYBUG_ANIMATION_START + pgm_read_byte(&ladybugAnimation[e->animationFrameCounter / LADYBUG_ANIMATION_FRAME_SKIP]);
+        if (++e->animationFrameCounter == LADYBUG_ANIMATION_FRAME_SKIP * NELEMS(ladybugAnimation))
+          e->animationFrameCounter = 0;
+      }
+    }
   }
 
   if (e->left)
@@ -484,7 +503,26 @@ void ladybug_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define ANT_ANIMATION_START 9
+/* #define LADYBUG_START 5 */
+
+/* void ladybug_render(ENTITY* e) */
+/* { */
+/*   if (e->update == entity_update_dying) { */
+/*     sprites[e->tag].tileIndex = LADYBUG_START - 1; // assumes dead sprite comes directly before start */
+/*   } else { */
+/*     sprites[e->tag].tileIndex = LADYBUG_START; */
+/*   } */
+
+/*   if (e->left) */
+/*     sprites[e->tag].flags = 0; */
+/*   if (e->right) */
+/*     sprites[e->tag].flags = SPRITE_FLIP_X; */
+
+/*   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT; */
+/*   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT; */
+/* } */
+
+#define ANT_ANIMATION_START 13
 #define ANT_DEAD (ANT_ANIMATION_START - 3)
 #define ANT_STATIONARY (ANT_ANIMATION_START - 2)
 #define ANT_JUMP (ANT_ANIMATION_START - 1)
@@ -539,7 +577,7 @@ void ant_render(ENTITY* e)
 /*   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT; */
 /* } */
 
-#define CRICKET_START 13
+#define CRICKET_START 17
 
 void cricket_render(ENTITY* e)
 {
@@ -561,7 +599,7 @@ void cricket_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define GRASSHOPPER_START 16
+#define GRASSHOPPER_START 20
 
 void grasshopper_render(ENTITY* e)
 {
@@ -583,7 +621,7 @@ void grasshopper_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define FRUITFLY_ANIMATION_START 19
+#define FRUITFLY_ANIMATION_START 23
 #define FRUITFLY_ANIMATION_FRAME_SKIP 2
 const uint8_t fruitflyAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 
@@ -607,7 +645,7 @@ void fruitfly_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define BEE_ANIMATION_START 24
+#define BEE_ANIMATION_START 27
 #define BEE_ANIMATION_FRAME_SKIP 2
 const uint8_t beeAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 
@@ -631,7 +669,7 @@ void bee_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define SPIDER_ANIMATION_START 29
+#define SPIDER_ANIMATION_START 33
 #define SPIDER_ANIMATION_FRAME_SKIP 8
 const uint8_t spiderAnimation[] PROGMEM = { 0, 1 };
 
