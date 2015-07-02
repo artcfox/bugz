@@ -72,9 +72,9 @@ bool detectKills(PLAYER* player, ENTITY* monster)
 {
     // Check for player collisions with monsters
     for (uint8_t p = 0; p < PLAYERS; ++p) {
-      if (((ENTITY*)(&player[p]))->enabled == true) {
+      if (((ENTITY*)(&player[p]))->enabled) {
         for (uint8_t i = 0; i < MONSTERS; ++i) {
-          if (((ENTITY*)(&monster[i]))->enabled == true) {
+          if (((ENTITY*)(&monster[i]))->enabled) {
             // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
             // If the player is moving down really fast, and an entity is moving up really fast, there is a slight chance
             // that it will kill you, because the entity might pass far enough through you that it's y position is above
@@ -133,7 +133,7 @@ int main()
 
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
-    player_init(&player[i], player_input, player_update, grasshopper_render, i,
+    player_init(&player[i], player_input, player_update, bee_render, i,
                 (int16_t)(pgm_read_byte(&playerInitialX[i]) * (TILE_WIDTH << FP_SHIFT)),
                 (int16_t)(pgm_read_byte(&playerInitialY[i]) * (TILE_HEIGHT << FP_SHIFT)),
                 WORLD_MAXDX/*WORLD_METER * 12*/,

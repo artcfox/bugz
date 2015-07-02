@@ -577,17 +577,33 @@ void ant_render(ENTITY* e)
 /*   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT; */
 /* } */
 
-#define CRICKET_START 17
+#define CRICKET_ANIMATION_START 19
+#define CRICKET_DEAD (CRICKET_ANIMATION_START - 3)
+#define CRICKET_STATIONARY (CRICKET_ANIMATION_START - 2)
+#define CRICKET_JUMP (CRICKET_ANIMATION_START - 1)
+#define CRICKET_ANIMATION_FRAME_SKIP 6
+const uint8_t cricketAnimation[] PROGMEM = { 0, 1, 2 };
 
 void cricket_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
-    sprites[e->tag].tileIndex = CRICKET_START - 1; // assumes dead sprite comes directly before start
+    sprites[e->tag].tileIndex = CRICKET_DEAD;
   } else {
-    if (e->dy >= 0)
-      sprites[e->tag].tileIndex = CRICKET_START;
-    else
-      sprites[e->tag].tileIndex = CRICKET_START + 1;
+    if (e->jumping || e->falling) {
+      if (e->dy >= 0)
+        sprites[e->tag].tileIndex = CRICKET_STATIONARY;
+      else
+        sprites[e->tag].tileIndex = CRICKET_JUMP;
+    } else {
+      if (!e->left && !e->right) {
+        sprites[e->tag].tileIndex = CRICKET_STATIONARY;
+      } else {
+        if ((e->animationFrameCounter % CRICKET_ANIMATION_FRAME_SKIP) == 0)
+          sprites[e->tag].tileIndex = CRICKET_ANIMATION_START + pgm_read_byte(&cricketAnimation[e->animationFrameCounter / CRICKET_ANIMATION_FRAME_SKIP]);
+        if (++e->animationFrameCounter == CRICKET_ANIMATION_FRAME_SKIP * NELEMS(cricketAnimation))
+          e->animationFrameCounter = 0;
+      }
+    }
   }
 
   if (e->left)
@@ -599,17 +615,33 @@ void cricket_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define GRASSHOPPER_START 20
+#define GRASSHOPPER_ANIMATION_START 25
+#define GRASSHOPPER_DEAD (GRASSHOPPER_ANIMATION_START - 3)
+#define GRASSHOPPER_STATIONARY (GRASSHOPPER_ANIMATION_START - 2)
+#define GRASSHOPPER_JUMP (GRASSHOPPER_ANIMATION_START - 1)
+#define GRASSHOPPER_ANIMATION_FRAME_SKIP 6
+const uint8_t grasshopperAnimation[] PROGMEM = { 0, 1, 2 };
 
 void grasshopper_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
-    sprites[e->tag].tileIndex = GRASSHOPPER_START - 1; // assumes dead sprite comes directly before start
+    sprites[e->tag].tileIndex = GRASSHOPPER_DEAD;
   } else {
-    if (e->dy >= 0)
-      sprites[e->tag].tileIndex = GRASSHOPPER_START;
-    else
-      sprites[e->tag].tileIndex = GRASSHOPPER_START + 1;
+    if (e->jumping || e->falling) {
+      if (e->dy >= 0)
+        sprites[e->tag].tileIndex = GRASSHOPPER_STATIONARY;
+      else
+        sprites[e->tag].tileIndex = GRASSHOPPER_JUMP;
+    } else {
+      if (!e->left && !e->right) {
+        sprites[e->tag].tileIndex = GRASSHOPPER_STATIONARY;
+      } else {
+        if ((e->animationFrameCounter % GRASSHOPPER_ANIMATION_FRAME_SKIP) == 0)
+          sprites[e->tag].tileIndex = GRASSHOPPER_ANIMATION_START + pgm_read_byte(&grasshopperAnimation[e->animationFrameCounter / GRASSHOPPER_ANIMATION_FRAME_SKIP]);
+        if (++e->animationFrameCounter == GRASSHOPPER_ANIMATION_FRAME_SKIP * NELEMS(grasshopperAnimation))
+          e->animationFrameCounter = 0;
+      }
+    }
   }
 
   if (e->left)
@@ -621,14 +653,15 @@ void grasshopper_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define FRUITFLY_ANIMATION_START 23
+#define FRUITFLY_ANIMATION_START 29
+#define FRUITFLY_DEAD (FRUITFLY_ANIMATION_START - 1)
 #define FRUITFLY_ANIMATION_FRAME_SKIP 2
 const uint8_t fruitflyAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 
 void fruitfly_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
-    sprites[e->tag].tileIndex = FRUITFLY_ANIMATION_START - 1; // assumes dead sprite comes directly before animation
+    sprites[e->tag].tileIndex = FRUITFLY_DEAD;
   } else {
     if ((e->animationFrameCounter % FRUITFLY_ANIMATION_FRAME_SKIP) == 0)
       sprites[e->tag].tileIndex = FRUITFLY_ANIMATION_START + pgm_read_byte(&fruitflyAnimation[e->animationFrameCounter / FRUITFLY_ANIMATION_FRAME_SKIP]);
@@ -645,14 +678,15 @@ void fruitfly_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define BEE_ANIMATION_START 27
+#define BEE_ANIMATION_START 34
+#define BEE_DEAD (BEE_ANIMATION_START - 1)
 #define BEE_ANIMATION_FRAME_SKIP 2
 const uint8_t beeAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 
 void bee_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
-    sprites[e->tag].tileIndex = BEE_ANIMATION_START - 1; // assumes dead sprite comes directly before animation
+    sprites[e->tag].tileIndex = BEE_DEAD;
   } else {
     if ((e->animationFrameCounter % BEE_ANIMATION_FRAME_SKIP) == 0)
       sprites[e->tag].tileIndex = BEE_ANIMATION_START + pgm_read_byte(&beeAnimation[e->animationFrameCounter / BEE_ANIMATION_FRAME_SKIP]);
@@ -669,14 +703,15 @@ void bee_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define SPIDER_ANIMATION_START 33
+#define SPIDER_ANIMATION_START 39
+#define SPIDER_DEAD (SPIDER_ANIMATION_START - 1)
 #define SPIDER_ANIMATION_FRAME_SKIP 8
 const uint8_t spiderAnimation[] PROGMEM = { 0, 1 };
 
 void spider_render(ENTITY* e)
 {
   if (e->update == entity_update_dying) {
-    sprites[e->tag].tileIndex = SPIDER_ANIMATION_START - 1; // assumes dead sprite comes directly before animation
+    sprites[e->tag].tileIndex = SPIDER_DEAD;
   } else {
     if ((e->animationFrameCounter % SPIDER_ANIMATION_FRAME_SKIP) == 0)
       sprites[e->tag].tileIndex = SPIDER_ANIMATION_START + pgm_read_byte(&spiderAnimation[e->animationFrameCounter / SPIDER_ANIMATION_FRAME_SKIP]);
