@@ -298,6 +298,14 @@ void entity_update(ENTITY* e)
   else if (e->dy > WORLD_MAXDY)
     e->dy = WORLD_MAXDY;
 
+  // Has entity fallen down a hole?
+  if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
+    e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
+    e->dy = 0;
+    e->dead = true;
+    return;
+  }
+
   // Collision Detection for Y
   tx = p2ht(e->x);
   ty = p2vt(e->y);
@@ -832,6 +840,14 @@ void player_update(ENTITY* e)
     e->dy = -WORLD_MAXDY;
   else if (e->dy > WORLD_MAXDY)
     e->dy = WORLD_MAXDY;
+
+  // Has entity fallen down a hole?
+  if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
+    e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
+    e->dy = 0;
+    e->dead = true;
+    return;
+  }
 
   // Collision Detection for Y
   tx = p2ht(e->x);
