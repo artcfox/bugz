@@ -67,7 +67,7 @@
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
 // Maps tile number to solidity
-const uint8_t isSolid[] PROGMEM = { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+//const uint8_t isSolid[] PROGMEM = { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 void null_input(ENTITY* e) { }
 void null_update(ENTITY* e) { }
@@ -105,8 +105,8 @@ void ai_walk_until_blocked(ENTITY* e)
   else
     tx = p2ht(e->x);
   uint8_t ty = p2vt(e->y);
-  uint8_t cell      = pgm_read_byte(&isSolid[GetTile(tx    , ty)]);
-  uint8_t cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
+  uint8_t cell      = isSolid(GetTile(tx    , ty));
+  uint8_t cellright = isSolid(GetTile(tx + 1, ty));
 
   if (e->left) {
     if (cell) {
@@ -136,10 +136,10 @@ void ai_walk_until_blocked_or_ledge(ENTITY* e)
   else
     tx = p2ht(e->x);
   uint8_t ty = p2vt(e->y);
-  uint8_t cell      = pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
-  uint8_t cellright = pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
-  uint8_t celldown  = pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-  uint8_t celldiag  = pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+  uint8_t cell      = isSolid(GetTile(tx,     ty));
+  uint8_t cellright = isSolid(GetTile(tx + 1, ty));
+  uint8_t celldown  = isSolid(GetTile(tx,     ty + 1));
+  uint8_t celldiag  = isSolid(GetTile(tx + 1, ty + 1));
 
   if (e->left) {
     if (cell || (!celldown && !e->falling)) {
@@ -263,10 +263,10 @@ void entity_update(ENTITY* e)
   uint8_t ty = p2vt(e->y);
   u.nx = (bool)nh(e->x);  // true if entity overlaps right
   u.ny = (bool)nv(e->y);  // true if entity overlaps below
-  u.cell      = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
-  u.cellright = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
-  u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-  u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+  u.cell      = (bool)isSolid(GetTile(tx,     ty));
+  u.cellright = (bool)isSolid(GetTile(tx + 1, ty));
+  u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+  u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
 
   if (e->dx > 0) {
     if ((u.cellright && !u.cell) ||
@@ -275,8 +275,8 @@ void entity_update(ENTITY* e)
       e->dx = 0;           // stop horizontal velocity
       u.nx = false;          // entity no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-      u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+      u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+      u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
     }
   } else if (e->dx < 0) {
     if ((u.cell     && !u.cellright) ||
@@ -285,8 +285,8 @@ void entity_update(ENTITY* e)
       e->dx = 0;           // stop horizontal velocity
       u.nx = false;              // entity no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-      u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+      u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+      u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
     }
   }
 
@@ -311,10 +311,10 @@ void entity_update(ENTITY* e)
   ty = p2vt(e->y);
   u.nx = (bool)nh(e->x);  // true if entity overlaps right
   u.ny = (bool)nv(e->y);  // true if entity overlaps below
-  u.cell      = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
-  u.cellright = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
-  u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-  u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+  u.cell      = (bool)isSolid(GetTile(tx,     ty));
+  u.cellright = (bool)isSolid(GetTile(tx + 1, ty));
+  u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+  u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
 
   if (e->dy > 0) {
     if ((u.celldown && !u.cell) ||
@@ -806,10 +806,10 @@ void player_update(ENTITY* e)
   uint8_t ty = p2vt(e->y);
   u.nx = (bool)nh(e->x);  // true if player overlaps right
   u.ny = (bool)nv(e->y); // true if player overlaps below
-  u.cell      = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
-  u.cellright = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
-  u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-  u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+  u.cell      = (bool)isSolid(GetTile(tx,     ty));
+  u.cellright = (bool)isSolid(GetTile(tx + 1, ty));
+  u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+  u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
 
   if (e->dx > 0) {
     if ((u.cellright && !u.cell) ||
@@ -818,8 +818,8 @@ void player_update(ENTITY* e)
       e->dx = 0;           // stop horizontal velocity
       u.nx = false;        // player no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-      u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+      u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+      u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
     }
   } else if (e->dx < 0) {
     if ((u.cell     && !u.cellright) ||
@@ -828,8 +828,8 @@ void player_update(ENTITY* e)
       e->dx = 0;           // stop horizontal velocity
       u.nx = false;        // player no longer overlaps the adjacent cell
       tx = p2ht(e->x);
-      u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-      u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+      u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+      u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
     }
   }
 
@@ -854,10 +854,10 @@ void player_update(ENTITY* e)
   ty = p2vt(e->y);
   u.nx = (bool)nh(e->x);  // true if player overlaps right
   u.ny = (bool)nv(e->y); // true if player overlaps below
-  u.cell      = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty)]);
-  u.cellright = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty)]);
-  u.celldown  = (bool)pgm_read_byte(&isSolid[GetTile(tx,     ty + 1)]);
-  u.celldiag  = (bool)pgm_read_byte(&isSolid[GetTile(tx + 1, ty + 1)]);
+  u.cell      = (bool)isSolid(GetTile(tx,     ty));
+  u.cellright = (bool)isSolid(GetTile(tx + 1, ty));
+  u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+  u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
 
   if (e->dy > 0) {
     if ((u.celldown && !u.cell) ||
