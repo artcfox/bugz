@@ -67,7 +67,7 @@
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
 // Maps tile number to solidity
-const uint8_t isSolid[] PROGMEM = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, };
+const uint8_t isSolid[] PROGMEM = { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 void null_input(ENTITY* e) { }
 void null_update(ENTITY* e) { }

@@ -41,14 +41,14 @@
 extern const char mysprites[] PROGMEM;
 extern const struct PatchStruct patches[] PROGMEM;
 
-const uint8_t  playerInitialX[] PROGMEM = {  4, 25 };
-const uint8_t  playerInitialY[] PROGMEM = { 26, 25 };
+const uint8_t  playerInitialX[] PROGMEM = {  1, 2 };
+const uint8_t  playerInitialY[] PROGMEM = { 25, 25 };
 const uint8_t monsterInitialX[] PROGMEM = { 25, 28,  9, 16, 19 };
 const uint8_t monsterInitialY[] PROGMEM = { 12, 22, 19, 17,  8 };
 const uint8_t monsterInitialD[] PROGMEM = {  3,  0,  0,  0,  0 };
 
 // How many treasures are in the level
-#define TREASURE_COUNT 10
+#define TREASURE_COUNT 0
 // How many frames to wait between 
 #define TREASURE_FRAME_SKIP 15
 // X coordinates of each treasure for this level
