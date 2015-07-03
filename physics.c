@@ -106,10 +106,10 @@ bool detectKills(PLAYER* players, ENTITY* monsters)
         }
 
         for (uint8_t i = 0; i < MONSTERS; ++i) {
-          if (((ENTITY*)(&monsters[i]))->enabled) {
+          if (monsters[i].enabled) {
 
             // Check if the dead flag has been set for a monster
-            if (((ENTITY*)(&monsters[i]))->dead) {
+            if (monsters[i].dead) {
               killMonster(&monsters[i]);
             }
 
@@ -122,12 +122,12 @@ bool detectKills(PLAYER* players, ENTITY* monsters)
                         ((ENTITY*)(&players[p]))->y,
                         WORLD_METER,
                         WORLD_METER,
-                        ((ENTITY*)(&monsters[i]))->x + (1 << FP_SHIFT),
-                        ((ENTITY*)(&monsters[i]))->y + (3 << FP_SHIFT),
+                        monsters[i].x + (1 << FP_SHIFT),
+                        monsters[i].y + (3 << FP_SHIFT),
                         WORLD_METER - (2 << FP_SHIFT),
                         WORLD_METER - (4 << FP_SHIFT))) {
               if ( /*(((ENTITY*)(&players[p]))->dy > 0) && */
-                   ((((ENTITY*)(&monsters[i]))->y + (3 << FP_SHIFT) - ((ENTITY*)(&players[p]))->y) > (WORLD_METER - (4 << FP_SHIFT)))) {
+                   ((monsters[i].y + (3 << FP_SHIFT) - ((ENTITY*)(&players[p]))->y) > (WORLD_METER - (4 << FP_SHIFT)))) {
                 killMonster(&monsters[i]);
                 ((ENTITY*)(&players[p]))->monsterhop = true;             // player should now do the monster hop
                 /* while (ReadJoypad(((ENTITY*)(&players[p]))->tag) != BTN_B) { */
@@ -242,7 +242,7 @@ int main()
       ((ENTITY*)(&player[i]))->input((ENTITY*)(&player[i]));
     }
     for (uint8_t i = 0; i < MONSTERS; ++i) {
-      ((ENTITY*)(&monster[i]))->input((ENTITY*)(&monster[i]));
+      monster[i].input(&monster[i]);
     }
     
     // Update the state of every entity
@@ -255,7 +255,7 @@ int main()
       goto start;
 
     for (uint8_t i = 0; i < MONSTERS; ++i) {
-      ((ENTITY*)(&monster[i]))->update((ENTITY*)(&monster[i]));
+      monster[i].update(&monster[i]);
     }
     
     // Render every entity
@@ -263,7 +263,7 @@ int main()
       ((ENTITY*)(&player[i]))->render((ENTITY*)(&player[i]));
     }
     for (uint8_t i = 0; i < MONSTERS; ++i) {
-      ((ENTITY*)(&monster[i]))->render((ENTITY*)(&monster[i]));
+      monster[i].render(&monster[i]);
     }
 
     // Now detect any kills when only the monster is moved
