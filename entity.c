@@ -346,7 +346,11 @@ void entity_update_dying(ENTITY* e)
     return;
   }
 
-  int16_t ddy = WORLD_GRAVITY;
+  int16_t ddy;
+  if (e->up)
+    ddy = -WORLD_GRAVITY / 4;
+  else
+    ddy = WORLD_GRAVITY;
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->y += (e->dy / WORLD_FPS);
@@ -494,10 +498,12 @@ void ladybug_render(ENTITY* e)
       if (!e->left && !e->right) {
         sprites[e->tag].tileIndex = LADYBUG_STATIONARY;
       } else {
-        if ((e->animationFrameCounter % LADYBUG_ANIMATION_FRAME_SKIP) == 0)
-          sprites[e->tag].tileIndex = LADYBUG_ANIMATION_START + pgm_read_byte(&ladybugAnimation[e->animationFrameCounter / LADYBUG_ANIMATION_FRAME_SKIP]);
-        if (++e->animationFrameCounter == LADYBUG_ANIMATION_FRAME_SKIP * NELEMS(ladybugAnimation))
-          e->animationFrameCounter = 0;
+        for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+          if ((e->animationFrameCounter % LADYBUG_ANIMATION_FRAME_SKIP) == 0)
+            sprites[e->tag].tileIndex = LADYBUG_ANIMATION_START + pgm_read_byte(&ladybugAnimation[e->animationFrameCounter / LADYBUG_ANIMATION_FRAME_SKIP]);
+          if (++e->animationFrameCounter == LADYBUG_ANIMATION_FRAME_SKIP * NELEMS(ladybugAnimation))
+            e->animationFrameCounter = 0;
+        }
       }
     }
   }
@@ -532,10 +538,12 @@ void ant_render(ENTITY* e)
       if (!e->left && !e->right) {
         sprites[e->tag].tileIndex = ANT_STATIONARY;
       } else {
-        if ((e->animationFrameCounter % ANT_ANIMATION_FRAME_SKIP) == 0)
-          sprites[e->tag].tileIndex = ANT_ANIMATION_START + pgm_read_byte(&antAnimation[e->animationFrameCounter / ANT_ANIMATION_FRAME_SKIP]);
-        if (++e->animationFrameCounter == ANT_ANIMATION_FRAME_SKIP * NELEMS(antAnimation))
-          e->animationFrameCounter = 0;
+        for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+          if ((e->animationFrameCounter % ANT_ANIMATION_FRAME_SKIP) == 0)
+            sprites[e->tag].tileIndex = ANT_ANIMATION_START + pgm_read_byte(&antAnimation[e->animationFrameCounter / ANT_ANIMATION_FRAME_SKIP]);
+          if (++e->animationFrameCounter == ANT_ANIMATION_FRAME_SKIP * NELEMS(antAnimation))
+            e->animationFrameCounter = 0;
+        }
       }
     }
   }
@@ -570,10 +578,12 @@ void cricket_render(ENTITY* e)
       if (!e->left && !e->right) {
         sprites[e->tag].tileIndex = CRICKET_STATIONARY;
       } else {
-        if ((e->animationFrameCounter % CRICKET_ANIMATION_FRAME_SKIP) == 0)
-          sprites[e->tag].tileIndex = CRICKET_ANIMATION_START + pgm_read_byte(&cricketAnimation[e->animationFrameCounter / CRICKET_ANIMATION_FRAME_SKIP]);
-        if (++e->animationFrameCounter == CRICKET_ANIMATION_FRAME_SKIP * NELEMS(cricketAnimation))
-          e->animationFrameCounter = 0;
+        for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+          if ((e->animationFrameCounter % CRICKET_ANIMATION_FRAME_SKIP) == 0)
+            sprites[e->tag].tileIndex = CRICKET_ANIMATION_START + pgm_read_byte(&cricketAnimation[e->animationFrameCounter / CRICKET_ANIMATION_FRAME_SKIP]);
+          if (++e->animationFrameCounter == CRICKET_ANIMATION_FRAME_SKIP * NELEMS(cricketAnimation))
+            e->animationFrameCounter = 0;
+        }
       }
     }
   }
@@ -608,10 +618,12 @@ void grasshopper_render(ENTITY* e)
       if (!e->left && !e->right) {
         sprites[e->tag].tileIndex = GRASSHOPPER_STATIONARY;
       } else {
-        if ((e->animationFrameCounter % GRASSHOPPER_ANIMATION_FRAME_SKIP) == 0)
-          sprites[e->tag].tileIndex = GRASSHOPPER_ANIMATION_START + pgm_read_byte(&grasshopperAnimation[e->animationFrameCounter / GRASSHOPPER_ANIMATION_FRAME_SKIP]);
-        if (++e->animationFrameCounter == GRASSHOPPER_ANIMATION_FRAME_SKIP * NELEMS(grasshopperAnimation))
-          e->animationFrameCounter = 0;
+        for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+          if ((e->animationFrameCounter % GRASSHOPPER_ANIMATION_FRAME_SKIP) == 0)
+            sprites[e->tag].tileIndex = GRASSHOPPER_ANIMATION_START + pgm_read_byte(&grasshopperAnimation[e->animationFrameCounter / GRASSHOPPER_ANIMATION_FRAME_SKIP]);
+          if (++e->animationFrameCounter == GRASSHOPPER_ANIMATION_FRAME_SKIP * NELEMS(grasshopperAnimation))
+            e->animationFrameCounter = 0;
+        }
       }
     }
   }
@@ -685,10 +697,12 @@ void spider_render(ENTITY* e)
   if (e->dead) {
     sprites[e->tag].tileIndex = SPIDER_DEAD;
   } else {
-    if ((e->animationFrameCounter % SPIDER_ANIMATION_FRAME_SKIP) == 0)
-      sprites[e->tag].tileIndex = SPIDER_ANIMATION_START + pgm_read_byte(&spiderAnimation[e->animationFrameCounter / SPIDER_ANIMATION_FRAME_SKIP]);
-    if (++e->animationFrameCounter == SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation))
-      e->animationFrameCounter = 0;
+    for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+      if ((e->animationFrameCounter % SPIDER_ANIMATION_FRAME_SKIP) == 0)
+        sprites[e->tag].tileIndex = SPIDER_ANIMATION_START + pgm_read_byte(&spiderAnimation[e->animationFrameCounter / SPIDER_ANIMATION_FRAME_SKIP]);
+      if (++e->animationFrameCounter == SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation))
+        e->animationFrameCounter = 0;
+    }
   }
 
   if (e->left)

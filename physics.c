@@ -43,12 +43,12 @@ extern const struct PatchStruct patches[] PROGMEM;
 
 const uint8_t  playerInitialX[] PROGMEM = {  1, 2 };
 const uint8_t  playerInitialY[] PROGMEM = { 25, 25 };
-const uint8_t monsterInitialX[] PROGMEM = { 25, 28,  9, 16, 19 };
-const uint8_t monsterInitialY[] PROGMEM = { 12, 22, 19, 17,  8 };
-const uint8_t monsterInitialD[] PROGMEM = {  3,  0,  0,  0,  0 };
+const uint8_t monsterInitialX[] PROGMEM = { 25, 28,  9, 16, 19,  7,  9, 23, 45, 9 };
+const uint8_t monsterInitialY[] PROGMEM = { 12, 22, 19, 17,  8, 25, 25, 5, 6, 7 };
+const uint8_t monsterInitialD[] PROGMEM = {  3,  0,  0,  0,  0,  1,  0, 0, 1, 0 };
 
 // How many treasures are in the level
-#define TREASURE_COUNT 0
+#define TREASURE_COUNT 1
 // How many frames to wait between 
 #define TREASURE_FRAME_SKIP 15
 // X coordinates of each treasure for this level
@@ -70,20 +70,25 @@ const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 3, 4, 3, 2, 1 };
 
 void killPlayer(PLAYER* p)
 {
+  ENTITY* e = (ENTITY*)p;
   TriggerFx(3, 128, false);
-  ((ENTITY*)p)->enabled = false;
-  ((ENTITY*)p)->input = null_input;
-  ((ENTITY*)p)->update = null_update;
-  player_render((ENTITY*)p);
-  while (ReadJoypad(((ENTITY*)p)->tag) != BTN_START) {
-    // TODO: figure out how to get note to stop playing
-  }
+  e->dead = true;
+  e->up = true;                   // player dies upwards
+  e->dy = 0;
+  e->enabled = false;
+  e->input = null_input;
+  e->update = entity_update_dying;
+  /* e->render(e); // since we just died, call the render function */
+  /* while (ReadJoypad(e->tag) != BTN_START) { */
+  /*   // TODO: figure out how to get note to stop playing */
+  /* } */
 }
 
 void killMonster(ENTITY* e)
 {
   TriggerFx(1, 128, false);        // play the monster death sound
   e->dead = true;                  // kill the monster
+  e->up = false;                   // die downwards
   e->enabled = false;              // make sure we don't consider the entity again for collisions
   e->input = null_input;           // disable the entity's ai
   e->update = entity_update_dying; // disable normal physics
@@ -97,7 +102,7 @@ bool detectKills(PLAYER* players, ENTITY* monsters)
         // Check if the dead flag has been set for a player
         if (((ENTITY*)(&players[p]))->dead) {
           killPlayer(&players[p]);
-          return true;
+          //return true;
         }
 
         for (uint8_t i = 0; i < MONSTERS; ++i) {
@@ -130,7 +135,7 @@ bool detectKills(PLAYER* players, ENTITY* monsters)
                 /* } */
               } else {
                 killPlayer(&players[p]);
-                return true;
+                //return true;
               }
             }
           }

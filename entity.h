@@ -42,7 +42,7 @@
 #define NELEMS(x) (sizeof(x)/sizeof(x[0]))
 
 #define PLAYERS 1
-#define MONSTERS 5
+#define MONSTERS 6
 
 #define FP_SHIFT   2
 
