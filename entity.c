@@ -904,10 +904,12 @@ void player_render(ENTITY* e)
       if (!e->left && !e->right) {
         sprites[e->tag].tileIndex = PLAYER_STATIONARY;
       } else {
-        if ((e->animationFrameCounter % PLAYER_ANIMATION_FRAME_SKIP) == 0)
-          sprites[e->tag].tileIndex = PLAYER_ANIMATION_START + pgm_read_byte(&playerAnimation[e->animationFrameCounter / PLAYER_ANIMATION_FRAME_SKIP]);
-        if (++e->animationFrameCounter == PLAYER_ANIMATION_FRAME_SKIP * NELEMS(playerAnimation))
-          e->animationFrameCounter = 0;
+        for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+          if ((e->animationFrameCounter % PLAYER_ANIMATION_FRAME_SKIP) == 0)
+            sprites[e->tag].tileIndex = PLAYER_ANIMATION_START + pgm_read_byte(&playerAnimation[e->animationFrameCounter / PLAYER_ANIMATION_FRAME_SKIP]);
+          if (++e->animationFrameCounter == PLAYER_ANIMATION_FRAME_SKIP * NELEMS(playerAnimation))
+            e->animationFrameCounter = 0;
+        }
       }
     }
   }
