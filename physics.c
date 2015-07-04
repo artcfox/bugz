@@ -152,12 +152,35 @@ renderFnPtr renderFunc(RENDER_FUNCTION r)
 }
 
 const uint8_t levelData[] PROGMEM = {
-  1,      // uint8_t numLevels
-  3, 0,   // uint16_t levelOffsets[numLevels] = offsets to each level (little endian)
-
+  2,      // uint8_t numLevels
+  5, 0,   // uint16_t levelOffsets[numLevels] = offsets to each level (little endian)
+  254, 0,
           // ---------- start of level 0 data
   0,      // uint8_t tileSet;
   255, 255, 255, 254, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 127, 255, 255, 255, // uint8_t map[105];
+  1, 2,   // uint8_t playerInitialX[2]
+  26, 26, // uint8_t playerInitialY[2]
+  25, 28,  9, 16, 19,  7,      // uint8_t monsterInitialX[6]
+  12, 22, 19, 17,  8, 25,      // uint8_t monsterInitialY[6]
+   3,  0,  0,  0,  0,  1,      // uint8_t monsterInitialD[6]
+  12, // uint8_t treasureCount
+  1,  7,  4, 12, 18,  6, 24, 27, 21, 28, 13, 18, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureX[32]
+  24, 5,  8, 11, 17,  3,  4, 18,  7, 12, 22, 23, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureY[32]
+  LO8(WORLD_MAXDX), HI8(WORLD_MAXDX), LO8(WORLD_MAXDX), HI8(WORLD_MAXDX),                                // int16_t playerMaxDX[2]
+  LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE), LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
+  INPUT_PLAYER_INPUT, INPUT_PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
+  UPDATE_PLAYER_UPDATE, UPDATE_PLAYER_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  RENDER_PLAYER_RENDER, RENDER_PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2]
+  LO8(WORLD_METER * 12), HI8(WORLD_METER * 12), LO8(WORLD_METER * 1), HI8(WORLD_METER * 1), LO8(WORLD_METER * 3), HI8(WORLD_METER * 3), LO8(WORLD_METER * 2), HI8(WORLD_METER * 2), LO8(WORLD_METER * 1), HI8(WORLD_METER * 1), LO8(WORLD_METER * 1), HI8(WORLD_METER * 1),                                // int16_t monsterMaxDX[6]
+  16, 23, LO8(WORLD_JUMP_IMPULSE >> 1), HI8(WORLD_JUMP_IMPULSE >> 1), LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE), LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE), LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE), LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE),    // int16_t monsterImpulse[6]
+  INPUT_AI_FLY_VERTICAL, INPUT_AI_HOP_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED_OR_LEDGE, INPUT_AI_HOP_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
+  UPDATE_ENTITY_UPDATE_FLYING, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
+  RENDER_SPIDER_RENDER, RENDER_CRICKET_RENDER, RENDER_LADYBUG_RENDER, RENDER_GRASSHOPPER_RENDER, RENDER_ANT_RENDER, RENDER_ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
+
+
+          // ---------- start of level 1 data
+  1,      // uint8_t tileSet;
+  255, 255, 255, 254, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 255, 0, 1, 128, 0, 0, 6, 0, 0, 15, 24, 0, 0, 0, 127, 255, 255, 255, // uint8_t map[105];
   1, 2,   // uint8_t playerInitialX[2]
   26, 26, // uint8_t playerInitialY[2]
   25, 28,  9, 16, 19,  7,      // uint8_t monsterInitialX[6]
@@ -427,10 +450,6 @@ int main()
   //DrawMap(0, 0, level1);
   levelOffset = LoadLevel(currentLevel, &tileSet);
 
-  // Sanity check for the prototype implementation
-  if (levelOffset != 3)
-    goto start;
-
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
     player_init(&player[i], inputFunc(playerInput(levelOffset, i)), updateFunc(playerUpdate(levelOffset, i)), renderFunc(playerRender(levelOffset, i)), i,
@@ -562,7 +581,19 @@ int main()
       }
     }
 
-    if (ReadJoypad(0) & BTN_START)
+    // Check for level restart button
+    uint16_t b = ReadJoypad(0);
+    if (b & BTN_START)
       goto start;
+
+    // Check for level select buttons
+    if ((b & BTN_SELECT) && ((b & BTN_SL) || (b & BTN_SR))) {
+      if ((b & BTN_SL) && --currentLevel == 255)
+        currentLevel = numLevels() - 1;
+      else if ((b & BTN_SR) && ++currentLevel >= numLevels())
+        currentLevel = 0;
+      WaitVsync(20); // delay
+      goto start;
+    }
   }
 }
