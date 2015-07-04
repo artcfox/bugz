@@ -66,6 +66,9 @@
 #define nv(p) ((p) % (TILE_HEIGHT << FP_SHIFT))
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
+// Avoids having to bit shift by a variable amount; always runs in constant time
+/* const uint8_t oneLeftShiftedBy[8] PROGMEM = {1, 2, 4, 8, 16, 32, 64, 128}; */
+
 // Maps tile number to solidity
 //const uint8_t isSolid[] PROGMEM = { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 

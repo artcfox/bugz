@@ -40,9 +40,10 @@
 #include <uzebox.h>
 
 #define NELEMS(x) (sizeof(x)/sizeof(x[0]))
+//extern const uint8_t oneLeftShiftedBy[8] PROGMEM; // avoids having to bit shift by a variable amount (faster)
 
 #define PLAYERS 1
-#define MONSTERS 6
+#define MONSTERS 5
 
 #define FP_SHIFT   2
 
