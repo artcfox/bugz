@@ -67,7 +67,7 @@
 // parameter used for variable jumping (gravity / 10 is a good default)
 #define WORLD_CUT_JUMP_SPEED_LIMIT (WORLD_GRAVITY / 10)
 
-#define FIRST_SOLID_TILE 15
+#define FIRST_SOLID_TILE 40
 #define isSolid(t) ((t) > FIRST_SOLID_TILE)
 //extern const uint8_t isSolid[] PROGMEM;
 

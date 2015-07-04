@@ -489,7 +489,7 @@ void ladybug_render(ENTITY* e)
   if (e->dead) {
     sprites[e->tag].tileIndex = LADYBUG_DEAD;
   } else {
-    if (e->jumping || e->falling) {
+    if (e->jumping || e->falling || e->update == entity_update_flying) {
       if (e->dy >= 0)
         sprites[e->tag].tileIndex = LADYBUG_STATIONARY;
       else
@@ -529,7 +529,7 @@ void ant_render(ENTITY* e)
   if (e->dead) {
     sprites[e->tag].tileIndex = ANT_DEAD;
   } else {
-    if (e->jumping || e->falling) {
+    if (e->jumping || e->falling || e->update == entity_update_flying) {
       if (e->dy >= 0)
         sprites[e->tag].tileIndex = ANT_STATIONARY;
       else
@@ -569,7 +569,7 @@ void cricket_render(ENTITY* e)
   if (e->dead) {
     sprites[e->tag].tileIndex = CRICKET_DEAD;
   } else {
-    if (e->jumping || e->falling) {
+    if (e->jumping || e->falling || e->update == entity_update_flying) {
       if (e->dy >= 0)
         sprites[e->tag].tileIndex = CRICKET_STATIONARY;
       else
@@ -609,7 +609,7 @@ void grasshopper_render(ENTITY* e)
   if (e->dead) {
     sprites[e->tag].tileIndex = GRASSHOPPER_DEAD;
   } else {
-    if (e->jumping || e->falling) {
+    if (e->jumping || e->falling || e->update == entity_update_flying) {
       if (e->dy >= 0)
         sprites[e->tag].tileIndex = GRASSHOPPER_STATIONARY;
       else
@@ -720,7 +720,6 @@ void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
 {
   entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx, impulse);
   memset(&p->buttons, 0, sizeof(p->buttons));
-  /* p->jumpReleased = true; */
   p->framesFalling = 0;
 }
 
@@ -909,7 +908,7 @@ void player_render(ENTITY* e)
   if (e->dead) {
     sprites[e->tag].tileIndex = PLAYER_DEAD;
   } else {
-    if (e->jumping || e->falling) {
+    if (e->jumping || e->falling || e->update == entity_update_flying) {
       if (e->dy >= 0)
         sprites[e->tag].tileIndex = PLAYER_STATIONARY;
       else

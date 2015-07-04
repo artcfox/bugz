@@ -1,2 +1,2 @@
 #!/bin/sh
-cd ../data && ~/uzebox/bin/gconvert level.xml && ~/uzebox/bin/gconvert sprites.xml && cd ../default && make clean && make && ~/uzebox/bin/uzem physics.uze -s .
+cd ../data && ~/uzebox/bin/gconvert tileset.xml && ~/uzebox/bin/gconvert sprites.xml && cd ../default && make clean && make && ~/uzebox/bin/uzem physics.uze -s .
