@@ -160,16 +160,19 @@ const uint8_t levelData[] PROGMEM = {
   255, 255, 255, 254, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 127, 255, 255, 255, // uint8_t map[105];
   1, 2,   // uint8_t playerInitialX[2]
   26, 26, // uint8_t playerInitialY[2]
+  25, 28,  9, 16, 19,  7,      // uint8_t monsterInitialX[6]
+  12, 22, 19, 17,  8, 25,      // uint8_t monsterInitialY[6]
+   3,  0,  0,  0,  0,  1,      // uint8_t monsterInitialD[6]
+  12, // uint8_t treasureCount
+  1,  7,  4, 12, 18,  6, 24, 27, 21, 28, 13, 18, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureX[32]
+  24, 5,  8, 11, 17,  3,  4, 18,  7, 12, 22, 23, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureY[32]
   LO8(WORLD_MAXDX), HI8(WORLD_MAXDX), LO8(WORLD_MAXDX), HI8(WORLD_MAXDX),                                // int16_t playerMaxDX[2]
   LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE), LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
   INPUT_PLAYER_INPUT, INPUT_PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
   UPDATE_PLAYER_UPDATE, UPDATE_PLAYER_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
   RENDER_PLAYER_RENDER, RENDER_PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2]
-  25, 28,  9, 16, 19,  7,      // uint8_t monsterInitialX[6]
-  12, 22, 19, 17,  8, 25,      // uint8_t monsterInitialY[6]
-   3,  0,  0,  0,  0,  1,      // uint8_t monsterInitialD[6]
   LO8(WORLD_METER * 12), HI8(WORLD_METER * 12), LO8(WORLD_METER * 1), HI8(WORLD_METER * 1), LO8(WORLD_METER * 3), HI8(WORLD_METER * 3), LO8(WORLD_METER * 2), HI8(WORLD_METER * 2), LO8(WORLD_METER * 1), HI8(WORLD_METER * 1), LO8(WORLD_METER * 1), HI8(WORLD_METER * 1),                                // int16_t monsterMaxDX[6]
-  16, 23, LO8(WORLD_JUMP_IMPULSE >> 1), HI8(WORLD_JUMP_IMPULSE >> 1), LO8(0), HI8(0), LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE), LO8(0), HI8(0), LO8(0), HI8(0),    // int16_t monsterImpulse[6]
+  16, 23, LO8(WORLD_JUMP_IMPULSE >> 1), HI8(WORLD_JUMP_IMPULSE >> 1), LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE), LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE), LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE), LO8(WORLD_JUMP_IMPULSE), HI8(WORLD_JUMP_IMPULSE),    // int16_t monsterImpulse[6]
   INPUT_AI_FLY_VERTICAL, INPUT_AI_HOP_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED_OR_LEDGE, INPUT_AI_HOP_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
   UPDATE_ENTITY_UPDATE_FLYING, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   RENDER_SPIDER_RENDER, RENDER_CRICKET_RENDER, RENDER_LADYBUG_RENDER, RENDER_GRASSHOPPER_RENDER, RENDER_ANT_RENDER, RENDER_ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
@@ -191,7 +194,26 @@ const uint8_t levelData[] PROGMEM = {
 #define LEVEL_PLAYER_INITIAL_Y_START (LEVEL_PLAYER_INITIAL_X_START + LEVEL_PLAYER_INITIAL_X_SIZE)
 #define LEVEL_PLAYER_INITIAL_Y_SIZE 2
 
-#define LEVEL_PLAYER_MAXDX_START (LEVEL_PLAYER_INITIAL_Y_START + LEVEL_PLAYER_INITIAL_Y_SIZE)
+#define LEVEL_MONSTER_INITIAL_X_START (LEVEL_PLAYER_INITIAL_Y_START + LEVEL_PLAYER_INITIAL_Y_SIZE)
+#define LEVEL_MONSTER_INITIAL_X_SIZE 6
+
+#define LEVEL_MONSTER_INITIAL_Y_START (LEVEL_MONSTER_INITIAL_X_START + LEVEL_MONSTER_INITIAL_X_SIZE)
+#define LEVEL_MONSTER_INITIAL_Y_SIZE 6
+
+#define LEVEL_MONSTER_INITIAL_D_START (LEVEL_MONSTER_INITIAL_Y_START + LEVEL_MONSTER_INITIAL_Y_SIZE)
+#define LEVEL_MONSTER_INITIAL_D_SIZE 6
+
+// TREASURE STUFF
+#define LEVEL_TREASURE_COUNT_START (LEVEL_MONSTER_INITIAL_D_START + LEVEL_MONSTER_INITIAL_D_SIZE)
+#define LEVEL_TREASURE_COUNT_SIZE 1
+
+#define LEVEL_TREASURE_X_START (LEVEL_TREASURE_COUNT_START + LEVEL_TREASURE_COUNT_SIZE)
+#define LEVEL_TREASURE_X_SIZE 32
+
+#define LEVEL_TREASURE_Y_START (LEVEL_TREASURE_X_START + LEVEL_TREASURE_X_SIZE)
+#define LEVEL_TREASURE_Y_SIZE 32
+
+#define LEVEL_PLAYER_MAXDX_START (LEVEL_TREASURE_Y_START + LEVEL_TREASURE_Y_SIZE)
 #define LEVEL_PLAYER_MAXDX_SIZE (2 * sizeof(int16_t))
 
 #define LEVEL_PLAYER_IMPULSE_START (LEVEL_PLAYER_MAXDX_START + LEVEL_PLAYER_MAXDX_SIZE)
@@ -206,16 +228,7 @@ const uint8_t levelData[] PROGMEM = {
 #define LEVEL_PLAYER_RENDER_START (LEVEL_PLAYER_UPDATE_START + LEVEL_PLAYER_UPDATE_SIZE)
 #define LEVEL_PLAYER_RENDER_SIZE 2
 
-#define LEVEL_MONSTER_INITIAL_X_START (LEVEL_PLAYER_RENDER_START + LEVEL_PLAYER_RENDER_SIZE)
-#define LEVEL_MONSTER_INITIAL_X_SIZE 6
-
-#define LEVEL_MONSTER_INITIAL_Y_START (LEVEL_MONSTER_INITIAL_X_START + LEVEL_MONSTER_INITIAL_X_SIZE)
-#define LEVEL_MONSTER_INITIAL_Y_SIZE 6
-
-#define LEVEL_MONSTER_INITIAL_D_START (LEVEL_MONSTER_INITIAL_Y_START + LEVEL_MONSTER_INITIAL_Y_SIZE)
-#define LEVEL_MONSTER_INITIAL_D_SIZE 6
-
-#define LEVEL_MONSTER_MAXDX_START (LEVEL_MONSTER_INITIAL_D_START + LEVEL_MONSTER_INITIAL_D_SIZE)
+#define LEVEL_MONSTER_MAXDX_START (LEVEL_PLAYER_RENDER_START + LEVEL_PLAYER_RENDER_SIZE)
 #define LEVEL_MONSTER_MAXDX_SIZE (6 * sizeof(int16_t))
 
 #define LEVEL_MONSTER_IMPULSE_START (LEVEL_MONSTER_MAXDX_START + LEVEL_MONSTER_MAXDX_SIZE)
@@ -230,16 +243,25 @@ const uint8_t levelData[] PROGMEM = {
 #define LEVEL_MONSTER_RENDER_START (LEVEL_MONSTER_UPDATE_START + LEVEL_MONSTER_UPDATE_SIZE)
 #define LEVEL_MONSTER_RENDER_SIZE 6
 
+#define numLevels() ((uint8_t)pgm_read_byte(&levelData[0]))
+#define levelOffset(level) ((uint16_t)pgm_read_word(&levelData[LEVEL_HEADER_SIZE + (level) * sizeof(uint16_t)]))
+#define tileSet(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TILESET_START]))
+#define compressedMapChunk(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MAP_START + (i)]))
 #define playerInitialX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INITIAL_X_START + (i)]))
 #define playerInitialY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INITIAL_Y_START + (i)]))
+#define monsterInitialX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_X_START + (i)]))
+#define monsterInitialY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_Y_START + (i)]))
+#define monsterInitialD(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_D_START + (i)]))
+#define treasureCount(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_COUNT_START]))
+
+#define treasureX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_X_START + (i)]))
+#define treasureY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_Y_START + (i)]))
+
 #define playerMaxDX(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_MAXDX_START + (i) * sizeof(int16_t)]))
 #define playerImpulse(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_IMPULSE_START + (i) * sizeof(int16_t)]))
 #define playerInput(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INPUT_START + (i)]))
 #define playerUpdate(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_UPDATE_START + (i)]))
 #define playerRender(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_RENDER_START + (i)]))
-#define monsterInitialX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_X_START + (i)]))
-#define monsterInitialY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_Y_START + (i)]))
-#define monsterInitialD(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_D_START + (i)]))
 #define monsterMaxDX(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_MONSTER_MAXDX_START + (i) * sizeof(int16_t)]))
 #define monsterImpulse(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_MONSTER_IMPULSE_START + (i) * sizeof(int16_t)]))
 #define monsterInput(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INPUT_START + (i)]))
@@ -250,8 +272,7 @@ const uint8_t levelData[] PROGMEM = {
 uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
 {
   // Bounds check level
-  uint8_t numLevels = pgm_read_byte(&levelData[0]);
-  if (level >= numLevels)
+  if (level >= numLevels())
     return 0xFFFF; // bogus value
 
   // Determine the offset that the level data begins at within the levelData PROGMEM array
@@ -259,7 +280,7 @@ uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
   //   uint8_t numLevels;
   //   uint16_t levelOffsets[numLevels];
   // };
-  uint16_t levelOffset = (uint16_t)pgm_read_word(&levelData[LEVEL_HEADER_SIZE + level * sizeof(uint16_t)]);
+  uint16_t levelOffset = levelOffset(level);
 
   // Now that we have an offset to the actual level data, read the tile set, and draw the map
   // struct LEVEL_DATA {
@@ -268,14 +289,14 @@ uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
   //   uint8_t playerInitialX[2];
   //   uint8_t playerInitialY[2];
   // };
-  *tileSet = (uint8_t)pgm_read_byte(&levelData[levelOffset + LEVEL_TILESET_START]);
+  *tileSet = tileSet(levelOffset);
 
   uint16_t t = 0; // current tile to draw
   for (uint8_t i = 0; i < BitArray_numBits(SCREEN_TILES_H * SCREEN_TILES_V); ++i) {
     // Read 8 tiles worth of data at a time
-    uint8_t compressedChunk = (uint8_t)pgm_read_byte(&levelData[levelOffset + LEVEL_MAP_START + i]);
+    uint8_t chunk = compressedMapChunk(levelOffset, i);
     for (int8_t c = 7; c >= 0; c--) {
-      if (compressedChunk & (1 << (c & 7)))
+      if (chunk & (1 << (c & 7)))
         SetTile(t % SCREEN_TILES_H, t / SCREEN_TILES_H, 41 + (*tileSet * 2));
       else
         SetTile(t % SCREEN_TILES_H, t / SCREEN_TILES_H, 31 + (*tileSet * 5));
@@ -291,14 +312,14 @@ uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
 //const uint8_t monsterInitialY[] PROGMEM = { 12, 22, 19, 17,  8, 25 };
 //const uint8_t monsterInitialD[] PROGMEM = {  3,  0,  0,  0,  0,  1 };
 
-// How many treasures are in the level
-#define TREASURE_COUNT 10
+// How many treasures can be in the level
+#define MAX_TREASURE_COUNT 32
 // How many frames to wait between 
 #define TREASURE_FRAME_SKIP 15
 // X coordinates of each treasure for this level
-const uint8_t  treasureX[] PROGMEM = {  1,  7,  4, 12, 18,  6, 24, 27, 21, 28, };
+//const uint8_t  treasureX[] PROGMEM = {  1,  7,  4, 12, 18,  6, 24, 27, 21, 28, };
 // Y coordinates of each treasure for this level
-const uint8_t  treasureY[] PROGMEM = { 24,  5,  8, 11, 17,  3,  4, 18,  7, 12, };
+//const uint8_t  treasureY[] PROGMEM = { 24,  5,  8, 11, 17,  3,  4, 18,  7, 12, };
 // Starting tile number of each treasure tile to render (animation frames follow directly after this number)
 const uint8_t treasureFG[] PROGMEM = { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, };
 // Background tile number that should be used to replace each treasure after collected
@@ -455,11 +476,13 @@ int main()
   }
 
   //bool treasureCollected[TREASURE_COUNT];
-  uint8_t treasureCollected[BitArray_numBits(TREASURE_COUNT)] = {0}; // bit array
+  uint8_t treasureCollected[BitArray_numBits(MAX_TREASURE_COUNT)] = {0}; // bit array
 
   // Initialize treasure
-  for (uint8_t i = 0; i < TREASURE_COUNT; ++i) {
-    SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)pgm_read_byte(&treasureFG[i]) + tileSet * 15 + 1);
+  uint8_t tcount = treasureCount(levelOffset);
+  for (uint8_t i = 0; i < tcount; ++i) {
+    //SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)pgm_read_byte(&treasureFG[i]) + tileSet * 15 + 1);
+    SetTile(treasureX(levelOffset, i), treasureY(levelOffset, i), tileSet * 15 /*TREASURE_TILES_PER_TILESET*/+ 1 /*TREASURE_START_TILE*/);
   }
 
   for (;;) {
@@ -500,13 +523,16 @@ int main()
 
     // Animate treasure
     static uint8_t treasureFrameCounter = 0;
-    for (uint8_t i = 0; i < TREASURE_COUNT; ++i) {
+    for (uint8_t i = 0; i < tcount; ++i) {
       if (BitArray_readBit(treasureCollected, i)) {
-        SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), (uint16_t)pgm_read_byte(&treasureBG[i]) + tileSet * 5 + 1);
+        SetTile(treasureX(levelOffset, i), treasureY(levelOffset, i), 30 /*BACKGROUND_START*/+ tileSet * 5 /*BACKGROUND_TILES*/ + 1 /*TREASURE_START_TILE*/);
+        //        SetTile(treasureX(levelOffset, i), treasureY(levelOffset, i), (uint16_t)pgm_read_byte(&treasureBG[i]) + tileSet * 5 + 1);
       } else {
         if (treasureFrameCounter % TREASURE_FRAME_SKIP == 0)
-          SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]),
-                  (uint16_t)(pgm_read_byte(&treasureFG[i]) + tileSet * 15 + 1 + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP])));
+          SetTile(treasureX(levelOffset, i), treasureY(levelOffset, i),
+                  (uint16_t)tileSet * 15 + 1 + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
+          /* SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), */
+          /*         (uint16_t)(pgm_read_byte(&treasureFG[i]) + tileSet * 15 + 1 + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]))); */
       }
     }
     if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
@@ -515,7 +541,7 @@ int main()
     // Check for collisions with treasure
     for (uint8_t p = 0; p < PLAYERS; ++p) {
       if (((ENTITY*)(&player[p]))->enabled == true) {
-        for (uint8_t i = 0; i < TREASURE_COUNT; ++i) {
+        for (uint8_t i = 0; i < tcount; ++i) {
           if (BitArray_readBit(treasureCollected, i))
             continue;
 
@@ -524,8 +550,8 @@ int main()
                       ((ENTITY*)(&player[p]))->y,
                       WORLD_METER,
                       WORLD_METER,
-                      (uint16_t)pgm_read_byte(&treasureX[i]) * (TILE_WIDTH << FP_SHIFT),
-                      (uint16_t)pgm_read_byte(&treasureY[i]) * (TILE_HEIGHT << FP_SHIFT),
+                      (uint16_t)treasureX(levelOffset, i) * (TILE_WIDTH << FP_SHIFT),
+                      (uint16_t)treasureY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT),
                       WORLD_METER,
                       WORLD_METER)) {
               TriggerFx(2, 128, false);
