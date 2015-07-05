@@ -46,6 +46,8 @@ extern const struct PatchStruct patches[] PROGMEM;
 #define BitArray_clearBit(array, index) ((array)[(index) >> 3] &= ((1 << ((index) & 7)) ^ 0xFF))
 #define BitArray_readBit(array, index) ((bool)((array)[(index) >> 3] & (1 << ((index) & 7))))
 
+#define PgmBitArray_readBit(array, index) ((bool)(pgm_read_byte((array)+((index) >> 3)) & (1 << ((index) & 7))))
+
 enum INPUT_FUNCTION;
 typedef enum INPUT_FUNCTION INPUT_FUNCTION;
 
@@ -276,6 +278,8 @@ const uint8_t levelData[] PROGMEM = {
 #define monsterUpdate(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_UPDATE_START + (i)]))
 #define monsterRender(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_RENDER_START + (i)]))
 
+#define BaseMapIsSolid(x, y, levelOffset) (PgmBitArray_readBit(&levelData[(levelOffset) + LEVEL_MAP_START], (y) * SCREEN_TILES_H + (x)))
+
 // Returns offset into levelData PROGMEM array
 static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
 {
@@ -298,19 +302,87 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
   // };
   *tileSet = tileSet(levelOffset);
 
-  uint16_t t = 0; // current tile to draw
-  for (uint8_t i = 0; i < BitArray_numBytes(SCREEN_TILES_H * SCREEN_TILES_V); ++i) {
-    uint8_t chunk = compressedMapChunk(levelOffset, i); // read 8 tiles worth of data at a time
-    for (int8_t c = 0; c < 8; c++) {
-      if (chunk & (1 << (c & 7)))
-        SetTile(t % SCREEN_TILES_H, t / SCREEN_TILES_H, 41 + (*tileSet * 2));
-      else
-        SetTile(t % SCREEN_TILES_H, t / SCREEN_TILES_H, 31 + (*tileSet * 5));
-      t++;
+  for (uint8_t y = 0; y < SCREEN_TILES_V; ++y) {
+    for (uint8_t x = 0; x < SCREEN_TILES_H; ++x) {
+      if (BaseMapIsSolid(x, y, levelOffset)) {
+        if (y == 0 || BaseMapIsSolid(x, y - 1, levelOffset)) { // if we are the top tile, or there is a solid tile above us
+          SetTile(x, y, 41 + (*tileSet * 2)); // underground tile
+        } else {
+          SetTile(x, y, 42 + (*tileSet * 2)); // aboveground tile
+        }
+      } else { // we are a sky tile
+        if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
+          SetTile(x, y, 31 + (*tileSet * 5)); // full sky tile
+        } else { // interior tile
+          bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(x - 1, y + 1, levelOffset));
+          bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(x + 1, y + 1, levelOffset));
+          bool solidBelow = BaseMapIsSolid(x, y + 1, levelOffset);
+
+          if (!solidLDiag && !solidRDiag && solidBelow) // island
+            SetTile(x, y, 32 + (*tileSet * 5));
+          else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
+            SetTile(x, y, 33 + (*tileSet * 5));
+          else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
+            SetTile(x, y, 34 + (*tileSet * 5));
+          else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
+            SetTile(x, y, 35 + (*tileSet * 5));
+          else // clear all around
+            SetTile(x, y, 31 + (*tileSet * 5));
+        }
+      }
     }
   }
+
+  /* uint16_t t = 0; // current tile to draw */
+  /* for (uint8_t i = 0; i < BitArray_numBytes(SCREEN_TILES_H * SCREEN_TILES_V); ++i) { */
+  /*   uint8_t chunk = compressedMapChunk(levelOffset, i); // read 8 tiles worth of data at a time */
+  /*   for (int8_t c = 0; c < 8; c++) { */
+  /*     if (chunk & (1 << (c & 7))) { */
+  /*       SetTile(t % SCREEN_TILES_H, t / SCREEN_TILES_H, 41 + (*tileSet * 2)); */
+  /*     } else { */
+  /*       SetTile(t % SCREEN_TILES_H, t / SCREEN_TILES_H, 31 + (*tileSet * 5)); */
+  /*     } */
+  /*     t++; */
+  /*   } */
+  /* } */
   return levelOffset;
 }
+
+/* // Returns offset into levelData PROGMEM array */
+/* static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet) */
+/* { */
+/*   // Bounds check level */
+/*   if (level >= numLevels()) */
+/*     return 0xFFFF; // bogus value */
+
+/*   // Determine the offset into the PROGMEM array where the level data begins */
+/*   // struct LEVEL_HEADER { */
+/*   //   uint8_t numLevels; */
+/*   //   uint16_t levelOffsets[numLevels]; */
+/*   // }; */
+/*   uint16_t levelOffset = levelOffset(level); */
+
+/*   // Using that offset, read the tile set, and draw the map */
+/*   // struct LEVEL_DATA { */
+/*   //   uint8_t tileSet; */
+/*   //   uint8_t map[105]; */
+/*   //   ... */
+/*   // }; */
+/*   *tileSet = tileSet(levelOffset); */
+
+/*   uint16_t t = 0; // current tile to draw */
+/*   for (uint8_t i = 0; i < BitArray_numBytes(SCREEN_TILES_H * SCREEN_TILES_V); ++i) { */
+/*     uint8_t chunk = compressedMapChunk(levelOffset, i); // read 8 tiles worth of data at a time */
+/*     for (int8_t c = 0; c < 8; c++) { */
+/*       if (chunk & (1 << (c & 7))) */
+/*         SetTile(t % SCREEN_TILES_H, t / SCREEN_TILES_H, 41 + (*tileSet * 2)); */
+/*       else */
+/*         SetTile(t % SCREEN_TILES_H, t / SCREEN_TILES_H, 31 + (*tileSet * 5)); */
+/*       t++; */
+/*     } */
+/*   } */
+/*   return levelOffset; */
+/* } */
 
 #define MAX_TREASURE_COUNT 32
 // How many frames to wait between animating treasure
@@ -375,6 +447,18 @@ static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, 
 
 static bool detectKills(PLAYER* players, ENTITY* monsters, uint16_t levelOffset)
 {
+  // Check if the dead flag has been set for a monster
+  for (uint8_t i = 0; i < MONSTERS; ++i) {
+    if (monsters[i].enabled && monsters[i].dead) {
+      killMonster(&monsters[i]);
+    }
+    // Check if we need to respawn the monster
+    if (monsters[i].dead && monsters[i].autorespawn && monsters[i].render == null_render) {
+      // The monster is dead, and its dying animation has finished
+      spawnMonster(&monsters[i], levelOffset, i);
+    }
+  }
+
     // Check for player collisions with monsters
     for (uint8_t p = 0; p < PLAYERS; ++p) {
       if (((ENTITY*)(&players[p]))->enabled) {
@@ -385,17 +469,11 @@ static bool detectKills(PLAYER* players, ENTITY* monsters, uint16_t levelOffset)
         }
 
         for (uint8_t i = 0; i < MONSTERS; ++i) {
-          // Check if we need to respawn the monster
-          if (monsters[i].dead && monsters[i].autorespawn && monsters[i].render == null_render) {
-            // The monster is dead, and its dying animation has finished
-            spawnMonster(&monsters[i], levelOffset, i);
-          }
-
           if (monsters[i].enabled) {
-            // Check if the dead flag has been set for a monster
-            if (monsters[i].dead) {
-              killMonster(&monsters[i]);
-            }
+            /* // Check if the dead flag has been set for a monster */
+            /* if (monsters[i].dead) { */
+            /*   killMonster(&monsters[i]); */
+            /* } */
 
             // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
             // If the player is moving down really fast, and an entity is moving up really fast, there is a slight chance
@@ -521,6 +599,8 @@ int main()
       // If the treasure hasn't been collected, animate it.
       if (t > 0 && t < 31) { // is a treasure tile
         if (treasureFrameCounter % TREASURE_FRAME_SKIP == 0)
+          // TODO: Read the current treasure tile, and add with wrap what the treasure animation array tells us
+
           SetTile(tx, ty,
                   (uint16_t)tileSet * 15 + 1 + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
           /* SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), */
