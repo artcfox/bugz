@@ -112,6 +112,7 @@ struct ENTITY {
   unsigned int visible : 1;
   unsigned int dead : 1;
   unsigned int autorespawn : 1;
+  unsigned int instakills : 1;
 } __attribute__ ((packed));
 
 // Default functions that do nothing

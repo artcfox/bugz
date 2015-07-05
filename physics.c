@@ -148,6 +148,19 @@ renderFnPtr renderFunc(RENDER_FUNCTION r)
   }
 }
 
+enum MONSTER_FLAGS;
+typedef enum MONSTER_FLAGS MONSTER_FLAGS;
+
+enum MONSTER_FLAGS {
+  MFLAG_LEFT = 1,
+  MFLAG_RIGHT = 2,
+  MFLAG_UP = 4,
+  MFLAG_DOWN = 8,
+  MFLAG_AUTORESPAWN = 16,
+  MFLAG_NOINTERACT = 32,
+  MFLAG_INSTAKILLS = 64,
+};
+
 // Parenthesis cannot be placed around this macro expansion
 #define LO8HI8(i) LO8((i)), HI8((i))
 
@@ -160,7 +173,7 @@ const uint8_t levelData[] PROGMEM = {
 
 #include "editor/levels/prototype_level.png.inc"
 
-  0,0,1,1,1,1,      // uint8_t monsterInitialD[6]
+  MFLAG_LEFT, MFLAG_LEFT|MFLAG_AUTORESPAWN, MFLAG_RIGHT, MFLAG_RIGHT, MFLAG_RIGHT|MFLAG_AUTORESPAWN, MFLAG_RIGHT,      // uint8_t monsterFlags[6]
   LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                                // int16_t playerMaxDX[2]
   LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
   INPUT_PLAYER_INPUT, INPUT_PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
@@ -183,7 +196,7 @@ const uint8_t levelData[] PROGMEM = {
   /* 12, // uint8_t treasureCount */
   /* 1,  7,  4, 12, 18,  6, 24, 27, 21, 28, 13, 18, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureX[32] */
   /* 24, 5,  8, 11, 17,  3,  4, 18,  7, 12, 22, 23, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureY[32] */
-   3,  0,  0,  0,  0,  0,      // uint8_t monsterInitialD[6]
+  MFLAG_DOWN|MFLAG_INSTAKILLS, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
   LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                  // int16_t playerMaxDX[2]
   LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
   INPUT_PLAYER_INPUT, INPUT_PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
@@ -217,9 +230,9 @@ const uint8_t levelData[] PROGMEM = {
 #define LEVEL_TREASURE_X_SIZE 32
 #define LEVEL_TREASURE_Y_START (LEVEL_TREASURE_X_START + LEVEL_TREASURE_X_SIZE)
 #define LEVEL_TREASURE_Y_SIZE 32
-#define LEVEL_MONSTER_INITIAL_D_START (LEVEL_TREASURE_Y_START + LEVEL_TREASURE_Y_SIZE)
-#define LEVEL_MONSTER_INITIAL_D_SIZE 6
-#define LEVEL_PLAYER_MAXDX_START (LEVEL_MONSTER_INITIAL_D_START + LEVEL_MONSTER_INITIAL_D_SIZE)
+#define LEVEL_MONSTER_FLAGS_START (LEVEL_TREASURE_Y_START + LEVEL_TREASURE_Y_SIZE)
+#define LEVEL_MONSTER_FLAGS_SIZE 6
+#define LEVEL_PLAYER_MAXDX_START (LEVEL_MONSTER_FLAGS_START + LEVEL_MONSTER_FLAGS_SIZE)
 #define LEVEL_PLAYER_MAXDX_SIZE (2 * sizeof(int16_t))
 #define LEVEL_PLAYER_IMPULSE_START (LEVEL_PLAYER_MAXDX_START + LEVEL_PLAYER_MAXDX_SIZE)
 #define LEVEL_PLAYER_IMPULSE_SIZE (2 * sizeof(int16_t))
@@ -248,7 +261,7 @@ const uint8_t levelData[] PROGMEM = {
 #define playerInitialY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INITIAL_Y_START + (i)]))
 #define monsterInitialX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_X_START + (i)]))
 #define monsterInitialY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_Y_START + (i)]))
-#define monsterInitialD(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_D_START + (i)]))
+#define monsterFlags(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_FLAGS_START + (i)]))
 #define treasureCount(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_COUNT_START]))
 #define treasureX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_X_START + (i)]))
 #define treasureY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_Y_START + (i)]))
@@ -341,19 +354,15 @@ static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
               (int16_t)(monsterInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
               (int16_t)(monsterMaxDX(levelOffset, i)),
               (int16_t)(monsterImpulse(levelOffset, i)));
-  uint8_t monsterDirection = monsterInitialD(levelOffset, i);
-  if (monsterDirection == 0)
-    e->left = true;
-  else if (monsterDirection == 1)
-    e->right = true;
-  else if (monsterDirection == 2)
-    e->up = true;
-  else if (monsterDirection == 3)
-    e->down = true;
-
-  e->autorespawn = false;
-  e->enabled = true;
-
+  uint8_t monsterFlags = monsterFlags(levelOffset, i);
+  // The cast to bool is necessary to properly set bit flags
+  e->left = (bool)(monsterFlags & MFLAG_LEFT);
+  e->right = (bool)(monsterFlags & MFLAG_RIGHT);
+  e->up = (bool)(monsterFlags & MFLAG_UP);
+  e->down = (bool)(monsterFlags & MFLAG_DOWN);
+  e->autorespawn = (bool)(monsterFlags & MFLAG_AUTORESPAWN);
+  e->enabled = (bool)!(monsterFlags & MFLAG_NOINTERACT);
+  e->instakills = (bool)(monsterFlags & MFLAG_INSTAKILLS);
 }
 
 static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
@@ -402,7 +411,7 @@ static bool detectKills(PLAYER* players, ENTITY* monsters, uint16_t levelOffset)
                         WORLD_METER - (2 << FP_SHIFT),
                         WORLD_METER - (4 << FP_SHIFT))) {
               if ( /*(((ENTITY*)(&players[p]))->dy > 0) && */
-                   ((monsters[i].y + (3 << FP_SHIFT) - ((ENTITY*)(&players[p]))->y) > (WORLD_METER - (4 << FP_SHIFT)))) {
+                   ((monsters[i].y + (3 << FP_SHIFT) - ((ENTITY*)(&players[p]))->y) > (WORLD_METER - (4 << FP_SHIFT))) && !monsters[i].instakills) {
                 killMonster(&monsters[i]);
                 ((ENTITY*)(&players[p]))->monsterhop = true;             // player should now do the monster hop
                 /* while (ReadJoypad(((ENTITY*)(&players[p]))->tag) != BTN_B) { */
