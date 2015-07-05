@@ -732,7 +732,7 @@ void player_input(ENTITY* e)
     e->jump = (bool)(p->buttons.held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
     if (e->jump && !(e->jumping || (e->falling && p->framesFalling > WORLD_FALLING_GRACE_FRAMES))) { // if player[i] is currently holding BTN_A, (and is on the ground)
       e->jumpReleased = false;                                // a jump will occur during the next call to update(), so clear the jumpReleased flag.
-      TriggerFx(0, 128, false);
+      //TriggerFx(0, 128, false);
     }
   } else {                                                           // Otherwise, it means that we just jumped, and BTN_A is still being held down
     e->jump = false;                                          // so explicitly disallow any additional jumps until
@@ -754,18 +754,19 @@ void player_update(ENTITY* e)
   int16_t ddy = WORLD_GRAVITY;
 
   if (e->left)
-    ddx -= WORLD_ACCEL; // player wants to go left
+    ddx -= WORLD_ACCEL;    // player wants to go left
   else if (u.wasLeft)
     ddx += WORLD_FRICTION; // player was going left, but not anymore
 
   if (e->right)
-    ddx += WORLD_ACCEL; // player wants to go right
+    ddx += WORLD_ACCEL;    // player wants to go right
   else if (u.wasRight)
     ddx -= WORLD_FRICTION; // player was going right, but not anymore
 
   if (e->jump && !e->jumping && !(e->falling ? (p->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
-    e->dy = 0;            // reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    ddy -= e->impulse; // apply an instantaneous (large) vertical impulse
+    TriggerFx(0, 128, false);
+    e->dy = 0;             // reset vertical velocity so jumps during grace period are consistent with jumps from ground
+    ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
     e->jumping = true;
   }
 
