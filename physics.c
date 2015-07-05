@@ -41,7 +41,7 @@
 extern const char mysprites[] PROGMEM;
 extern const struct PatchStruct patches[] PROGMEM;
 
-#define BitArray_numBits(bits) (((bits) >> 3) + 1 * (((bits) & 7) ? 1 : 0))
+#define BitArray_numBytes(bits) (((bits) >> 3) + 1 * (((bits) & 7) ? 1 : 0))
 #define BitArray_setBit(array, index) ((array)[(index) >> 3] |= (1 << ((index) & 7)))
 #define BitArray_clearBit(array, index) ((array)[(index) >> 3] &= ((1 << ((index) & 7)) ^ 0xFF))
 #define BitArray_readBit(array, index) ((bool)((array)[(index) >> 3] & (1 << ((index) & 7))))
@@ -161,8 +161,8 @@ const uint8_t levelData[] PROGMEM = {
 255,255,255,127,0,0,0,24,0,0,0,198,1,0,128,1,0,0,96,0,0,0,24,7,15,15,6,0,0,128,1,0,0,224,193,255,127,24,0,0,0,7,0,0,128,225,1,0,96,0,96,0,30,0,31,0,31,0,31,128,129,128,1,224,127,96,0,254,127,24,14,15,28,6,128,1,230,1,96,128,241,225,31,96,56,0,7,16,6,128,121,252,225,96,0,63,0,31,0,0,0,254,255,255,255, // map data from file: prototype_level.png
 15,16, // playerInitialX[2]
 12,12, // playerInitialY[2]
-6,15,12,12,10,21, // monsterInitialX[6]
-2,5,5,13,8,17, // monsterInitialY[6]
+6,15,12,3,10,21, // monsterInitialX[6]
+2,5,5,22,8,17, // monsterInitialY[6]
 32, // treasureCount
 5,9,17,18,5,13,14,21,22,1,28,6,7,28,14,17,1,28,22,14,17,28,3,4,5,6,14,22,28,11,14,28, // treasureX[32]
 2,2,2,2,5,5,5,5,5,8,9,11,11,12,13,14,16,16,17,19,20,20,23,23,23,23,23,23,24,26,26,26, // treasureY[32]
@@ -173,9 +173,9 @@ const uint8_t levelData[] PROGMEM = {
   INPUT_PLAYER_INPUT, INPUT_PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
   UPDATE_PLAYER_UPDATE, UPDATE_PLAYER_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
   RENDER_PLAYER_RENDER, RENDER_PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2]
-  LO8(WORLD_METER * 1), HI8(WORLD_METER * 1), LO8(WORLD_METER * 2), HI8(WORLD_METER * 2), LO8(WORLD_METER * 3), HI8(WORLD_METER * 3), LO8(WORLD_METER * 3), HI8(WORLD_METER * 3), LO8(WORLD_METER * 1), HI8(WORLD_METER * 1), LO8(WORLD_METER * 2), HI8(WORLD_METER * 2),                                // int16_t monsterMaxDX[6]
+  LO8(WORLD_METER * 2), HI8(WORLD_METER * 2), LO8(WORLD_METER * 2), HI8(WORLD_METER * 2), LO8(WORLD_METER * 3), HI8(WORLD_METER * 3), LO8(WORLD_METER * 2), HI8(WORLD_METER * 2), LO8(WORLD_METER * 1), HI8(WORLD_METER * 1), LO8(WORLD_METER * 2), HI8(WORLD_METER * 2),                                // int16_t monsterMaxDX[6]
   LO8(WORLD_JUMP_IMPULSE >> 1), HI8(WORLD_JUMP_IMPULSE >> 1), LO8(WORLD_JUMP_IMPULSE >> 1), HI8(WORLD_JUMP_IMPULSE >> 1), LO8(WORLD_JUMP_IMPULSE >> 1), HI8(WORLD_JUMP_IMPULSE >> 1), LO8(WORLD_JUMP_IMPULSE >> 1), HI8(WORLD_JUMP_IMPULSE >> 1), LO8(WORLD_JUMP_IMPULSE >> 1), HI8(WORLD_JUMP_IMPULSE >> 1), LO8(WORLD_JUMP_IMPULSE >> 1), HI8(WORLD_JUMP_IMPULSE >> 1),    // int16_t monsterImpulse[6]
-  INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
+  INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED_OR_LEDGE, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
   UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   RENDER_ANT_RENDER, RENDER_ANT_RENDER, RENDER_ANT_RENDER, RENDER_ANT_RENDER, RENDER_ANT_RENDER, RENDER_ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 
@@ -301,24 +301,23 @@ uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
   if (level >= numLevels())
     return 0xFFFF; // bogus value
 
-  // Determine the offset that the level data begins at within the levelData PROGMEM array
+  // Determine the offset into the PROGMEM array where the level data begins
   // struct LEVEL_HEADER {
   //   uint8_t numLevels;
   //   uint16_t levelOffsets[numLevels];
   // };
   uint16_t levelOffset = levelOffset(level);
 
-  // Now that we have an offset to the actual level data, read the tile set, and draw the map
+  // Using that offset, read the tile set, and draw the map
   // struct LEVEL_DATA {
   //   uint8_t tileSet;
   //   uint8_t map[105];
-  //   uint8_t playerInitialX[2];
-  //   uint8_t playerInitialY[2];
+  //   ...
   // };
   *tileSet = tileSet(levelOffset);
 
   uint16_t t = 0; // current tile to draw
-  for (uint8_t i = 0; i < BitArray_numBits(SCREEN_TILES_H * SCREEN_TILES_V); ++i) {
+  for (uint8_t i = 0; i < BitArray_numBytes(SCREEN_TILES_H * SCREEN_TILES_V); ++i) {
     // Read 8 tiles worth of data at a time
     uint8_t chunk = compressedMapChunk(levelOffset, i);
     for (int8_t c = 0; c < 8; c++) {
@@ -332,24 +331,18 @@ uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
   return levelOffset;
 }
 
-//const uint8_t  playerInitialX[] PROGMEM = {  1,  2 };
-//const uint8_t  playerInitialY[] PROGMEM = { 25, 25 };
-//const uint8_t monsterInitialX[] PROGMEM = { 25, 28,  9, 16, 19,  7 };
-//const uint8_t monsterInitialY[] PROGMEM = { 12, 22, 19, 17,  8, 25 };
-//const uint8_t monsterInitialD[] PROGMEM = {  3,  0,  0,  0,  0,  1 };
-
 // How many treasures can be in the level
 #define MAX_TREASURE_COUNT 32
-// How many frames to wait between 
+// How many frames to wait between animating treasure
 #define TREASURE_FRAME_SKIP 15
 // X coordinates of each treasure for this level
 //const uint8_t  treasureX[] PROGMEM = {  1,  7,  4, 12, 18,  6, 24, 27, 21, 28, };
 // Y coordinates of each treasure for this level
 //const uint8_t  treasureY[] PROGMEM = { 24,  5,  8, 11, 17,  3,  4, 18,  7, 12, };
 // Starting tile number of each treasure tile to render (animation frames follow directly after this number)
-const uint8_t treasureFG[] PROGMEM = { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, };
+//const uint8_t treasureFG[] PROGMEM = { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, };
 // Background tile number that should be used to replace each treasure after collected
-const uint8_t treasureBG[] PROGMEM = { 30, 30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30, };
+//const uint8_t treasureBG[] PROGMEM = { 30, 30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30, };
 // As the animation frame counter advances, this array will be indexed, and its value will be added to the
 // treasureFG value for each treasure to compute the next tile number that the treasure will use
 const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 1 };
@@ -450,12 +443,14 @@ int main()
 
  start:
 
-  //DrawMap(0, 0, level1);
   levelOffset = LoadLevel(currentLevel, &tileSet);
 
   // Initialize players
   for (uint8_t i = 0; i < PLAYERS; ++i) {
-    player_init(&player[i], inputFunc(playerInput(levelOffset, i)), updateFunc(playerUpdate(levelOffset, i)), renderFunc(playerRender(levelOffset, i)), i,
+    player_init(&player[i],
+                inputFunc(playerInput(levelOffset, i)),
+                updateFunc(playerUpdate(levelOffset, i)),
+                renderFunc(playerRender(levelOffset, i)), i,
                 (int16_t)(playerInitialX(levelOffset, i) * (TILE_WIDTH << FP_SHIFT)),
                 (int16_t)(playerInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
                 (int16_t)(playerMaxDX(levelOffset, i)),
@@ -497,10 +492,6 @@ int main()
     monster[i].enabled = true;
   }
 
-  //bool treasureCollected[TREASURE_COUNT];
-  //uint8_t treasureCollected[BitArray_numBits(MAX_TREASURE_COUNT)] = {0}; // bit array
-  bool treasureCollected[MAX_TREASURE_COUNT] = {0};
-
   // Initialize treasure
   uint8_t tcount = treasureCount(levelOffset);
   for (uint8_t i = 0; i < tcount; ++i) {
@@ -524,9 +515,9 @@ int main()
       ((ENTITY*)(&player[i]))->update((ENTITY*)(&player[i]));
     }
 
-    // First detect any kills when only the player is moved
-    if (detectKills(player, monster))
-      goto start;
+    /* // First detect any kills when only the player is moved */
+    /* if (detectKills(player, monster)) */
+    /*   goto start; */
 
     for (uint8_t i = 0; i < MONSTERS; ++i) {
       monster[i].update(&monster[i]);
@@ -547,12 +538,13 @@ int main()
     // Animate treasure
     static uint8_t treasureFrameCounter = 0;
     for (uint8_t i = 0; i < tcount; ++i) {
-      if (/*BitArray_readBit(treasureCollected, i)*/treasureCollected[i]) {
-        SetTile(treasureX(levelOffset, i), treasureY(levelOffset, i), 30 /*BACKGROUND_START*/+ tileSet * 5 /*BACKGROUND_TILES*/ + 1 /*TREASURE_START_TILE*/);
-        //        SetTile(treasureX(levelOffset, i), treasureY(levelOffset, i), (uint16_t)pgm_read_byte(&treasureBG[i]) + tileSet * 5 + 1);
-      } else {
+      uint8_t tx = treasureX(levelOffset, i);
+      uint8_t ty = treasureY(levelOffset, i);
+      uint8_t t = GetTile(tx, ty);
+      // If the treasure hasn't been collected, animate it.
+      if (t > 0 && t < 31) { // is a treasure tile
         if (treasureFrameCounter % TREASURE_FRAME_SKIP == 0)
-          SetTile(treasureX(levelOffset, i), treasureY(levelOffset, i),
+          SetTile(tx, ty,
                   (uint16_t)tileSet * 15 + 1 + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
           /* SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), */
           /*         (uint16_t)(pgm_read_byte(&treasureFG[i]) + tileSet * 15 + 1 + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]))); */
@@ -565,23 +557,24 @@ int main()
     for (uint8_t p = 0; p < PLAYERS; ++p) {
       if (((ENTITY*)(&player[p]))->enabled == true) {
         for (uint8_t i = 0; i < tcount; ++i) {
-          if (/*BitArray_readBit(treasureCollected, i)*/treasureCollected[i])
-            continue;
-
-          // The calculation below assumes each sprite is WORLD_METER wide
-          if (overlap(((ENTITY*)(&player[p]))->x,
-                      ((ENTITY*)(&player[p]))->y,
-                      WORLD_METER,
-                      WORLD_METER,
-                      (uint16_t)treasureX(levelOffset, i) * (TILE_WIDTH << FP_SHIFT),
-                      (uint16_t)treasureY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT),
-                      WORLD_METER,
-                      WORLD_METER)) {
+          uint8_t tx = treasureX(levelOffset, i);
+          uint8_t ty = treasureY(levelOffset, i);
+          uint8_t t = GetTile(tx, ty);
+          if (t > 0 && t < 31) { // is a treasure tile; treasure has not been collected
+            // The calculation below assumes each sprite is WORLD_METER wide
+            if (overlap(((ENTITY*)(&player[p]))->x,
+                        ((ENTITY*)(&player[p]))->y,
+                        WORLD_METER,
+                        WORLD_METER,
+                        (uint16_t)tx * (TILE_WIDTH << FP_SHIFT),
+                        (uint16_t)ty * (TILE_HEIGHT << FP_SHIFT),
+                        WORLD_METER,
+                        WORLD_METER)) {
               TriggerFx(2, 128, false);
-              //BitArray_setBit(treasureCollected, i);
-              treasureCollected[i] = true;
-          }
-          
+              // Inidcate treasure is collected by changing the tile to one that isn't a treasure
+              SetTile(tx, ty, 30 /*BACKGROUND_START*/+ tileSet * 5 /*BACKGROUND_TILES*/ + 1 /*TREASURE_START_TILE*/);
+            }
+          }          
         }
       }
     }
