@@ -1,0 +1,84 @@
+24-bit RGB-POV by Matt Pandina
+
+SOFTWARE BUILD INSTRUCTIONS (Mac OS X)
+
+Follow Apple's instructions to install the appropriate version of
+Xcode on your computer:
+
+    https://developer.apple.com/xcode/
+
+png2tlc depends on libpng, so unless you already have the libpng and
+zlib (a dependency of libpng) development headers installed on your
+computer, you will need to install them now.
+
+The easiest, and most foolproof way that I've found to do this on OS X
+is to download and compile them from source code. Don't worry, this is
+actually very easy!
+
+First download the source code for zlib by visiting:
+
+    http://zlib.net/
+
+Scroll down the page until you see "source code" and click the
+link to download the latest version in tar.gz format.
+
+Open Terminal and type:
+
+    cd Downloads
+
+followed by:
+
+    tar -zvf zlib-1.2.7.tar.gz
+    cd zlib-1.2.7
+
+replacing the "1.2.7" with the actual version number of the file that
+you downloaded.
+
+Next, type the following:
+
+    ./configure
+    make
+    sudo make install
+
+to compile and install the zlib library.
+
+After zlib has been installed, download the source code for libpng by
+visiting:
+
+    http://www.libpng.org/pub/png/libpng.html
+
+Scroll down the page until you see "source code" and click the link to
+download the latest version in tar.gz format.
+
+Open Terminal and type:
+
+    cd Downloads
+
+followed by:
+
+    tar -xvf libpng-1.5.10.tar.gz
+    cd libpng-1.5.10
+
+replacing the "1.5.10" with the actual version number of the file that
+you downloaded.
+
+Next, type the following:
+
+    ./configure
+    make
+    sudo make install
+
+to compile and install the libpng library.
+
+Once these required dependencies have been installed, change to the
+software directory and build png2tlc using the following commands:
+
+    cd software
+    make
+
+This should produce an executable file called png2tlc.
+
+Note: If you wish to uninstall these versions of zlib or libpng (say
+after you've used them to statically link png2tlc), follow the same
+procedures above, except type "sudo make uninstall" in place of "sudo
+make install".

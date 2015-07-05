@@ -1,0 +1,24 @@
+24-bit RGB-POV by Matt Pandina
+
+SOFTWARE BUILD INSTRUCTIONS (Linux)
+
+png2tlc depends on libpng, so before building, make sure you have the
+libpng12-dev (or libpng14-dev) package installed. If you are using
+Debian or Ubuntu, use the following command to be sure you have the
+proper build environment installed:
+
+    sudo apt-get install gcc make libpng12-dev
+
+If you are using another Linux distribution, you may have to use a
+different command to install these packages. Consult the documentation
+for your distribution to discover which command to use. You will also
+want to use the gcc compiler, since the code is written in C99 with
+GNU extensions.
+
+Once the required dependencies have been installed, change to the
+software directory and build png2tlc using the following commands:
+
+    cd software
+    make
+
+This should produce an executable file called png2tlc.

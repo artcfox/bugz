@@ -1,0 +1,54 @@
+24-bit RGB-POV by Matt Pandina
+
+BUILDING THE SOFTWARE
+
+To compile the software from its source code, please refer to the
+instructions in the BUILD.linux file if you are using Linux;
+BUILD.windows if you are using Windows; or BUILD.macosx if you are
+using Mac OS X.
+
+
+RUNNING THE SOFTWARE
+
+The software is designed to be run from the command prompt.
+
+The purpose of the png2tlc program is to take a directory of PNG files
+(whose height in pixels matches the number of LEDs on the hardware
+device), and convert them into a single output file that contains all
+of those images packed in an optimized format.
+
+If the output file does not exist, it will first be created, and if
+it does exist, it will be modified.
+
+This file should be created directly on a newly formatted microSD card
+to ensure that the file data is stored in a single contiguous chunk by
+running the command:
+
+    ./png2tlc -d /path/to/pngs/ -o /path/to/microSD/RGB-POV.TLC
+
+replacing "/path/to/pngs/" with the path to the directory of png files
+you wish to use, and "/path/to/microSD/" with the actual path to the
+microSD card's root directory (after inserting it into a card reader
+and plugging it into your computer).
+
+Afterward, you may run this same command again any number of times to
+update the image data in the RGB-POV.TLC file with whatever images are
+stored in the specified directory.
+
+The height of each PNG file stored in "/path/to/pngs/" should be a
+multiple of 16 that matches the number of LEDs on the device, though
+if you have multiple devices with different numbers of LEDs, you may
+share a single microSD card among them because the firmware will
+automatically skip over any images that don't match its hardware
+configuration.
+
+The data in the RGB-POV.TLC file is stored in a custom file format
+which is further described in the "tlc-file-format.pdf" file.
+
+The firmware is written such that it first checks to see if an
+RGB-POV.TLC file has been written directly to the microSD card
+starting at sector zero (for advanced users that want to store more
+than 4 GB worth of images). If it doesn't find a valid TLC file
+written there, it then parses the partition table and looks in the
+root directory of a FAT12, FAT16, or FAT32 filesystem for a file named
+"RGB-POV.TLC".

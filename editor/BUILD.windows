@@ -1,0 +1,68 @@
+24-bit RGB-POV by Matt Pandina
+
+SOFTWARE BUILD INSTRUCTIONS (Windows)
+
+Installing Cygwin
+
+Cygwin is required to build png2tlc on Microsoft Windows. Download the
+latest version here:
+
+    http://www.cygwin.com/setup.exe
+
+Run the installer after it has finished downloading, and click "Next"
+until you reach the "Choose a Download Site" dialog. Choose an http
+mirror that looks close, and click "Next". Do not change the default
+root directory.
+
+When you reach the "Select Packages" dialog that has a search box at
+the top and package categories listed below, search and mark for
+installation, the following packages:
+
+    * gcc4
+    * make
+    * libpng14-devel
+
+Note: After you search for a package, you will have to expand the
+categories in the results until you can see the actual package
+name. Select a package for installation by clicking once on the text
+marked "Skip" which will then be replaced with a version number.
+
+After searching and selecting all required packages, keep clicking
+"Next" until the installation completes.  If there are any errors, run
+the installer again, but choose a different mirror.
+
+Compiling under Cygwin
+
+In the Start menu, under "Cygwin" find and run "Cygwin Terminal", or
+double-click on the desktop shortcut labeled "Cygwin Terminal".
+
+Change to the directory that you extracted the source code into, by
+typing the following command:
+
+    cd /cygdrive/c/Users/Artcfox/Downloads/rgb-pov/png2tlc
+
+replacing the "/c/Users/Artcfox/Downloads/rgb-pov/png2tlc" part with
+the path where you extracted the png2tlc source code. Do not put a
+colon after the drive letter, and be sure to use forward slashes
+between the path components.
+
+Next, create the executable by typing:
+
+   make
+
+This should create a file called "png2tlc.exe" in the current
+directory.
+
+In case you ever want to move this file to another machine, or execute
+it outside of the Cygwin environment, the "cygwin1.dll" file needs to
+be in the search path for the executable. The easiest way to ensure
+this, is to make sure that "png2tlc.exe" and "cygwin1.dll" are in the
+same directory.
+
+You may copy the "cygwin1.dll" file into the current directory now, by
+typing the following command:
+
+    cp /usr/bin/cygwin1.dll .
+
+Note: This command is not necessary if you plan on always running
+"png2tlc.exe" from within the Cygwin Terminal.
