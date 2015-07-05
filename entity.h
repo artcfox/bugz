@@ -40,10 +40,12 @@
 #include <uzebox.h>
 
 #define NELEMS(x) (sizeof(x)/sizeof(x[0]))
-//extern const uint8_t oneLeftShiftedBy[8] PROGMEM; // avoids having to bit shift by a variable amount (faster)
+
+#define LO8(x) ((uint8_t)((x) & 0xFF))
+#define HI8(x) ((uint8_t)(((x) >> 8) & 0xFF))
 
 #define PLAYERS 1
-#define MONSTERS 5
+#define MONSTERS 6
 
 #define FP_SHIFT   2
 
@@ -70,7 +72,6 @@
 
 #define FIRST_SOLID_TILE 40
 #define isSolid(t) ((t) > FIRST_SOLID_TILE)
-//extern const uint8_t isSolid[] PROGMEM;
 
 /*
   One way of implementing everthing is to extend the idea that I'm

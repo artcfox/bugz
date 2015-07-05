@@ -46,9 +46,6 @@ extern const struct PatchStruct patches[] PROGMEM;
 #define BitArray_clearBit(array, index) ((array)[(index) >> 3] &= ((1 << ((index) & 7)) ^ 0xFF))
 #define BitArray_readBit(array, index) ((bool)((array)[(index) >> 3] & (1 << ((index) & 7))))
 
-#define LO8(x) ((uint8_t)((x) & 0xFF))
-#define HI8(x) ((uint8_t)(((x) >> 8) & 0xFF))
-
 enum INPUT_FUNCTION;
 typedef enum INPUT_FUNCTION INPUT_FUNCTION;
 
@@ -204,68 +201,44 @@ const uint8_t levelData[] PROGMEM = {
  };
 
 #define LEVEL_HEADER_SIZE 1
-
 #define LEVEL_TILESET_START 0
 #define LEVEL_TILESET_SIZE 1
-
 #define LEVEL_MAP_START (LEVEL_TILESET_START + LEVEL_TILESET_SIZE)
 #define LEVEL_MAP_SIZE 105
-
 #define LEVEL_PLAYER_INITIAL_X_START (LEVEL_MAP_START + LEVEL_MAP_SIZE)
 #define LEVEL_PLAYER_INITIAL_X_SIZE 2
-
 #define LEVEL_PLAYER_INITIAL_Y_START (LEVEL_PLAYER_INITIAL_X_START + LEVEL_PLAYER_INITIAL_X_SIZE)
 #define LEVEL_PLAYER_INITIAL_Y_SIZE 2
-
 #define LEVEL_MONSTER_INITIAL_X_START (LEVEL_PLAYER_INITIAL_Y_START + LEVEL_PLAYER_INITIAL_Y_SIZE)
 #define LEVEL_MONSTER_INITIAL_X_SIZE 6
-
 #define LEVEL_MONSTER_INITIAL_Y_START (LEVEL_MONSTER_INITIAL_X_START + LEVEL_MONSTER_INITIAL_X_SIZE)
 #define LEVEL_MONSTER_INITIAL_Y_SIZE 6
-
-
-// TREASURE STUFF
 #define LEVEL_TREASURE_COUNT_START (LEVEL_MONSTER_INITIAL_Y_START + LEVEL_MONSTER_INITIAL_Y_SIZE)
 #define LEVEL_TREASURE_COUNT_SIZE 1
-
 #define LEVEL_TREASURE_X_START (LEVEL_TREASURE_COUNT_START + LEVEL_TREASURE_COUNT_SIZE)
 #define LEVEL_TREASURE_X_SIZE 32
-
 #define LEVEL_TREASURE_Y_START (LEVEL_TREASURE_X_START + LEVEL_TREASURE_X_SIZE)
 #define LEVEL_TREASURE_Y_SIZE 32
-
-
 #define LEVEL_MONSTER_INITIAL_D_START (LEVEL_TREASURE_Y_START + LEVEL_TREASURE_Y_SIZE)
 #define LEVEL_MONSTER_INITIAL_D_SIZE 6
-
-
 #define LEVEL_PLAYER_MAXDX_START (LEVEL_MONSTER_INITIAL_D_START + LEVEL_MONSTER_INITIAL_D_SIZE)
 #define LEVEL_PLAYER_MAXDX_SIZE (2 * sizeof(int16_t))
-
 #define LEVEL_PLAYER_IMPULSE_START (LEVEL_PLAYER_MAXDX_START + LEVEL_PLAYER_MAXDX_SIZE)
 #define LEVEL_PLAYER_IMPULSE_SIZE (2 * sizeof(int16_t))
-
 #define LEVEL_PLAYER_INPUT_START (LEVEL_PLAYER_IMPULSE_START + LEVEL_PLAYER_IMPULSE_SIZE)
 #define LEVEL_PLAYER_INPUT_SIZE 2
-
 #define LEVEL_PLAYER_UPDATE_START (LEVEL_PLAYER_INPUT_START + LEVEL_PLAYER_INPUT_SIZE)
 #define LEVEL_PLAYER_UPDATE_SIZE 2
-
 #define LEVEL_PLAYER_RENDER_START (LEVEL_PLAYER_UPDATE_START + LEVEL_PLAYER_UPDATE_SIZE)
 #define LEVEL_PLAYER_RENDER_SIZE 2
-
 #define LEVEL_MONSTER_MAXDX_START (LEVEL_PLAYER_RENDER_START + LEVEL_PLAYER_RENDER_SIZE)
 #define LEVEL_MONSTER_MAXDX_SIZE (6 * sizeof(int16_t))
-
 #define LEVEL_MONSTER_IMPULSE_START (LEVEL_MONSTER_MAXDX_START + LEVEL_MONSTER_MAXDX_SIZE)
 #define LEVEL_MONSTER_IMPULSE_SIZE (6 * sizeof(int16_t))
-
 #define LEVEL_MONSTER_INPUT_START (LEVEL_MONSTER_IMPULSE_START + LEVEL_MONSTER_IMPULSE_SIZE)
 #define LEVEL_MONSTER_INPUT_SIZE 6
-
 #define LEVEL_MONSTER_UPDATE_START (LEVEL_MONSTER_INPUT_START + LEVEL_MONSTER_INPUT_SIZE)
 #define LEVEL_MONSTER_UPDATE_SIZE 6
-
 #define LEVEL_MONSTER_RENDER_START (LEVEL_MONSTER_UPDATE_START + LEVEL_MONSTER_UPDATE_SIZE)
 #define LEVEL_MONSTER_RENDER_SIZE 6
 
@@ -279,10 +252,8 @@ const uint8_t levelData[] PROGMEM = {
 #define monsterInitialY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_Y_START + (i)]))
 #define monsterInitialD(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_D_START + (i)]))
 #define treasureCount(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_COUNT_START]))
-
 #define treasureX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_X_START + (i)]))
 #define treasureY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_Y_START + (i)]))
-
 #define playerMaxDX(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_MAXDX_START + (i) * sizeof(int16_t)]))
 #define playerImpulse(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_IMPULSE_START + (i) * sizeof(int16_t)]))
 #define playerInput(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INPUT_START + (i)]))
@@ -318,8 +289,7 @@ uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
 
   uint16_t t = 0; // current tile to draw
   for (uint8_t i = 0; i < BitArray_numBytes(SCREEN_TILES_H * SCREEN_TILES_V); ++i) {
-    // Read 8 tiles worth of data at a time
-    uint8_t chunk = compressedMapChunk(levelOffset, i);
+    uint8_t chunk = compressedMapChunk(levelOffset, i); // read 8 tiles worth of data at a time
     for (int8_t c = 0; c < 8; c++) {
       if (chunk & (1 << (c & 7)))
         SetTile(t % SCREEN_TILES_H, t / SCREEN_TILES_H, 41 + (*tileSet * 2));
@@ -331,20 +301,10 @@ uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
   return levelOffset;
 }
 
-// How many treasures can be in the level
 #define MAX_TREASURE_COUNT 32
 // How many frames to wait between animating treasure
 #define TREASURE_FRAME_SKIP 15
-// X coordinates of each treasure for this level
-//const uint8_t  treasureX[] PROGMEM = {  1,  7,  4, 12, 18,  6, 24, 27, 21, 28, };
-// Y coordinates of each treasure for this level
-//const uint8_t  treasureY[] PROGMEM = { 24,  5,  8, 11, 17,  3,  4, 18,  7, 12, };
-// Starting tile number of each treasure tile to render (animation frames follow directly after this number)
-//const uint8_t treasureFG[] PROGMEM = { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, };
-// Background tile number that should be used to replace each treasure after collected
-//const uint8_t treasureBG[] PROGMEM = { 30, 30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30,  30, };
-// As the animation frame counter advances, this array will be indexed, and its value will be added to the
-// treasureFG value for each treasure to compute the next tile number that the treasure will use
+// Offsets that are added to the tile number when animating treasure
 const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 1 };
 
 
