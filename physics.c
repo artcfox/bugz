@@ -160,15 +160,6 @@ const uint8_t levelData[] PROGMEM = {
 
 #include "editor/levels/prototype_level.png.inc"
 
-/* 255,255,255,127,0,0,0,24,0,0,0,198,1,0,128,1,0,0,96,0,0,0,24,7,15,15,6,0,0,128,1,0,0,224,193,255,127,24,0,0,0,7,0,0,128,225,1,0,96,0,96,0,30,0,31,0,31,0,31,128,129,128,1,224,127,96,0,254,127,24,14,15,28,6,128,1,230,1,96,128,241,225,31,96,56,0,7,16,6,128,121,252,225,96,0,63,0,31,0,0,0,254,255,255,255, // map data from file: prototype_level.png */
-/* 15,16, // playerInitialX[2] */
-/* 12,12, // playerInitialY[2] */
-/* 6,15,12,3,10,21, // monsterInitialX[6] */
-/* 2,5,5,22,8,17, // monsterInitialY[6] */
-/* 32, // treasureCount */
-/* 5,9,17,18,5,13,14,21,22,1,28,6,7,28,14,17,1,28,22,14,17,28,3,4,5,6,14,22,28,11,14,28, // treasureX[32] */
-/* 2,2,2,2,5,5,5,5,5,8,9,11,11,12,13,14,16,16,17,19,20,20,23,23,23,23,23,23,24,26,26,26, // treasureY[32] */
-
   0,0,1,1,1,1,      // uint8_t monsterInitialD[6]
   LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                                // int16_t playerMaxDX[2]
   LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]

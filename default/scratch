@@ -1,2 +1,12 @@
 #!/bin/sh
-cd ../editor && ./png2inc && cd ../data && ~/uzebox/bin/gconvert tileset.xml && ~/uzebox/bin/gconvert sprites.xml && cd ../default && make clean && make && ~/uzebox/bin/uzem physics.uze -s .
+cd ../editor && \
+make clean && \
+make && \
+./png2inc && \
+cd ../data && \
+~/uzebox/bin/gconvert tileset.xml && \
+~/uzebox/bin/gconvert sprites.xml && \
+cd ../default && \
+make clean && \
+make && \
+~/uzebox/bin/uzem physics.uze -s .
