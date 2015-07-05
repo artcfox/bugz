@@ -70,14 +70,6 @@ void null_input(ENTITY* e) { }
 void null_update(ENTITY* e) { }
 void null_render(ENTITY* e) { }
 
-bool overlap(uint16_t x1, uint16_t y1, uint8_t w1, uint8_t h1, uint16_t x2, uint16_t y2, uint8_t w2, uint8_t h2)
-{
-  return !(((x1 + w1 - 1) < x2) ||
-           ((x2 + w2 - 1) < x1) ||
-           ((y1 + h1 - 1) < y2) ||
-           ((y2 + h2 - 1) < y1));
-}
-
 void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
 {
   e->input = input;
@@ -90,7 +82,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->impulse = impulse;
   e->visible = true;
   e->jumpReleased = true;
-  e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->dead = e->animationFrameCounter = 0;
+  e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = 0;
 }
 
 void ai_walk_until_blocked(ENTITY* e)

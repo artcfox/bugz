@@ -111,9 +111,8 @@ struct ENTITY {
   unsigned int monsterhop : 1;
   unsigned int visible : 1;
   unsigned int dead : 1;
+  unsigned int autorespawn : 1;
 } __attribute__ ((packed));
-
-bool overlap(uint16_t x1, uint16_t y1, uint8_t w1, uint8_t h1, uint16_t x2, uint16_t y2, uint8_t w2, uint8_t h2);
 
 // Default functions that do nothing
 void null_input(ENTITY* e);
