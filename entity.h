@@ -70,8 +70,14 @@
 // parameter used for variable jumping (gravity / 10 is a good default)
 #define WORLD_CUT_JUMP_SPEED_LIMIT (WORLD_GRAVITY / 10)
 
-#define FIRST_SOLID_TILE 40
+#define TILESETS_N 3
+#define TREASURE_TILES_IN_TILESET 15
+#define SKY_TILES_IN_TILESET 5
+#define SOLID_TILES_IN_TILESET 2
+#define FIRST_SOLID_TILE (TREASURE_TILES_IN_TILESET * TILESETS_N + SKY_TILES_IN_TILESET * TILESETS_N)
+
 #define isSolid(t) ((t) > FIRST_SOLID_TILE)
+#define isTreasure(t) (bool)(((t) > 0) && ((t) < (1 + TILESETS_N * TREASURE_TILES_IN_TILESET)))
 
 /*
   One way of implementing everthing is to extend the idea that I'm

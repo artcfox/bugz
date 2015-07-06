@@ -167,9 +167,10 @@ enum MONSTER_FLAGS {
 #define LO8HI8(i) LO8((i)), HI8((i))
 
 const uint8_t levelData[] PROGMEM = {
-  2,      // uint8_t numLevels
-  5, 0,   // uint16_t levelOffsets[numLevels] = offsets to each level (little endian)
-  254, 0,
+  3,      // uint8_t numLevels
+  LO8HI8(7),   // uint16_t levelOffsets[numLevels] = offsets to each level (little endian)
+  LO8HI8(256),
+  LO8HI8(505),
           // ---------- start of level 0 data
   0,      // uint8_t tileSet;
 
@@ -209,6 +210,31 @@ const uint8_t levelData[] PROGMEM = {
   INPUT_AI_FLY_VERTICAL, INPUT_AI_HOP_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED_OR_LEDGE, INPUT_AI_HOP_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
   UPDATE_ENTITY_UPDATE_FLYING, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   RENDER_SPIDER_RENDER, RENDER_CRICKET_RENDER, RENDER_LADYBUG_RENDER, RENDER_GRASSHOPPER_RENDER, RENDER_ANT_RENDER, RENDER_ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
+
+
+
+  2,      // uint8_t tileSet;
+#include "editor/levels/space_level.png.inc"
+
+  /* 255, 255, 255, 254, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 255, 0, 1, 128, 0, 0, 6, 0, 0, 15, 24, 0, 0, 0, 127, 255, 255, 255, // uint8_t map[105]; */
+  /* 1, 2,   // uint8_t playerInitialX[2] */
+  /* 26, 26, // uint8_t playerInitialY[2] */
+  /* 25, 28,  9, 16, 19,  7,      // uint8_t monsterInitialX[6] */
+  /* 12, 22, 19, 17,  8, 25,      // uint8_t monsterInitialY[6] */
+  /* 12, // uint8_t treasureCount */
+  /* 1,  7,  4, 12, 18,  6, 24, 27, 21, 28, 13, 18, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureX[32] */
+  /* 24, 5,  8, 11, 17,  3,  4, 18,  7, 12, 22, 23, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureY[32] */
+  MFLAG_DOWN|MFLAG_INSTAKILLS, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
+  LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                  // int16_t playerMaxDX[2]
+  LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
+  INPUT_PLAYER_INPUT, INPUT_PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
+  UPDATE_PLAYER_UPDATE, UPDATE_PLAYER_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  RENDER_PLAYER_RENDER, RENDER_PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2]
+  LO8HI8(WORLD_METER * 5), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 3), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 1), // int16_t monsterMaxDX[6]
+  16, 23, LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), // int16_t monsterImpulse[6]
+  INPUT_AI_FLY_VERTICAL, INPUT_AI_HOP_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED_OR_LEDGE, INPUT_AI_HOP_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
+  UPDATE_ENTITY_UPDATE_FLYING, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
+  RENDER_BEE_RENDER, RENDER_CRICKET_RENDER, RENDER_LADYBUG_RENDER, RENDER_GRASSHOPPER_RENDER, RENDER_ANT_RENDER, RENDER_ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 
   
  };
@@ -306,28 +332,28 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
     for (uint8_t x = 0; x < SCREEN_TILES_H; ++x) {
       if (BaseMapIsSolid(x, y, levelOffset)) {
         if (y == 0 || BaseMapIsSolid(x, y - 1, levelOffset)) { // if we are the top tile, or there is a solid tile above us
-          SetTile(x, y, 41 + (*tileSet * 2)); // underground tile
+          SetTile(x, y, 1 + 0 + FIRST_SOLID_TILE + (*tileSet * SOLID_TILES_IN_TILESET)); // underground tile
         } else {
-          SetTile(x, y, 42 + (*tileSet * 2)); // aboveground tile
+          SetTile(x, y, 1 + 1 + FIRST_SOLID_TILE + (*tileSet * SOLID_TILES_IN_TILESET)); // aboveground tile
         }
       } else { // we are a sky tile
         if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-          SetTile(x, y, 31 + (*tileSet * 5)); // full sky tile
+          SetTile(x, y, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET)); // full sky tile
         } else { // interior tile
           bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(x - 1, y + 1, levelOffset));
           bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(x + 1, y + 1, levelOffset));
           bool solidBelow = BaseMapIsSolid(x, y + 1, levelOffset);
 
           if (!solidLDiag && !solidRDiag && solidBelow) // island
-            SetTile(x, y, 32 + (*tileSet * 5));
+            SetTile(x, y, 1 + 1 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
           else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-            SetTile(x, y, 33 + (*tileSet * 5));
+            SetTile(x, y, 1 + 2 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
           else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-            SetTile(x, y, 34 + (*tileSet * 5));
+            SetTile(x, y, 1 + 3 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
           else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-            SetTile(x, y, 35 + (*tileSet * 5));
+            SetTile(x, y, 1 + 4 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
           else // clear all around
-            SetTile(x, y, 31 + (*tileSet * 5));
+            SetTile(x, y, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
         }
       }
     }
@@ -478,9 +504,9 @@ static bool detectKills(PLAYER* players, ENTITY* monsters, uint16_t levelOffset)
                 ((ENTITY*)(&players[p]))->monsterhop = true;             // player should now do the monster hop
               } else {
                 killPlayer(&players[p]);
-                while (ReadJoypad(((ENTITY*)(&players[p]))->tag) != BTN_START) {
-                  // TODO: figure out how to get note to stop playing
-                }
+                /* while (ReadJoypad(((ENTITY*)(&players[p]))->tag) != BTN_START) { */
+                /*   // TODO: figure out how to get note to stop playing */
+                /* } */
 
               }
             }
@@ -492,7 +518,8 @@ static bool detectKills(PLAYER* players, ENTITY* monsters, uint16_t levelOffset)
 }
 
 // Given an absolute treasure tile, returns an index to the first absolute treasure tile for that animated treasure/background combo
-const uint8_t BaseTreasureTile[] PROGMEM = { 1, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, };
+// If adding tilesets, copy and paste the sequence from the end, since the beginning has an extra 1 (for the blank tile in the beginning)
+const uint8_t BaseTreasureTile[] PROGMEM = { 1, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, };
 
 int main()
 {
@@ -604,10 +631,10 @@ int main()
       uint8_t ty = treasureY(levelOffset, i);
       uint8_t t = GetTile(tx, ty);
       // If the treasure hasn't been collected, animate it.
-      if (t > 0 && t < 31) { // is a treasure tile
+      if (isTreasure(t)) { // is a treasure tile
         if (treasureFrameCounter % TREASURE_FRAME_SKIP == 0) {
           // Calculate what the initial treasure tile would be, and use that plus the animation offset to calculate the animated tile
-          uint8_t baseTreasureTile = pgm_read_byte(&BaseTreasureTile[t]) + (tileSet * 15);
+          uint8_t baseTreasureTile = pgm_read_byte(&BaseTreasureTile[t]) + (tileSet * TREASURE_TILES_IN_TILESET);
           // The above algorithm performs the below computation, but much faster since it uses a LUT
           //   uint8_t baseTreasureTile = (((t - 1) % 15) / 3) * 3 + (tileSet * 15) + 1;
           SetTile(tx, ty, (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
@@ -624,7 +651,7 @@ int main()
           uint8_t tx = treasureX(levelOffset, i);
           uint8_t ty = treasureY(levelOffset, i);
           uint8_t t = GetTile(tx, ty);
-          if (t > 0 && t < 31) { // is a treasure tile; treasure has not been collected
+          if (isTreasure(t)) { // is a treasure tile; treasure has not been collected
             // The calculation below assumes each sprite is WORLD_METER wide
             if (overlap(((ENTITY*)(&player[p]))->x,
                         ((ENTITY*)(&player[p]))->y,
@@ -639,22 +666,22 @@ int main()
               //SetTile(tx, ty, 30 /*BACKGROUND_START*/+ tileSet * 5 /*BACKGROUND_TILES*/ + 1 /*TREASURE_START_TILE*/);
 
               if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-                SetTile(tx, ty, 31 + (tileSet * 5)); // full sky tile
+                SetTile(tx, ty, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET)); // full sky tile
               } else { // interior tile
                 bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset));
                 bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset));
                 bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset);
 
                 if (!solidLDiag && !solidRDiag && solidBelow) // island
-                  SetTile(tx, ty, 32 + (tileSet * 5));
+                  SetTile(tx, ty, 1 + 1 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
                 else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-                  SetTile(tx, ty, 33 + (tileSet * 5));
+                  SetTile(tx, ty, 1 + 2 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
                 else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-                  SetTile(tx, ty, 34 + (tileSet * 5));
+                  SetTile(tx, ty, 1 + 3 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
                 else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-                  SetTile(tx, ty, 35 + (tileSet * 5));
+                  SetTile(tx, ty, 1 + 4 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
                 else // clear all around
-                  SetTile(tx, ty, 31 + (tileSet * 5));
+                  SetTile(tx, ty, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
               }
 
             }
