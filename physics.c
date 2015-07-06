@@ -538,24 +538,24 @@ int main()
 
     //SetTile(treasureX(levelOffset, i), treasureY(levelOffset, i), tileSet * 15 /*TREASURE_TILES_PER_TILESET*/+ 1 /*TREASURE_START_TILE*/);
 
-        if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky treasure tiles
-          SetTile(x, y, 0 + (tileSet * 15) + 1); // full sky treasure tile
-        } else { // interior tile
-          bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(x - 1, y + 1, levelOffset));
-          bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(x + 1, y + 1, levelOffset));
-          bool solidBelow = BaseMapIsSolid(x, y + 1, levelOffset);
+    if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky treasure tiles
+      SetTile(x, y, 0 + (tileSet * 15) + 1); // full sky treasure tile
+    } else { // interior tile
+      bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(x - 1, y + 1, levelOffset));
+      bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(x + 1, y + 1, levelOffset));
+      bool solidBelow = BaseMapIsSolid(x, y + 1, levelOffset);
 
-          if (!solidLDiag && !solidRDiag && solidBelow) // treasure island
-            SetTile(x, y, 3 + (tileSet * 15) + 1);
-          else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-            SetTile(x, y, 6 + (tileSet * 15) + 1);
-          else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-            SetTile(x, y, 9 + (tileSet * 15) + 1);
-          else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-            SetTile(x, y, 12 + (tileSet * 15) + 1);
-          else // clear all around
-            SetTile(x, y, 0 + (tileSet * 15) + 1);
-        }
+      if (!solidLDiag && !solidRDiag && solidBelow) // treasure island
+        SetTile(x, y, 3 + (tileSet * 15) + 1);
+      else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
+        SetTile(x, y, 6 + (tileSet * 15) + 1);
+      else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
+        SetTile(x, y, 9 + (tileSet * 15) + 1);
+      else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
+        SetTile(x, y, 12 + (tileSet * 15) + 1);
+      else // clear all around
+        SetTile(x, y, 0 + (tileSet * 15) + 1);
+    }
 
   }
 
@@ -596,24 +596,47 @@ int main()
       goto start;
 
     // Animate treasure
-    /* static uint8_t treasureFrameCounter = 0; */
-    /* for (uint8_t i = 0; i < tcount; ++i) { */
-    /*   uint8_t tx = treasureX(levelOffset, i); */
-    /*   uint8_t ty = treasureY(levelOffset, i); */
-    /*   uint8_t t = GetTile(tx, ty); */
-    /*   // If the treasure hasn't been collected, animate it. */
-    /*   if (t > 0 && t < 31) { // is a treasure tile */
-    /*     if (treasureFrameCounter % TREASURE_FRAME_SKIP == 0) */
-    /*       // TODO: Read the current treasure tile, and add with wrap what the treasure animation array tells us */
+    static uint8_t treasureFrameCounter = 0;
+    for (uint8_t i = 0; i < tcount; ++i) {
+      uint8_t tx = treasureX(levelOffset, i);
+      uint8_t ty = treasureY(levelOffset, i);
+      uint8_t t = GetTile(tx, ty);
+      // If the treasure hasn't been collected, animate it.
+      if (t > 0 && t < 31) { // is a treasure tile
+        if (treasureFrameCounter % TREASURE_FRAME_SKIP == 0) {
+          // TODO: Optimize this. (Read the current treasure tile, and add with wrap what the treasure animation array tells us?)
 
-    /*       SetTile(tx, ty, */
-    /*               (uint16_t)tileSet * 15 + 1 + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP])); */
-    /*       /\* SetTile(pgm_read_byte(&treasureX[i]), pgm_read_byte(&treasureY[i]), *\/ */
-    /*       /\*         (uint16_t)(pgm_read_byte(&treasureFG[i]) + tileSet * 15 + 1 + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]))); *\/ */
-    /*   } */
-    /* } */
-    /* if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation)) */
-    /*   treasureFrameCounter = 0; */
+          // Use the base map to calculate what the initial treasure tile would be, and use that plus the animation offset to calculate the animated tile
+          uint8_t baseTreasureTile;
+
+          if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky treasure tiles
+            baseTreasureTile = 0 + (tileSet * 15) + 1; // full sky treasure tile
+          } else { // interior tile
+            bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset));
+            bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset));
+            bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset);
+
+            if (!solidLDiag && !solidRDiag && solidBelow) // treasure island
+              baseTreasureTile = 3 + (tileSet * 15) + 1;
+            else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
+              baseTreasureTile = 6 + (tileSet * 15) + 1;
+            else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
+              baseTreasureTile = 9 + (tileSet * 15) + 1;
+            else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
+              baseTreasureTile = 12 + (tileSet * 15) + 1;
+            else // clear all around
+              baseTreasureTile = 0 + (tileSet * 15) + 1;
+          }
+
+          SetTile(tx, ty,
+                  (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
+          /* SetTile(tx, ty, */
+          /*         (uint16_t)tileSet * 15 + 1 + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP])); */
+        }
+      }
+    }
+    if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
+      treasureFrameCounter = 0;
 
     // Check for collisions with treasure
     for (uint8_t p = 0; p < PLAYERS; ++p) {
@@ -636,24 +659,24 @@ int main()
               // Inidcate treasure is collected by changing the tile to one that isn't a treasure
               //SetTile(tx, ty, 30 /*BACKGROUND_START*/+ tileSet * 5 /*BACKGROUND_TILES*/ + 1 /*TREASURE_START_TILE*/);
 
-        if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-          SetTile(tx, ty, 31 + (tileSet * 5)); // full sky tile
-        } else { // interior tile
-          bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset));
-          bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset));
-          bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset);
+              if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
+                SetTile(tx, ty, 31 + (tileSet * 5)); // full sky tile
+              } else { // interior tile
+                bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset));
+                bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset));
+                bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset);
 
-          if (!solidLDiag && !solidRDiag && solidBelow) // island
-            SetTile(tx, ty, 32 + (tileSet * 5));
-          else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-            SetTile(tx, ty, 33 + (tileSet * 5));
-          else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-            SetTile(tx, ty, 34 + (tileSet * 5));
-          else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-            SetTile(tx, ty, 35 + (tileSet * 5));
-          else // clear all around
-            SetTile(tx, ty, 31 + (tileSet * 5));
-        }
+                if (!solidLDiag && !solidRDiag && solidBelow) // island
+                  SetTile(tx, ty, 32 + (tileSet * 5));
+                else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
+                  SetTile(tx, ty, 33 + (tileSet * 5));
+                else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
+                  SetTile(tx, ty, 34 + (tileSet * 5));
+                else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
+                  SetTile(tx, ty, 35 + (tileSet * 5));
+                else // clear all around
+                  SetTile(tx, ty, 31 + (tileSet * 5));
+              }
 
             }
           }          
