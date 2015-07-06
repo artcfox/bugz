@@ -459,64 +459,6 @@ static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, 
            ((y2 + h2 - 1) < y1));
 }
 
-static bool detectKills(PLAYER* players, ENTITY* monsters, uint16_t levelOffset)
-{
-  // Check if the dead flag has been set for a monster
-  for (uint8_t i = 0; i < MONSTERS; ++i) {
-    if (monsters[i].enabled && monsters[i].dead) {
-      killMonster(&monsters[i]);
-    }
-    // Check if we need to respawn the monster
-    if (monsters[i].dead && monsters[i].autorespawn && monsters[i].render == null_render) {
-      // The monster is dead, and its dying animation has finished
-      spawnMonster(&monsters[i], levelOffset, i);
-    }
-  }
-
-    // Check for player collisions with monsters
-    for (uint8_t p = 0; p < PLAYERS; ++p) {
-      if (((ENTITY*)(&players[p]))->enabled) {
-        // Check if the dead flag has been set for a player
-        if (((ENTITY*)(&players[p]))->dead) {
-          killPlayer(&players[p]);
-          //return true;
-        }
-
-        for (uint8_t i = 0; i < MONSTERS; ++i) {
-          if (monsters[i].enabled) {
-            // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
-            // If the player is moving down really fast, and an entity is moving up really fast, there is a slight chance
-            // that it will kill you, because the entity might pass far enough through you that it's y position is above
-            // you. To fix this, we might have to also check for collisions before updating the monsters positions (or cache
-            // the previous x and y, and check that first)
-            if (overlap(((ENTITY*)(&players[p]))->x,
-                        ((ENTITY*)(&players[p]))->y,
-                        WORLD_METER,
-                        WORLD_METER,
-                        monsters[i].x + (1 << FP_SHIFT),
-                        monsters[i].y + (3 << FP_SHIFT),
-                        WORLD_METER - (2 << FP_SHIFT),
-                        WORLD_METER - (4 << FP_SHIFT))) {
-              if ( /*(((ENTITY*)(&players[p]))->dy > 0) && */
-                  ((((ENTITY*)(&players[p]))->prevY + WORLD_METER - (1 << FP_SHIFT)) <= (monsters[i].prevY + (3 << FP_SHIFT))) &&
-                  /*((monsters[i].y + (3 << FP_SHIFT) - ((ENTITY*)(&players[p]))->y) > (WORLD_METER - (4 << FP_SHIFT))) &&*/ !monsters[i].instakills) {
-                killMonster(&monsters[i]);
-                ((ENTITY*)(&players[p]))->monsterhop = true;             // player should now do the monster hop
-              } else {
-                killPlayer(&players[p]);
-                /* while (ReadJoypad(((ENTITY*)(&players[p]))->tag) != BTN_START) { */
-                /*   // TODO: figure out how to get note to stop playing */
-                /* } */
-
-              }
-            }
-          }
-        }
-      }
-    }
-    return false;
-}
-
 // Given an absolute treasure tile, returns an index to the first absolute treasure tile for that animated treasure/background combo
 // If adding tilesets, copy and paste the sequence from the end, since the beginning has an extra 1 (for the blank tile in the beginning)
 const uint8_t BaseTreasureTile[] PROGMEM = { 1, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, };
@@ -599,17 +541,52 @@ int main()
       monster[i].input(&monster[i]);
     }
     
-    // Update the state of every entity
+
+    int16_t playerPrevY[PLAYERS];
+
+    // Update the state of the players
     for (uint8_t i = 0; i < PLAYERS; ++i) {
+      playerPrevY[i] = ((ENTITY*)(&player[i]))->y; // cache the previous Y value to use for collision detection below
       ((ENTITY*)(&player[i]))->update((ENTITY*)(&player[i]));
     }
 
-    /* // First detect any kills when only the player is moved */
-    /* if (detectKills(player, monster, levelOffset, playerPrevY)) */
-    /*   goto start; */
-
+    // Update the state of the monsters
     for (uint8_t i = 0; i < MONSTERS; ++i) {
+      int16_t monsterPrevY = monster[i].y; // cache the previous Y value to use for collision detection below
       monster[i].update(&monster[i]);
+      
+      // Collision detection
+      // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
+
+      // TODO: With the new collision detection code (added below), this might not be true any longer:
+      //       If the player is moving down really fast, and an entity is moving up really fast, there is a slight chance
+      //       that it will kill you, because the entity might pass far enough through you that it's y position is above
+      //       you. To fix this, we might have to also check for collisions before updating the monsters positions (or cache
+      //       the previous x and y, and check that first)
+
+      for (uint8_t p = 0; p < PLAYERS; ++p) {
+        if (((ENTITY*)(&player[p]))->enabled && monster[i].enabled &&
+            overlap(((ENTITY*)(&player[p]))->x,
+                    ((ENTITY*)(&player[p]))->y,
+                    WORLD_METER,
+                    WORLD_METER,
+                    monster[i].x + (1 << FP_SHIFT),
+                    monster[i].y + (3 << FP_SHIFT),
+                    WORLD_METER - (2 << FP_SHIFT),
+                    WORLD_METER - (4 << FP_SHIFT))) {
+          if ( /*(((ENTITY*)(&player[p]))->dy > 0) && */
+              ((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) &&
+              /*((monsters[i].y + (3 << FP_SHIFT) - ((ENTITY*)(&player[p]))->y) > (WORLD_METER - (4 << FP_SHIFT))) &&*/ !monster[i].instakills) {
+            killMonster(&monster[i]);
+            ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
+          } else {
+            killPlayer(&player[p]);
+            /* while (ReadJoypad(((ENTITY*)(&players[p]))->tag) != BTN_START) { */
+            /*   // TODO: figure out how to get note to stop playing */
+            /* } */
+          }
+        }
+      }
     }
     
     // Render every entity
@@ -620,9 +597,24 @@ int main()
       monster[i].render(&monster[i]);
     }
 
-    // Now detect any kills when only the monster is moved
-    if (detectKills(player, monster, levelOffset))
-      goto start;
+    // Check if the dead flag has been set for a monster (from something other than a collision with a player)
+    for (uint8_t i = 0; i < MONSTERS; ++i) {
+      if (monster[i].enabled && monster[i].dead) {
+        killMonster(&monster[i]);
+      }
+      // Check if we need to respawn the monster
+      if (monster[i].dead && monster[i].autorespawn && monster[i].render == null_render) {
+        // The monster is dead, and its dying animation has finished
+        spawnMonster(&monster[i], levelOffset, i);
+      }
+    }
+
+    for (uint8_t p = 0; p < PLAYERS; ++p) {
+      if (((ENTITY*)(&player[p]))->enabled && ((ENTITY*)(&player[p]))->dead) {
+        killPlayer(&player[p]);
+        //return true;
+      }
+    }
 
     // Animate treasure
     static uint8_t treasureFrameCounter = 0;

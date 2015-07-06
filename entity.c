@@ -278,7 +278,6 @@ void entity_update(ENTITY* e)
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  e->prevY = e->y;
   e->y += (e->dy / WORLD_FPS);
   e->dy += (ddy / WORLD_FPS);
   if (e->dy < -WORLD_MAXDY)
@@ -341,7 +340,6 @@ void entity_update_dying(ENTITY* e)
     ddy = WORLD_GRAVITY;
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  e->prevY = e->y;
   e->y += (e->dy / WORLD_FPS);
   e->dy += (ddy / WORLD_FPS);
   if (e->dy < -WORLD_MAXDY)
@@ -441,7 +439,6 @@ void entity_update_flying(ENTITY* e)
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  e->prevY = e->y;
   e->y += (e->dy / WORLD_FPS);
   e->dy += (ddy / WORLD_FPS);
   if (e->turbo) {
@@ -838,7 +835,6 @@ void player_update(ENTITY* e)
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  e->prevY = e->y;
   e->y += (e->dy / WORLD_FPS);
   e->dy += (ddy / WORLD_FPS);
   if (e->dy < -WORLD_MAXDY)
