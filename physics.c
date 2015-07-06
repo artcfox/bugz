@@ -607,26 +607,42 @@ int main()
           // TODO: Optimize this. (Read the current treasure tile, and add with wrap what the treasure animation array tells us?)
 
           // Use the base map to calculate what the initial treasure tile would be, and use that plus the animation offset to calculate the animated tile
-          uint8_t baseTreasureTile;
-
-          if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky treasure tiles
+          uint8_t baseTreasureTile = (t - 1) % 15;
+          if (baseTreasureTile < 3)
             baseTreasureTile = 0 + (tileSet * 15) + 1; // full sky treasure tile
-          } else { // interior tile
-            bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset));
-            bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset));
-            bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset);
+          else if (baseTreasureTile < 6)
+            baseTreasureTile = 3 + (tileSet * 15) + 1;
+          else if (baseTreasureTile < 9)
+            baseTreasureTile = 6 + (tileSet * 15) + 1;
+          else if (baseTreasureTile < 12)
+            baseTreasureTile = 9 + (tileSet * 15) + 1;
+          else
+            baseTreasureTile = 12 + (tileSet * 15) + 1;
 
-            if (!solidLDiag && !solidRDiag && solidBelow) // treasure island
-              baseTreasureTile = 3 + (tileSet * 15) + 1;
-            else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-              baseTreasureTile = 6 + (tileSet * 15) + 1;
-            else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-              baseTreasureTile = 9 + (tileSet * 15) + 1;
-            else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-              baseTreasureTile = 12 + (tileSet * 15) + 1;
-            else // clear all around
-              baseTreasureTile = 0 + (tileSet * 15) + 1;
-          }
+          /* if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky treasure tiles */
+          /*   baseTreasureTile = 0 + (tileSet * 15) + 1; // full sky treasure tile */
+          /* } else { // interior tile */
+          /*   bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset)); */
+          /*   bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset)); */
+          /*   bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset); */
+
+          /*   if (!solidLDiag && !solidRDiag && solidBelow) // treasure island */
+          /*     baseTreasureTile = 3 + (tileSet * 15) + 1; */
+          /*   else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left */
+          /*     baseTreasureTile = 6 + (tileSet * 15) + 1; */
+          /*   else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right */
+          /*     baseTreasureTile = 9 + (tileSet * 15) + 1; */
+          /*   else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right */
+          /*     baseTreasureTile = 12 + (tileSet * 15) + 1; */
+          /*   else // clear all around */
+          /*     baseTreasureTile = 0 + (tileSet * 15) + 1; */
+          /* } */
+
+
+
+
+
+
 
           SetTile(tx, ty,
                   (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
