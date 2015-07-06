@@ -490,6 +490,9 @@ static bool detectKills(PLAYER* players, ENTITY* monsters, uint16_t levelOffset)
     return false;
 }
 
+// Given an absolute treasure tile, returns an index to the first absolute treasure tile for that animated treasure/background combo
+const uint8_t BaseTreasureTile[] PROGMEM = { 1, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, };
+
 int main()
 {
   PLAYER player[PLAYERS];
@@ -535,8 +538,6 @@ int main()
   for (uint8_t i = 0; i < tcount; ++i) {
     uint8_t x = treasureX(levelOffset, i);
     uint8_t y = treasureY(levelOffset, i);
-
-    //SetTile(treasureX(levelOffset, i), treasureY(levelOffset, i), tileSet * 15 /*TREASURE_TILES_PER_TILESET*/+ 1 /*TREASURE_START_TILE*/);
 
     if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky treasure tiles
       SetTile(x, y, 0 + (tileSet * 15) + 1); // full sky treasure tile
@@ -605,22 +606,11 @@ int main()
       if (t > 0 && t < 31) { // is a treasure tile
         if (treasureFrameCounter % TREASURE_FRAME_SKIP == 0) {
           // Calculate what the initial treasure tile would be, and use that plus the animation offset to calculate the animated tile
-          uint8_t baseTreasureTile = (t - 1) % 15;
-          if (baseTreasureTile < 3)
-            baseTreasureTile = 0 + (tileSet * 15) + 1; // full sky treasure tile
-          else if (baseTreasureTile < 6)
-            baseTreasureTile = 3 + (tileSet * 15) + 1;
-          else if (baseTreasureTile < 9)
-            baseTreasureTile = 6 + (tileSet * 15) + 1;
-          else if (baseTreasureTile < 12)
-            baseTreasureTile = 9 + (tileSet * 15) + 1;
-          else
-            baseTreasureTile = 12 + (tileSet * 15) + 1;
-
+          uint8_t baseTreasureTile = pgm_read_byte(&BaseTreasureTile[t]) + (tileSet * 15);
+          // The above algorithm performs the below computation, but much faster since it uses a LUT
+          //   uint8_t baseTreasureTile = (((t - 1) % 15) / 3) * 3 + (tileSet * 15) + 1;
           SetTile(tx, ty,
                   (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
-          /* SetTile(tx, ty, */
-          /*         (uint16_t)tileSet * 15 + 1 + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP])); */
         }
       }
     }
