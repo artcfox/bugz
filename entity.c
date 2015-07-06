@@ -278,6 +278,7 @@ void entity_update(ENTITY* e)
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->prevY = e->y;
   e->y += (e->dy / WORLD_FPS);
   e->dy += (ddy / WORLD_FPS);
   if (e->dy < -WORLD_MAXDY)
@@ -340,6 +341,7 @@ void entity_update_dying(ENTITY* e)
     ddy = WORLD_GRAVITY;
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->prevY = e->y;
   e->y += (e->dy / WORLD_FPS);
   e->dy += (ddy / WORLD_FPS);
   if (e->dy < -WORLD_MAXDY)
@@ -439,6 +441,7 @@ void entity_update_flying(ENTITY* e)
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->prevY = e->y;
   e->y += (e->dy / WORLD_FPS);
   e->dy += (ddy / WORLD_FPS);
   if (e->turbo) {
@@ -764,7 +767,7 @@ void player_update(ENTITY* e)
     ddx -= WORLD_FRICTION; // player was going right, but not anymore
 
   if (e->jump && !e->jumping && !(e->falling ? (p->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
-    TriggerFx(0, 128, false);
+    TriggerFx(0, 128, true);
     e->dy = 0;             // reset vertical velocity so jumps during grace period are consistent with jumps from ground
     ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
     e->jumping = true;
@@ -835,6 +838,7 @@ void player_update(ENTITY* e)
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->prevY = e->y;
   e->y += (e->dy / WORLD_FPS);
   e->dy += (ddy / WORLD_FPS);
   if (e->dy < -WORLD_MAXDY)

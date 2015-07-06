@@ -382,7 +382,7 @@ const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 1 };
 static void killPlayer(PLAYER* p)
 {
   ENTITY* e = (ENTITY*)p;
-  TriggerFx(3, 128, false);
+  TriggerFx(3, 128, true);
   e->dead = true;
   e->up = true;                   // player dies upwards
   e->dy = 0;
@@ -397,7 +397,7 @@ static void killPlayer(PLAYER* p)
 
 static void killMonster(ENTITY* e)
 {
-  TriggerFx(1, 128, false);        // play the monster death sound
+  TriggerFx(1, 128, true);        // play the monster death sound
   e->dead = true;                  // kill the monster
   e->up = false;                   // die downwards
   e->enabled = false;              // make sure we don't consider the entity again for collisions
@@ -472,15 +472,16 @@ static bool detectKills(PLAYER* players, ENTITY* monsters, uint16_t levelOffset)
                         WORLD_METER - (2 << FP_SHIFT),
                         WORLD_METER - (4 << FP_SHIFT))) {
               if ( /*(((ENTITY*)(&players[p]))->dy > 0) && */
-                   ((monsters[i].y + (3 << FP_SHIFT) - ((ENTITY*)(&players[p]))->y) > (WORLD_METER - (4 << FP_SHIFT))) && !monsters[i].instakills) {
+                  ((((ENTITY*)(&players[p]))->prevY + WORLD_METER - (1 << FP_SHIFT)) <= (monsters[i].prevY + (3 << FP_SHIFT))) &&
+                  /*((monsters[i].y + (3 << FP_SHIFT) - ((ENTITY*)(&players[p]))->y) > (WORLD_METER - (4 << FP_SHIFT))) &&*/ !monsters[i].instakills) {
                 killMonster(&monsters[i]);
                 ((ENTITY*)(&players[p]))->monsterhop = true;             // player should now do the monster hop
-                /* while (ReadJoypad(((ENTITY*)(&players[p]))->tag) != BTN_B) { */
-                /*   // TODO: figure out how to get note to stop playing */
-                /* } */
               } else {
                 killPlayer(&players[p]);
-                //return true;
+                while (ReadJoypad(((ENTITY*)(&players[p]))->tag) != BTN_START) {
+                  // TODO: figure out how to get note to stop playing
+                }
+
               }
             }
           }
@@ -576,9 +577,9 @@ int main()
       ((ENTITY*)(&player[i]))->update((ENTITY*)(&player[i]));
     }
 
-    // First detect any kills when only the player is moved
-    if (detectKills(player, monster, levelOffset))
-      goto start;
+    /* // First detect any kills when only the player is moved */
+    /* if (detectKills(player, monster, levelOffset, playerPrevY)) */
+    /*   goto start; */
 
     for (uint8_t i = 0; i < MONSTERS; ++i) {
       monster[i].update(&monster[i]);
@@ -609,8 +610,7 @@ int main()
           uint8_t baseTreasureTile = pgm_read_byte(&BaseTreasureTile[t]) + (tileSet * 15);
           // The above algorithm performs the below computation, but much faster since it uses a LUT
           //   uint8_t baseTreasureTile = (((t - 1) % 15) / 3) * 3 + (tileSet * 15) + 1;
-          SetTile(tx, ty,
-                  (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
+          SetTile(tx, ty, (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
         }
       }
     }
@@ -634,7 +634,7 @@ int main()
                         (uint16_t)ty * (TILE_HEIGHT << FP_SHIFT),
                         WORLD_METER,
                         WORLD_METER)) {
-              TriggerFx(2, 128, false);
+              TriggerFx(2, 128, true);
               // Inidcate treasure is collected by changing the tile to one that isn't a treasure
               //SetTile(tx, ty, 30 /*BACKGROUND_START*/+ tileSet * 5 /*BACKGROUND_TILES*/ + 1 /*TREASURE_START_TILE*/);
 

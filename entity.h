@@ -93,6 +93,7 @@ struct ENTITY {
   uint8_t tag;
   int16_t x;
   int16_t y;
+  int16_t prevY;
   int16_t dx;
   int16_t dy;
   int16_t maxdx;
