@@ -410,8 +410,8 @@ static void killPlayer(PLAYER* p)
   ENTITY* e = (ENTITY*)p;
   TriggerFx(3, 128, true);
   e->dead = true;
-  e->up = true;                   // player dies upwards
   e->left = e->right = false;
+  e->monsterhop = true;
   e->dy = 0;
   e->enabled = false;
   e->input = null_input;

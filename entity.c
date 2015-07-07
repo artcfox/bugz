@@ -339,6 +339,7 @@ void entity_update_dying(ENTITY* e)
   u.wasRight = (bool)(e->dx > 0);
 
   int16_t ddx = 0;
+  int16_t ddy = WORLD_GRAVITY;
 
   if (e->left)
     ddx -= WORLD_ACCEL;    // entity wants to go left
@@ -350,11 +351,11 @@ void entity_update_dying(ENTITY* e)
   else if (u.wasRight)
     ddx -= WORLD_FRICTION; // entity was going right, but not anymore
 
-  int16_t ddy;
-  if (e->up)
-    ddy = -WORLD_GRAVITY / 4;
-  else
-    ddy = WORLD_GRAVITY;
+  // Bounce a bit when you die if the monsterhop flag is set
+  if (e->monsterhop) {
+    e->monsterhop = false;
+    ddy -= (e->impulse >> 1);
+  }
 
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
@@ -811,7 +812,7 @@ void player_update(ENTITY* e)
     e->monsterhop = e->jumping = e->falling = false;
     e->jumpReleased = true;
     e->dy = p->framesFalling = 0;
-    ddy -= (e->impulse / 2);
+    ddy -= (e->impulse >> 1);
   }
 
   // Variable height jumping
