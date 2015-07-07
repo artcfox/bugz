@@ -185,6 +185,12 @@ void ai_fly_horizontal(ENTITY* e)
   }
 }
 
+static inline bool isSolidForEntity(uint8_t tx, uint8_t ty, int16_t prevY, uint8_t entityHeight)
+{
+  uint8_t t = GetTile(tx, ty);
+  return (isSolid(t) || (isOneWay(t) && ((prevY + entityHeight - 1) < vt2p(ty))));
+}
+
 void entity_update(ENTITY* e)
 {
   UPDATE_BITFLAGS u;
@@ -229,10 +235,10 @@ void entity_update(ENTITY* e)
   uint8_t ty = p2vt(e->y);
   //u.nx = (bool)nh(e->x);  // true if entity overlaps right
   u.ny = (bool)nv(e->y);  // true if entity overlaps below
-  u.cell      = (bool)isSolid(GetTile(tx,     ty));
-  u.cellright = (bool)isSolid(GetTile(tx + 1, ty));
-  u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
-  u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
+  u.cell      = (bool)isSolidForEntity(tx,     ty,     e->y, WORLD_METER);
+  u.cellright = (bool)isSolidForEntity(tx + 1, ty,     e->y, WORLD_METER);
+  u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, e->y, WORLD_METER);
+  u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
 
   if (e->dx > 0) {
     if ((u.cellright && !u.cell) ||
@@ -240,9 +246,9 @@ void entity_update(ENTITY* e)
       e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
       //u.nx = false;          // entity no longer overlaps the adjacent cell
-      tx = p2ht(e->x);
-      u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
-      u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
+      //tx = p2ht(e->x);
+      //u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, e->y, WORLD_METER);
+      //u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
     }
   } else if (e->dx < 0) {
     if ((u.cell     && !u.cellright) ||
@@ -250,13 +256,14 @@ void entity_update(ENTITY* e)
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
       //u.nx = false;              // entity no longer overlaps the adjacent cell
-      tx = p2ht(e->x);
-      u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
-      u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
+      //tx = p2ht(e->x);
+      //u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, e->y, WORLD_METER);
+      //u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
     }
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  int16_t prevY = e->y; // cache previous Y value for one-way tiles
   e->y += (e->dy / WORLD_FPS);
   e->dy += (ddy / WORLD_FPS);
   if (e->dy < -WORLD_MAXDY)
@@ -268,7 +275,8 @@ void entity_update(ENTITY* e)
   if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
     e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
     e->dy = 0;
-    e->dead = true;
+    if (!e->invincible)
+      e->dead = true;
     return;
   }
 
@@ -277,10 +285,10 @@ void entity_update(ENTITY* e)
   ty = p2vt(e->y);
   u.nx = (bool)nh(e->x);  // true if entity overlaps right
   //u.ny = (bool)nv(e->y);  // true if entity overlaps below
-  u.cell      = (bool)isSolid(GetTile(tx,     ty));
-  u.cellright = (bool)isSolid(GetTile(tx + 1, ty));
-  u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
-  u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
+  u.cell      = (bool)isSolidForEntity(tx,     ty, prevY,     WORLD_METER);
+  u.cellright = (bool)isSolidForEntity(tx + 1, ty, prevY,     WORLD_METER);
+  u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, prevY, WORLD_METER);
+  u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, prevY, WORLD_METER);
 
   if (e->dy > 0) {
     if ((u.celldown && !u.cell) ||
@@ -840,10 +848,10 @@ void player_update(ENTITY* e)
   uint8_t ty = p2vt(e->y);
   //u.nx = (bool)nh(e->x);  // true if player overlaps right
   u.ny = (bool)nv(e->y); // true if player overlaps below
-  u.cell      = (bool)isSolid(GetTile(tx,     ty));
-  u.cellright = (bool)isSolid(GetTile(tx + 1, ty));
-  u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
-  u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
+  u.cell      = (bool)isSolidForEntity(tx,     ty,     e->y, WORLD_METER);
+  u.cellright = (bool)isSolidForEntity(tx + 1, ty,     e->y, WORLD_METER);
+  u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, e->y, WORLD_METER);
+  u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
 
   if (e->dx > 0) {
     if ((u.cellright && !u.cell) ||
@@ -851,9 +859,9 @@ void player_update(ENTITY* e)
       e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform we just hit
       e->dx = 0;           // stop horizontal velocity
       //u.nx = false;        // player no longer overlaps the adjacent cell
-      tx = p2ht(e->x);
-      u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
-      u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
+      //tx = p2ht(e->x);
+      //u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, e->y, WORLD_METER);
+      //u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
     }
   } else if (e->dx < 0) {
     if ((u.cell     && !u.cellright) ||
@@ -861,13 +869,14 @@ void player_update(ENTITY* e)
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
       e->dx = 0;           // stop horizontal velocity
       //u.nx = false;        // player no longer overlaps the adjacent cell
-      tx = p2ht(e->x);
-      u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
-      u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
+      //tx = p2ht(e->x);
+      //u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, e->y, WORLD_METER);
+      //u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
     }
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  int16_t prevY = e->y; // cache previous Y value for one-way tiles
   e->y += (e->dy / WORLD_FPS);
   e->dy += (ddy / WORLD_FPS);
   if (e->dy < -WORLD_MAXDY)
@@ -889,10 +898,10 @@ void player_update(ENTITY* e)
   ty = p2vt(e->y);
   u.nx = (bool)nh(e->x);  // true if player overlaps right
   //u.ny = (bool)nv(e->y); // true if player overlaps below
-  u.cell      = (bool)isSolid(GetTile(tx,     ty));
-  u.cellright = (bool)isSolid(GetTile(tx + 1, ty));
-  u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
-  u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
+  u.cell      = (bool)isSolidForEntity(tx,     ty,     prevY, WORLD_METER);
+  u.cellright = (bool)isSolidForEntity(tx + 1, ty,     prevY, WORLD_METER);
+  u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, prevY, WORLD_METER);
+  u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, prevY, WORLD_METER);
 
   if (e->dy > 0) {
     if ((u.celldown && !u.cell) ||
