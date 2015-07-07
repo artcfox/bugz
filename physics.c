@@ -408,6 +408,8 @@ const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 1 };
 static void killPlayer(PLAYER* p)
 {
   ENTITY* e = (ENTITY*)p;
+  if (e->invincible)
+    return;
   TriggerFx(3, 128, true);
   e->dead = true;
   e->left = e->right = false;
@@ -424,6 +426,8 @@ static void killPlayer(PLAYER* p)
 
 static void killMonster(ENTITY* e)
 {
+  if (e->invincible)
+    return;
   TriggerFx(1, 128, true);        // play the monster death sound
   e->dead = true;                  // kill the monster
   e->up = e->left = e->right = false;                   // die downwards
@@ -449,7 +453,8 @@ static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
   e->down = (bool)(monsterFlags & MFLAG_DOWN);
   e->autorespawn = (bool)(monsterFlags & MFLAG_AUTORESPAWN);
   e->enabled = (bool)!(monsterFlags & MFLAG_NOINTERACT);
-  e->instakills = (bool)(monsterFlags & MFLAG_INSTAKILLS);
+  //e->instakills = (bool)(monsterFlags & MFLAG_INSTAKILLS);
+  e->invincible = (bool)(monsterFlags & MFLAG_INSTAKILLS);
 }
 
 static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
@@ -496,7 +501,6 @@ int main()
                   (int16_t)(playerImpulse(levelOffset, i)));
       ((ENTITY*)(&player[i]))->enabled = true;
       ((ENTITY*)(&player[i]))->left = true;
-
     }
 
     // Initialize monsters

@@ -44,7 +44,7 @@
 #define LO8(x) ((uint8_t)((x) & 0xFF))
 #define HI8(x) ((uint8_t)(((x) >> 8) & 0xFF))
 
-#define PLAYERS 1
+#define PLAYERS 2
 #define MONSTERS 6
 
 #define FP_SHIFT   2
@@ -119,6 +119,7 @@ struct ENTITY {
   unsigned int dead : 1;
   unsigned int autorespawn : 1;
   unsigned int instakills : 1;
+  unsigned int invincible : 1;
 } __attribute__ ((packed));
 
 // Default functions that do nothing

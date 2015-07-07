@@ -82,7 +82,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->impulse = impulse;
   e->visible = true;
   e->jumpReleased = true;
-  e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = 0;
+  e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->instakills = e->invincible = 0;
 }
 
 void ai_walk_until_blocked(ENTITY* e)
@@ -763,6 +763,12 @@ void player_input(ENTITY* e)
   e->up = (bool)(p->buttons.held & BTN_UP);
   e->down = (bool)(p->buttons.held & BTN_DOWN);
   e->turbo = (bool)(p->buttons.held & BTN_B);
+
+  if (e->tag) { // only for player 2
+    uint16_t pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
+    if (pressed & BTN_SELECT)
+      e->invincible = !e->invincible;
+  }
 
   // Improve the user experience, by allowing players to jump by holding the jump
   // button before landing, but require them to release it before jumping again
