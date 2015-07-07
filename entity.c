@@ -68,7 +68,7 @@
 
 void null_input(ENTITY* e) { }
 void null_update(ENTITY* e) { }
-void null_render(ENTITY* e) { }
+void null_render(ENTITY* e) { sprites[e->tag].x = OFF_SCREEN; }
 
 void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
 {
@@ -758,17 +758,29 @@ void player_input(ENTITY* e)
   //p->buttons.pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
   //p->buttons.released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
 
+  // Allow player 2 to join/leave the game at any time 
+  if (e->tag) { // only for player 2
+    uint16_t pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
+    if (pressed & BTN_START) {
+      if (e->enabled) {
+        e->enabled = false;
+        e->render = null_render;
+      } else {
+        e->enabled = true;
+        e->render = player_render;
+      }
+    }
+    if (!e->enabled)
+      return;
+    if (pressed & BTN_SELECT)
+      e->invincible = !e->invincible;
+  }
+
   e->left = (bool)(p->buttons.held & BTN_LEFT);
   e->right = (bool)(p->buttons.held & BTN_RIGHT);
   e->up = (bool)(p->buttons.held & BTN_UP);
   e->down = (bool)(p->buttons.held & BTN_DOWN);
   e->turbo = (bool)(p->buttons.held & BTN_B);
-
-  if (e->tag) { // only for player 2
-    uint16_t pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
-    if (pressed & BTN_SELECT)
-      e->invincible = !e->invincible;
-  }
 
   // Improve the user experience, by allowing players to jump by holding the jump
   // button before landing, but require them to release it before jumping again
@@ -889,7 +901,8 @@ void player_update(ENTITY* e)
   if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
     e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
     e->dy = 0;
-    e->dead = true;
+    if (!e->invincible)
+      e->dead = true;
     return;
   }
 

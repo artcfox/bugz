@@ -500,7 +500,12 @@ int main()
                   (int16_t)(playerMaxDX(levelOffset, i)),
                   (int16_t)(playerImpulse(levelOffset, i)));
       ((ENTITY*)(&player[i]))->enabled = true;
-      ((ENTITY*)(&player[i]))->left = true;
+      //((ENTITY*)(&player[i]))->left = true;
+      if (i == 1) { // player 2 starts off hidden and disabled
+        ((ENTITY*)(&player[i]))->enabled = false;
+        ((ENTITY*)(&player[i]))->render = null_render;
+        ((ENTITY*)(&player[i]))->invincible = true;
+      }
     }
 
     // Initialize monsters
@@ -701,6 +706,7 @@ int main()
         WaitVsync(20); // delay
         break; // restart level
       }
+
     }
   }
 }
