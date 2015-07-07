@@ -362,42 +362,6 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
   return levelOffset;
 }
 
-/* // Returns offset into levelData PROGMEM array */
-/* static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet) */
-/* { */
-/*   // Bounds check level */
-/*   if (level >= numLevels()) */
-/*     return 0xFFFF; // bogus value */
-
-/*   // Determine the offset into the PROGMEM array where the level data begins */
-/*   // struct LEVEL_HEADER { */
-/*   //   uint8_t numLevels; */
-/*   //   uint16_t levelOffsets[numLevels]; */
-/*   // }; */
-/*   uint16_t levelOffset = levelOffset(level); */
-
-/*   // Using that offset, read the tile set, and draw the map */
-/*   // struct LEVEL_DATA { */
-/*   //   uint8_t tileSet; */
-/*   //   uint8_t map[105]; */
-/*   //   ... */
-/*   // }; */
-/*   *tileSet = tileSet(levelOffset); */
-
-/*   uint16_t t = 0; // current tile to draw */
-/*   for (uint8_t i = 0; i < BitArray_numBytes(SCREEN_TILES_H * SCREEN_TILES_V); ++i) { */
-/*     uint8_t chunk = compressedMapChunk(levelOffset, i); // read 8 tiles worth of data at a time */
-/*     for (int8_t c = 0; c < 8; c++) { */
-/*       if (chunk & (1 << (c & 7))) */
-/*         SetTile(t % SCREEN_TILES_H, t / SCREEN_TILES_H, 41 + (*tileSet * 2)); */
-/*       else */
-/*         SetTile(t % SCREEN_TILES_H, t / SCREEN_TILES_H, 31 + (*tileSet * 5)); */
-/*       t++; */
-/*     } */
-/*   } */
-/*   return levelOffset; */
-/* } */
-
 #define MAX_TREASURE_COUNT 32
 // How many frames to wait between animating treasure
 #define TREASURE_FRAME_SKIP 16
@@ -410,7 +374,7 @@ static void killPlayer(PLAYER* p)
   ENTITY* e = (ENTITY*)p;
   if (e->invincible)
     return;
-  TriggerFx(3, 128, false);
+  TriggerFx(3, 128, true);
   e->dead = true;
   e->left = e->right = false;
   e->monsterhop = true;
@@ -418,29 +382,26 @@ static void killPlayer(PLAYER* p)
   e->enabled = false;
   e->input = null_input;
   e->update = entity_update_dying;
-  /* e->render(e); // since we just died, call the render function */
-  /* while (ReadJoypad(e->tag) != BTN_START) { */
-  /*   // TODO: figure out how to get note to stop playing */
-  /* } */
 }
 
 static void killMonster(ENTITY* e)
 {
   if (e->invincible)
     return;
-  TriggerFx(1, 128, false);        // play the monster death sound
+  TriggerFx(1, 128, true);        // play the monster death sound
   e->dead = true;                  // kill the monster
-  e->up = e->left = e->right = false;                   // die downwards
+  e->left = e->right = false;      // release controls that matter to dying physics
   e->enabled = false;              // make sure we don't consider the entity again for collisions
   e->input = null_input;           // disable the entity's ai
-  e->update = entity_update_dying; // disable normal physics
+  e->update = entity_update_dying; // use dying physics
 }
 
 static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
   entity_init(e,
               inputFunc(monsterInput(levelOffset, i)),
               updateFunc(monsterUpdate(levelOffset, i)),
-              renderFunc(monsterRender(levelOffset, i)), PLAYERS + i,
+              renderFunc(monsterRender(levelOffset, i)),
+              PLAYERS + i,
               (int16_t)(monsterInitialX(levelOffset, i) * (TILE_WIDTH << FP_SHIFT)),
               (int16_t)(monsterInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
               (int16_t)(monsterMaxDX(levelOffset, i)),
@@ -468,6 +429,30 @@ static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, 
 // Given an absolute treasure tile, returns an index to the first absolute treasure tile for that animated treasure/background combo
 // If adding tilesets, copy and paste the sequence from the end, since the beginning has an extra 1 (for the blank tile in the beginning)
 const uint8_t BaseTreasureTile[] PROGMEM = { 1, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, };
+
+static void collectTreasure(uint8_t tx, uint8_t ty, uint16_t levelOffset, uint8_t tileSet)
+{
+  TriggerFx(2, 128, true);
+  // Inidcate treasure is collected by changing the tile to one that isn't a treasure
+  if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
+    SetTile(tx, ty, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET)); // full sky tile
+  } else { // interior tile
+    bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset));
+    bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset));
+    bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset);
+
+    if (!solidLDiag && !solidRDiag && solidBelow) // island
+      SetTile(tx, ty, 1 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+    else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
+      SetTile(tx, ty, 2 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+    else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
+      SetTile(tx, ty, 3 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+    else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
+      SetTile(tx, ty, 4 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+    else // clear all around
+      SetTile(tx, ty, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+  }
+}
 
 int main()
 {
@@ -575,7 +560,7 @@ int main()
         //       the previous x and y, and check that first)
 
         for (uint8_t p = 0; p < PLAYERS; ++p) {
-          if (((ENTITY*)(&player[p]))->enabled && monster[i].enabled &&
+          if (((ENTITY*)(&player[p]))->enabled && !(((ENTITY*)(&player[p]))->dead) && monster[i].enabled && !monster[i].dead &&
               overlap(((ENTITY*)(&player[p]))->x,
                       ((ENTITY*)(&player[p]))->y,
                       WORLD_METER,
@@ -584,9 +569,9 @@ int main()
                       monster[i].y + (3 << FP_SHIFT),
                       WORLD_METER - (2 << FP_SHIFT),
                       WORLD_METER - (4 << FP_SHIFT))) {
-            if ( /*(((ENTITY*)(&player[p]))->dy > 0) && */
-                ((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) &&
-                /*((monsters[i].y + (3 << FP_SHIFT) - ((ENTITY*)(&player[p]))->y) > (WORLD_METER - (4 << FP_SHIFT))) &&*/ !monster[i].instakills) {
+            // If we are overlapping, and the bottom pixel of the player's previous Y is above the top
+            // of the monster's previous Y then player kills monster, otherwise monster kills player.
+            if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
               ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
             } else {
@@ -646,51 +631,32 @@ int main()
       if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
         treasureFrameCounter = 0;
 
-      // Check for collisions with treasure
+      // Here is the faster collision check for treasure. We just loop over the enabled players, and convert their (x, y)
+      // coordinates into tile coordinates, and then read those tiles to see if any overlapping ones are treasure tiles.
       for (uint8_t p = 0; p < PLAYERS; ++p) {
-        if (((ENTITY*)(&player[p]))->enabled == true) {
-          for (uint8_t i = 0; i < tcount; ++i) {
-            uint8_t tx = treasureX(levelOffset, i);
-            uint8_t ty = treasureY(levelOffset, i);
-            uint8_t t = GetTile(tx, ty);
-            if (isTreasure(t)) { // is a treasure tile; treasure has not been collected
-              // The calculation below assumes each sprite is WORLD_METER wide
-              if (overlap(((ENTITY*)(&player[p]))->x,
-                          ((ENTITY*)(&player[p]))->y,
-                          WORLD_METER,
-                          WORLD_METER,
-                          (uint16_t)tx * (TILE_WIDTH << FP_SHIFT),
-                          (uint16_t)ty * (TILE_HEIGHT << FP_SHIFT),
-                          WORLD_METER,
-                          WORLD_METER)) {
-                TriggerFx(2, 128, false);
-                // Inidcate treasure is collected by changing the tile to one that isn't a treasure
-                //SetTile(tx, ty, 30 /*BACKGROUND_START*/+ tileSet * 5 /*BACKGROUND_TILES*/ + 1 /*TREASURE_START_TILE*/);
+        ENTITY* e = (ENTITY*)(&player[p]);
+        if (e->enabled) {
+          UPDATE_BITFLAGS u;
+          uint8_t tx = p2ht(e->x);
+          uint8_t ty = p2vt(e->y);
+          u.nx = (bool)nh(e->x);  // true if entity overlaps right
+          u.ny = (bool)nv(e->y);  // true if entity overlaps below
+          u.cell      = (bool)isTreasure(GetTile(tx,     ty));
+          u.cellright = (bool)isTreasure(GetTile(tx + 1, ty));
+          u.celldown  = (bool)isTreasure(GetTile(tx,     ty + 1));
+          u.celldiag  = (bool)isTreasure(GetTile(tx + 1, ty + 1));
 
-                if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-                  SetTile(tx, ty, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET)); // full sky tile
-                } else { // interior tile
-                  bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset));
-                  bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset));
-                  bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset);
-
-                  if (!solidLDiag && !solidRDiag && solidBelow) // island
-                    SetTile(tx, ty, 1 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-                  else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-                    SetTile(tx, ty, 2 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-                  else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-                    SetTile(tx, ty, 3 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-                  else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-                    SetTile(tx, ty, 4 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-                  else // clear all around
-                    SetTile(tx, ty, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-                }
-
-              }
-            }          
-          }
+          if (u.cell)
+            collectTreasure(tx, ty, levelOffset, tileSet);
+          if (u.nx && u.cellright)
+            collectTreasure(tx + 1, ty, levelOffset, tileSet);
+          if (u.ny && u.celldown)
+            collectTreasure(tx, ty + 1, levelOffset, tileSet);
+          if (u.nx && u.ny && u.celldiag)
+            collectTreasure(tx + 1, ty + 1, levelOffset, tileSet);
         }
       }
+
 
       // Check for level restart button
       uint16_t b = ReadJoypad(0);

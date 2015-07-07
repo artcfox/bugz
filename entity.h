@@ -44,7 +44,14 @@
 #define LO8(x) ((uint8_t)((x) & 0xFF))
 #define HI8(x) ((uint8_t)(((x) >> 8) & 0xFF))
 
-#define PLAYERS 2
+#define vt2p(t) ((t) * (TILE_HEIGHT << FP_SHIFT))
+#define ht2p(t) ((t) * (TILE_WIDTH << FP_SHIFT))
+#define p2vt(p) ((p) / (TILE_HEIGHT << FP_SHIFT))
+#define p2ht(p) ((p) / (TILE_WIDTH << FP_SHIFT))
+#define nv(p) ((p) % (TILE_HEIGHT << FP_SHIFT))
+#define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
+
+#define PLAYERS 1
 #define MONSTERS 6
 
 #define FP_SHIFT   2
@@ -91,6 +98,20 @@
   on or off as needed.
  */
 
+struct UPDATE_BITFLAGS;
+typedef struct UPDATE_BITFLAGS UPDATE_BITFLAGS;
+
+struct UPDATE_BITFLAGS {
+  unsigned int wasLeft : 1;
+  unsigned int wasRight : 1;
+  unsigned int nx : 1;
+  unsigned int ny : 1;
+  unsigned int cell : 1;
+  unsigned int cellright : 1;
+  unsigned int celldown : 1;
+  unsigned int celldiag : 1;
+};
+
 struct ENTITY;
 typedef struct ENTITY ENTITY;
 
@@ -120,7 +141,6 @@ struct ENTITY {
   unsigned int visible : 1;
   unsigned int dead : 1;
   unsigned int autorespawn : 1;
-  unsigned int instakills : 1;
   unsigned int invincible : 1;
 } __attribute__ ((packed));
 

@@ -59,13 +59,6 @@
 #include "data/sprites.inc"
 #include "data/patches.inc"
 
-#define vt2p(t) ((t) * (TILE_HEIGHT << FP_SHIFT))
-#define ht2p(t) ((t) * (TILE_WIDTH << FP_SHIFT))
-#define p2vt(p) ((p) / (TILE_HEIGHT << FP_SHIFT))
-#define p2ht(p) ((p) / (TILE_WIDTH << FP_SHIFT))
-#define nv(p) ((p) % (TILE_HEIGHT << FP_SHIFT))
-#define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
-
 void null_input(ENTITY* e) { }
 void null_update(ENTITY* e) { }
 void null_render(ENTITY* e) { sprites[e->tag].x = OFF_SCREEN; }
@@ -82,7 +75,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->impulse = impulse;
   e->visible = true;
   e->jumpReleased = true;
-  e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->instakills = e->invincible = 0;
+  e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
 }
 
 void ai_walk_until_blocked(ENTITY* e)
@@ -191,20 +184,6 @@ void ai_fly_horizontal(ENTITY* e)
     }
   }
 }
-
-struct UPDATE_BITFLAGS;
-typedef struct UPDATE_BITFLAGS UPDATE_BITFLAGS;
-
-struct UPDATE_BITFLAGS {
-  unsigned int wasLeft : 1;
-  unsigned int wasRight : 1;
-  unsigned int nx : 1;
-  unsigned int ny : 1;
-  unsigned int cell : 1;
-  unsigned int cellright : 1;
-  unsigned int celldown : 1;
-  unsigned int celldiag : 1;
-};
 
 void entity_update(ENTITY* e)
 {
@@ -818,7 +797,7 @@ void player_update(ENTITY* e)
     ddx -= WORLD_FRICTION; // player was going right, but not anymore
 
   if (e->jump && !e->jumping && !(e->falling ? (p->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
-    TriggerFx(0, 128, false);
+    TriggerFx(0, 128, true);
     e->dy = 0;             // reset vertical velocity so jumps during grace period are consistent with jumps from ground
     ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
     e->jumping = true;
