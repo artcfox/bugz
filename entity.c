@@ -328,7 +328,6 @@ void entity_update_dying(ENTITY* e)
 {
   // Check to see if we should hide the entity now
   if (!e->visible) {
-    sprites[e->tag].x = OFF_SCREEN;
     e->render = null_render;
     return;
   }
@@ -783,7 +782,7 @@ void player_input(ENTITY* e)
   e->turbo = (bool)(p->buttons.held & BTN_B);
 
   // Improve the user experience, by allowing players to jump by holding the jump
-  // button before landing, but require them to release it before jumping again
+  // button before landing, but require them to release it before they can jump again
   if (e->jumpReleased) {                                      // Jumping multiple times requires releasing the jump button between jumps
     e->jump = (bool)(p->buttons.held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
     if (e->jump && !(e->jumping || (e->falling && p->framesFalling > WORLD_FALLING_GRACE_FRAMES))) { // if player[i] is currently holding BTN_A, (and is on the ground)
@@ -819,7 +818,7 @@ void player_update(ENTITY* e)
     ddx -= WORLD_FRICTION; // player was going right, but not anymore
 
   if (e->jump && !e->jumping && !(e->falling ? (p->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
-    TriggerFx(0, 128, true);
+    TriggerFx(0, 128, false);
     e->dy = 0;             // reset vertical velocity so jumps during grace period are consistent with jumps from ground
     ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
     e->jumping = true;

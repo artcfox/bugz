@@ -332,28 +332,28 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
     for (uint8_t x = 0; x < SCREEN_TILES_H; ++x) {
       if (BaseMapIsSolid(x, y, levelOffset)) {
         if (y == 0 || BaseMapIsSolid(x, y - 1, levelOffset)) { // if we are the top tile, or there is a solid tile above us
-          SetTile(x, y, 1 + 0 + FIRST_SOLID_TILE + (*tileSet * SOLID_TILES_IN_TILESET)); // underground tile
+          SetTile(x, y, 0 + FIRST_SOLID_TILE + (*tileSet * SOLID_TILES_IN_TILESET)); // underground tile
         } else {
-          SetTile(x, y, 1 + 1 + FIRST_SOLID_TILE + (*tileSet * SOLID_TILES_IN_TILESET)); // aboveground tile
+          SetTile(x, y, 1 + FIRST_SOLID_TILE + (*tileSet * SOLID_TILES_IN_TILESET)); // aboveground tile
         }
       } else { // we are a sky tile
         if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-          SetTile(x, y, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET)); // full sky tile
+          SetTile(x, y, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET)); // full sky tile
         } else { // interior tile
           bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(x - 1, y + 1, levelOffset));
           bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(x + 1, y + 1, levelOffset));
           bool solidBelow = BaseMapIsSolid(x, y + 1, levelOffset);
 
           if (!solidLDiag && !solidRDiag && solidBelow) // island
-            SetTile(x, y, 1 + 1 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
+            SetTile(x, y, 1 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
           else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-            SetTile(x, y, 1 + 2 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
+            SetTile(x, y, 2 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
           else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-            SetTile(x, y, 1 + 3 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
+            SetTile(x, y, 3 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
           else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-            SetTile(x, y, 1 + 4 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
+            SetTile(x, y, 4 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
           else // clear all around
-            SetTile(x, y, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
+            SetTile(x, y, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
         }
       }
     }
@@ -410,7 +410,7 @@ static void killPlayer(PLAYER* p)
   ENTITY* e = (ENTITY*)p;
   if (e->invincible)
     return;
-  TriggerFx(3, 128, true);
+  TriggerFx(3, 128, false);
   e->dead = true;
   e->left = e->right = false;
   e->monsterhop = true;
@@ -428,7 +428,7 @@ static void killMonster(ENTITY* e)
 {
   if (e->invincible)
     return;
-  TriggerFx(1, 128, true);        // play the monster death sound
+  TriggerFx(1, 128, false);        // play the monster death sound
   e->dead = true;                  // kill the monster
   e->up = e->left = e->right = false;                   // die downwards
   e->enabled = false;              // make sure we don't consider the entity again for collisions
@@ -520,22 +520,22 @@ int main()
       uint8_t y = treasureY(levelOffset, i);
 
       if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky treasure tiles
-        SetTile(x, y, 0 + (tileSet * 15) + 1); // full sky treasure tile
+        SetTile(x, y, (0 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET)); // full sky treasure tile
       } else { // interior tile
         bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(x - 1, y + 1, levelOffset));
         bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(x + 1, y + 1, levelOffset));
         bool solidBelow = BaseMapIsSolid(x, y + 1, levelOffset);
 
         if (!solidLDiag && !solidRDiag && solidBelow) // treasure island
-          SetTile(x, y, 3 + (tileSet * 15) + 1);
+          SetTile(x, y, (1 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET));
         else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-          SetTile(x, y, 6 + (tileSet * 15) + 1);
+          SetTile(x, y, (2 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET));
         else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-          SetTile(x, y, 9 + (tileSet * 15) + 1);
+          SetTile(x, y, (3 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET));
         else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-          SetTile(x, y, 12 + (tileSet * 15) + 1);
+          SetTile(x, y, (4 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET));
         else // clear all around
-          SetTile(x, y, 0 + (tileSet * 15) + 1);
+          SetTile(x, y, (0 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET));
       }
 
     }
@@ -663,27 +663,27 @@ int main()
                           (uint16_t)ty * (TILE_HEIGHT << FP_SHIFT),
                           WORLD_METER,
                           WORLD_METER)) {
-                TriggerFx(2, 128, true);
+                TriggerFx(2, 128, false);
                 // Inidcate treasure is collected by changing the tile to one that isn't a treasure
                 //SetTile(tx, ty, 30 /*BACKGROUND_START*/+ tileSet * 5 /*BACKGROUND_TILES*/ + 1 /*TREASURE_START_TILE*/);
 
                 if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-                  SetTile(tx, ty, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET)); // full sky tile
+                  SetTile(tx, ty, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET)); // full sky tile
                 } else { // interior tile
                   bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset));
                   bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset));
                   bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset);
 
                   if (!solidLDiag && !solidRDiag && solidBelow) // island
-                    SetTile(tx, ty, 1 + 1 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+                    SetTile(tx, ty, 1 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
                   else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-                    SetTile(tx, ty, 1 + 2 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+                    SetTile(tx, ty, 2 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
                   else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-                    SetTile(tx, ty, 1 + 3 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+                    SetTile(tx, ty, 3 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
                   else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-                    SetTile(tx, ty, 1 + 4 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+                    SetTile(tx, ty, 4 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
                   else // clear all around
-                    SetTile(tx, ty, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+                    SetTile(tx, ty, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
                 }
 
               }
