@@ -485,8 +485,10 @@ int main()
                   (int16_t)(playerMaxDX(levelOffset, i)),
                   (int16_t)(playerImpulse(levelOffset, i)));
       ((ENTITY*)(&player[i]))->enabled = true;
+      sprites[i].flags = 0;
       //((ENTITY*)(&player[i]))->left = true;
       if (i == 1) { // player 2 starts off hidden and disabled
+        ((ENTITY*)(&player[i]))->render(((ENTITY*)(&player[i]))); // setup sprite
         ((ENTITY*)(&player[i]))->enabled = false;
         ((ENTITY*)(&player[i]))->render = null_render;
         ((ENTITY*)(&player[i]))->invincible = true;
@@ -669,7 +671,7 @@ int main()
           currentLevel = numLevels() - 1;
         else if ((b & BTN_SR) && ++currentLevel >= numLevels())
           currentLevel = 0;
-        WaitVsync(20); // delay
+        //WaitVsync(20); // delay
         break; // restart level
       }
 
