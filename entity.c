@@ -468,7 +468,7 @@ void entity_update_flying(ENTITY* e)
 #define LADYBUG_DEAD (LADYBUG_ANIMATION_START - 3)
 #define LADYBUG_STATIONARY (LADYBUG_ANIMATION_START - 2)
 #define LADYBUG_JUMP (LADYBUG_ANIMATION_START - 1)
-#define LADYBUG_ANIMATION_FRAME_SKIP 6
+#define LADYBUG_ANIMATION_FRAME_SKIP 4
 const uint8_t ladybugAnimation[] PROGMEM = { 0, 1, 2 };
 
 void ladybug_render(ENTITY* e)
@@ -508,7 +508,7 @@ void ladybug_render(ENTITY* e)
 #define ANT_DEAD (ANT_ANIMATION_START - 3)
 #define ANT_STATIONARY (ANT_ANIMATION_START - 2)
 #define ANT_JUMP (ANT_ANIMATION_START - 1)
-#define ANT_ANIMATION_FRAME_SKIP 6
+#define ANT_ANIMATION_FRAME_SKIP 4
 const uint8_t antAnimation[] PROGMEM = { 0, 1, 2 };
 
 void ant_render(ENTITY* e)
@@ -548,7 +548,7 @@ void ant_render(ENTITY* e)
 #define CRICKET_DEAD (CRICKET_ANIMATION_START - 3)
 #define CRICKET_STATIONARY (CRICKET_ANIMATION_START - 2)
 #define CRICKET_JUMP (CRICKET_ANIMATION_START - 1)
-#define CRICKET_ANIMATION_FRAME_SKIP 6
+#define CRICKET_ANIMATION_FRAME_SKIP 4
 const uint8_t cricketAnimation[] PROGMEM = { 0, 1, 2 };
 
 void cricket_render(ENTITY* e)
@@ -588,7 +588,7 @@ void cricket_render(ENTITY* e)
 #define GRASSHOPPER_DEAD (GRASSHOPPER_ANIMATION_START - 3)
 #define GRASSHOPPER_STATIONARY (GRASSHOPPER_ANIMATION_START - 2)
 #define GRASSHOPPER_JUMP (GRASSHOPPER_ANIMATION_START - 1)
-#define GRASSHOPPER_ANIMATION_FRAME_SKIP 6
+#define GRASSHOPPER_ANIMATION_FRAME_SKIP 4
 const uint8_t grasshopperAnimation[] PROGMEM = { 0, 1, 2 };
 
 void grasshopper_render(ENTITY* e)
@@ -732,7 +732,6 @@ void player_input(ENTITY* e)
     e->jump = (bool)(p->buttons.held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
     if (e->jump && !(e->jumping || (e->falling && p->framesFalling > WORLD_FALLING_GRACE_FRAMES))) { // if player[i] is currently holding BTN_A, (and is on the ground)
       e->jumpReleased = false;                                // a jump will occur during the next call to update(), so clear the jumpReleased flag.
-      //TriggerFx(0, 128, false);
     }
   } else {                                                           // Otherwise, it means that we just jumped, and BTN_A is still being held down
     e->jump = false;                                          // so explicitly disallow any additional jumps until
@@ -888,7 +887,7 @@ void player_update(ENTITY* e)
 #define PLAYER_DEAD (PLAYER_ANIMATION_START - 3)
 #define PLAYER_STATIONARY (PLAYER_ANIMATION_START - 2)
 #define PLAYER_JUMP (PLAYER_ANIMATION_START - 1)
-#define PLAYER_ANIMATION_FRAME_SKIP 6
+#define PLAYER_ANIMATION_FRAME_SKIP 4
 const uint8_t playerAnimation[] PROGMEM = { 0, 1, 2, 1 };
 
 void player_render(ENTITY* e)

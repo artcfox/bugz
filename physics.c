@@ -400,7 +400,7 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
 
 #define MAX_TREASURE_COUNT 32
 // How many frames to wait between animating treasure
-#define TREASURE_FRAME_SKIP 15
+#define TREASURE_FRAME_SKIP 16
 // Offsets that are added to the tile number when animating treasure
 const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 1 };
 
@@ -479,222 +479,223 @@ int main()
   uint16_t levelOffset;
   uint8_t tileSet = 0;
 
- start:
+  while (true) {
 
-  levelOffset = LoadLevel(currentLevel, &tileSet);
+    levelOffset = LoadLevel(currentLevel, &tileSet);
 
-  // Initialize players
-  for (uint8_t i = 0; i < PLAYERS; ++i) {
-    player_init(&player[i],
-                inputFunc(playerInput(levelOffset, i)),
-                updateFunc(playerUpdate(levelOffset, i)),
-                renderFunc(playerRender(levelOffset, i)), i,
-                (int16_t)(playerInitialX(levelOffset, i) * (TILE_WIDTH << FP_SHIFT)),
-                (int16_t)(playerInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
-                (int16_t)(playerMaxDX(levelOffset, i)),
-                (int16_t)(playerImpulse(levelOffset, i)));
-    ((ENTITY*)(&player[i]))->enabled = true;
-    ((ENTITY*)(&player[i]))->left = true;
-
-  }
-
-  // Initialize monsters
-  for (uint8_t i = 0; i < MONSTERS; ++i) {
-    spawnMonster(&monster[i], levelOffset, i);
-  }
-
-  // Initialize treasure
-  uint8_t tcount = treasureCount(levelOffset);
-  for (uint8_t i = 0; i < tcount; ++i) {
-    uint8_t x = treasureX(levelOffset, i);
-    uint8_t y = treasureY(levelOffset, i);
-
-    if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky treasure tiles
-      SetTile(x, y, 0 + (tileSet * 15) + 1); // full sky treasure tile
-    } else { // interior tile
-      bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(x - 1, y + 1, levelOffset));
-      bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(x + 1, y + 1, levelOffset));
-      bool solidBelow = BaseMapIsSolid(x, y + 1, levelOffset);
-
-      if (!solidLDiag && !solidRDiag && solidBelow) // treasure island
-        SetTile(x, y, 3 + (tileSet * 15) + 1);
-      else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-        SetTile(x, y, 6 + (tileSet * 15) + 1);
-      else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-        SetTile(x, y, 9 + (tileSet * 15) + 1);
-      else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-        SetTile(x, y, 12 + (tileSet * 15) + 1);
-      else // clear all around
-        SetTile(x, y, 0 + (tileSet * 15) + 1);
-    }
-
-  }
-
-  for (;;) {
-    WaitVsync(1);
-
-    // Get the inputs for every entity
+    // Initialize players
     for (uint8_t i = 0; i < PLAYERS; ++i) {
-      ((ENTITY*)(&player[i]))->input((ENTITY*)(&player[i]));
+      player_init(&player[i],
+                  inputFunc(playerInput(levelOffset, i)),
+                  updateFunc(playerUpdate(levelOffset, i)),
+                  renderFunc(playerRender(levelOffset, i)), i,
+                  (int16_t)(playerInitialX(levelOffset, i) * (TILE_WIDTH << FP_SHIFT)),
+                  (int16_t)(playerInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
+                  (int16_t)(playerMaxDX(levelOffset, i)),
+                  (int16_t)(playerImpulse(levelOffset, i)));
+      ((ENTITY*)(&player[i]))->enabled = true;
+      ((ENTITY*)(&player[i]))->left = true;
+
     }
+
+    // Initialize monsters
     for (uint8_t i = 0; i < MONSTERS; ++i) {
-      monster[i].input(&monster[i]);
+      spawnMonster(&monster[i], levelOffset, i);
     }
+
+    // Initialize treasure
+    uint8_t tcount = treasureCount(levelOffset);
+    for (uint8_t i = 0; i < tcount; ++i) {
+      uint8_t x = treasureX(levelOffset, i);
+      uint8_t y = treasureY(levelOffset, i);
+
+      if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky treasure tiles
+        SetTile(x, y, 0 + (tileSet * 15) + 1); // full sky treasure tile
+      } else { // interior tile
+        bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(x - 1, y + 1, levelOffset));
+        bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(x + 1, y + 1, levelOffset));
+        bool solidBelow = BaseMapIsSolid(x, y + 1, levelOffset);
+
+        if (!solidLDiag && !solidRDiag && solidBelow) // treasure island
+          SetTile(x, y, 3 + (tileSet * 15) + 1);
+        else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
+          SetTile(x, y, 6 + (tileSet * 15) + 1);
+        else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
+          SetTile(x, y, 9 + (tileSet * 15) + 1);
+        else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
+          SetTile(x, y, 12 + (tileSet * 15) + 1);
+        else // clear all around
+          SetTile(x, y, 0 + (tileSet * 15) + 1);
+      }
+
+    }
+
+    for (;;) {
+      WaitVsync(1);
+
+      // Get the inputs for every entity
+      for (uint8_t i = 0; i < PLAYERS; ++i) {
+        ((ENTITY*)(&player[i]))->input((ENTITY*)(&player[i]));
+      }
+      for (uint8_t i = 0; i < MONSTERS; ++i) {
+        monster[i].input(&monster[i]);
+      }
     
 
-    int16_t playerPrevY[PLAYERS];
+      int16_t playerPrevY[PLAYERS];
 
-    // Update the state of the players
-    for (uint8_t i = 0; i < PLAYERS; ++i) {
-      playerPrevY[i] = ((ENTITY*)(&player[i]))->y; // cache the previous Y value to use for collision detection below
-      ((ENTITY*)(&player[i]))->update((ENTITY*)(&player[i]));
-    }
+      // Update the state of the players
+      for (uint8_t i = 0; i < PLAYERS; ++i) {
+        playerPrevY[i] = ((ENTITY*)(&player[i]))->y; // cache the previous Y value to use for collision detection below
+        ((ENTITY*)(&player[i]))->update((ENTITY*)(&player[i]));
+      }
 
-    // Update the state of the monsters
-    for (uint8_t i = 0; i < MONSTERS; ++i) {
-      int16_t monsterPrevY = monster[i].y; // cache the previous Y value to use for collision detection below
-      monster[i].update(&monster[i]);
+      // Update the state of the monsters
+      for (uint8_t i = 0; i < MONSTERS; ++i) {
+        int16_t monsterPrevY = monster[i].y; // cache the previous Y value to use for collision detection below
+        monster[i].update(&monster[i]);
       
-      // Collision detection
-      // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
+        // Collision detection
+        // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
 
-      // TODO: With the new collision detection code (added below), this might not be true any longer:
-      //       If the player is moving down really fast, and an entity is moving up really fast, there is a slight chance
-      //       that it will kill you, because the entity might pass far enough through you that it's y position is above
-      //       you. To fix this, we might have to also check for collisions before updating the monsters positions (or cache
-      //       the previous x and y, and check that first)
+        // TODO: With the new collision detection code (added below), this might not be true any longer:
+        //       If the player is moving down really fast, and an entity is moving up really fast, there is a slight chance
+        //       that it will kill you, because the entity might pass far enough through you that it's y position is above
+        //       you. To fix this, we might have to also check for collisions before updating the monsters positions (or cache
+        //       the previous x and y, and check that first)
 
-      for (uint8_t p = 0; p < PLAYERS; ++p) {
-        if (((ENTITY*)(&player[p]))->enabled && monster[i].enabled &&
-            overlap(((ENTITY*)(&player[p]))->x,
-                    ((ENTITY*)(&player[p]))->y,
-                    WORLD_METER,
-                    WORLD_METER,
-                    monster[i].x + (1 << FP_SHIFT),
-                    monster[i].y + (3 << FP_SHIFT),
-                    WORLD_METER - (2 << FP_SHIFT),
-                    WORLD_METER - (4 << FP_SHIFT))) {
-          if ( /*(((ENTITY*)(&player[p]))->dy > 0) && */
-              ((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) &&
-              /*((monsters[i].y + (3 << FP_SHIFT) - ((ENTITY*)(&player[p]))->y) > (WORLD_METER - (4 << FP_SHIFT))) &&*/ !monster[i].instakills) {
-            killMonster(&monster[i]);
-            ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
-          } else {
-            killPlayer(&player[p]);
-            /* while (ReadJoypad(((ENTITY*)(&players[p]))->tag) != BTN_START) { */
-            /*   // TODO: figure out how to get note to stop playing */
-            /* } */
+        for (uint8_t p = 0; p < PLAYERS; ++p) {
+          if (((ENTITY*)(&player[p]))->enabled && monster[i].enabled &&
+              overlap(((ENTITY*)(&player[p]))->x,
+                      ((ENTITY*)(&player[p]))->y,
+                      WORLD_METER,
+                      WORLD_METER,
+                      monster[i].x + (1 << FP_SHIFT),
+                      monster[i].y + (3 << FP_SHIFT),
+                      WORLD_METER - (2 << FP_SHIFT),
+                      WORLD_METER - (4 << FP_SHIFT))) {
+            if ( /*(((ENTITY*)(&player[p]))->dy > 0) && */
+                ((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) &&
+                /*((monsters[i].y + (3 << FP_SHIFT) - ((ENTITY*)(&player[p]))->y) > (WORLD_METER - (4 << FP_SHIFT))) &&*/ !monster[i].instakills) {
+              killMonster(&monster[i]);
+              ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
+            } else {
+              killPlayer(&player[p]);
+              /* while (ReadJoypad(((ENTITY*)(&players[p]))->tag) != BTN_START) { */
+              /*   // TODO: figure out how to get note to stop playing */
+              /* } */
+            }
           }
         }
       }
-    }
     
-    // Render every entity
-    for (uint8_t i = 0; i < PLAYERS; ++i) {
-      ((ENTITY*)(&player[i]))->render((ENTITY*)(&player[i]));
-    }
-    for (uint8_t i = 0; i < MONSTERS; ++i) {
-      monster[i].render(&monster[i]);
-    }
-
-    // Check if the dead flag has been set for a monster (from something other than a collision with a player)
-    for (uint8_t i = 0; i < MONSTERS; ++i) {
-      if (monster[i].enabled && monster[i].dead) {
-        killMonster(&monster[i]);
+      // Render every entity
+      for (uint8_t i = 0; i < PLAYERS; ++i) {
+        ((ENTITY*)(&player[i]))->render((ENTITY*)(&player[i]));
       }
-      // Check if we need to respawn the monster
-      if (monster[i].dead && monster[i].autorespawn && monster[i].render == null_render) {
-        // The monster is dead, and its dying animation has finished
-        spawnMonster(&monster[i], levelOffset, i);
+      for (uint8_t i = 0; i < MONSTERS; ++i) {
+        monster[i].render(&monster[i]);
       }
-    }
 
-    for (uint8_t p = 0; p < PLAYERS; ++p) {
-      if (((ENTITY*)(&player[p]))->enabled && ((ENTITY*)(&player[p]))->dead) {
-        killPlayer(&player[p]);
-        //return true;
-      }
-    }
-
-    // Animate treasure
-    static uint8_t treasureFrameCounter = 0;
-    for (uint8_t i = 0; i < tcount; ++i) {
-      uint8_t tx = treasureX(levelOffset, i);
-      uint8_t ty = treasureY(levelOffset, i);
-      uint8_t t = GetTile(tx, ty);
-      // If the treasure hasn't been collected, animate it.
-      if (isTreasure(t)) { // is a treasure tile
-        if (treasureFrameCounter % TREASURE_FRAME_SKIP == 0) {
-          // Calculate what the initial treasure tile would be, and use that plus the animation offset to calculate the animated tile
-          uint8_t baseTreasureTile = pgm_read_byte(&BaseTreasureTile[t]) + (tileSet * TREASURE_TILES_IN_TILESET);
-          // The above algorithm performs the below computation, but much faster since it uses a LUT
-          //   uint8_t baseTreasureTile = (((t - 1) % 15) / 3) * 3 + (tileSet * 15) + 1;
-          SetTile(tx, ty, (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
+      // Check if the dead flag has been set for a monster (from something other than a collision with a player)
+      for (uint8_t i = 0; i < MONSTERS; ++i) {
+        if (monster[i].enabled && monster[i].dead) {
+          killMonster(&monster[i]);
+        }
+        // Check if we need to respawn the monster
+        if (monster[i].dead && monster[i].autorespawn && monster[i].render == null_render) {
+          // The monster is dead, and its dying animation has finished
+          spawnMonster(&monster[i], levelOffset, i);
         }
       }
-    }
-    if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
-      treasureFrameCounter = 0;
 
-    // Check for collisions with treasure
-    for (uint8_t p = 0; p < PLAYERS; ++p) {
-      if (((ENTITY*)(&player[p]))->enabled == true) {
-        for (uint8_t i = 0; i < tcount; ++i) {
-          uint8_t tx = treasureX(levelOffset, i);
-          uint8_t ty = treasureY(levelOffset, i);
-          uint8_t t = GetTile(tx, ty);
-          if (isTreasure(t)) { // is a treasure tile; treasure has not been collected
-            // The calculation below assumes each sprite is WORLD_METER wide
-            if (overlap(((ENTITY*)(&player[p]))->x,
-                        ((ENTITY*)(&player[p]))->y,
-                        WORLD_METER,
-                        WORLD_METER,
-                        (uint16_t)tx * (TILE_WIDTH << FP_SHIFT),
-                        (uint16_t)ty * (TILE_HEIGHT << FP_SHIFT),
-                        WORLD_METER,
-                        WORLD_METER)) {
-              TriggerFx(2, 128, true);
-              // Inidcate treasure is collected by changing the tile to one that isn't a treasure
-              //SetTile(tx, ty, 30 /*BACKGROUND_START*/+ tileSet * 5 /*BACKGROUND_TILES*/ + 1 /*TREASURE_START_TILE*/);
+      for (uint8_t p = 0; p < PLAYERS; ++p) {
+        if (((ENTITY*)(&player[p]))->enabled && ((ENTITY*)(&player[p]))->dead) {
+          killPlayer(&player[p]);
+          //return true;
+        }
+      }
 
-              if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-                SetTile(tx, ty, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET)); // full sky tile
-              } else { // interior tile
-                bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset));
-                bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset));
-                bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset);
+      // Animate treasure
+      static uint8_t treasureFrameCounter = 0;
+      for (uint8_t i = 0; i < tcount; ++i) {
+        uint8_t tx = treasureX(levelOffset, i);
+        uint8_t ty = treasureY(levelOffset, i);
+        uint8_t t = GetTile(tx, ty);
+        // If the treasure hasn't been collected, animate it.
+        if (isTreasure(t)) { // is a treasure tile
+          if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) {
+            // Calculate what the initial treasure tile would be, and use that plus the animation offset to calculate the animated tile
+            uint8_t baseTreasureTile = pgm_read_byte(&BaseTreasureTile[t]) + (tileSet * TREASURE_TILES_IN_TILESET);
+            // The above algorithm performs the below computation, but much faster since it uses a LUT
+            //   uint8_t baseTreasureTile = (((t - 1) % 15) / 3) * 3 + (tileSet * 15) + 1;
+            SetTile(tx, ty, (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
+          }
+        }
+      }
+      if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
+        treasureFrameCounter = 0;
 
-                if (!solidLDiag && !solidRDiag && solidBelow) // island
-                  SetTile(tx, ty, 1 + 1 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-                else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-                  SetTile(tx, ty, 1 + 2 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-                else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-                  SetTile(tx, ty, 1 + 3 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-                else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-                  SetTile(tx, ty, 1 + 4 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-                else // clear all around
-                  SetTile(tx, ty, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+      // Check for collisions with treasure
+      for (uint8_t p = 0; p < PLAYERS; ++p) {
+        if (((ENTITY*)(&player[p]))->enabled == true) {
+          for (uint8_t i = 0; i < tcount; ++i) {
+            uint8_t tx = treasureX(levelOffset, i);
+            uint8_t ty = treasureY(levelOffset, i);
+            uint8_t t = GetTile(tx, ty);
+            if (isTreasure(t)) { // is a treasure tile; treasure has not been collected
+              // The calculation below assumes each sprite is WORLD_METER wide
+              if (overlap(((ENTITY*)(&player[p]))->x,
+                          ((ENTITY*)(&player[p]))->y,
+                          WORLD_METER,
+                          WORLD_METER,
+                          (uint16_t)tx * (TILE_WIDTH << FP_SHIFT),
+                          (uint16_t)ty * (TILE_HEIGHT << FP_SHIFT),
+                          WORLD_METER,
+                          WORLD_METER)) {
+                TriggerFx(2, 128, true);
+                // Inidcate treasure is collected by changing the tile to one that isn't a treasure
+                //SetTile(tx, ty, 30 /*BACKGROUND_START*/+ tileSet * 5 /*BACKGROUND_TILES*/ + 1 /*TREASURE_START_TILE*/);
+
+                if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
+                  SetTile(tx, ty, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET)); // full sky tile
+                } else { // interior tile
+                  bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset));
+                  bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset));
+                  bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset);
+
+                  if (!solidLDiag && !solidRDiag && solidBelow) // island
+                    SetTile(tx, ty, 1 + 1 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+                  else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
+                    SetTile(tx, ty, 1 + 2 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+                  else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
+                    SetTile(tx, ty, 1 + 3 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+                  else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
+                    SetTile(tx, ty, 1 + 4 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+                  else // clear all around
+                    SetTile(tx, ty, 1 + 0 + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
+                }
+
               }
-
-            }
-          }          
+            }          
+          }
         }
       }
-    }
 
-    // Check for level restart button
-    uint16_t b = ReadJoypad(0);
-    if (b & BTN_START)
-      goto start;
+      // Check for level restart button
+      uint16_t b = ReadJoypad(0);
+      if (b & BTN_START)
+        break; // restart level
 
-    // Check for level select buttons
-    if ((b & BTN_SELECT) && ((b & BTN_SL) || (b & BTN_SR))) {
-      if ((b & BTN_SL) && --currentLevel == 255)
-        currentLevel = numLevels() - 1;
-      else if ((b & BTN_SR) && ++currentLevel >= numLevels())
-        currentLevel = 0;
-      WaitVsync(20); // delay
-      goto start;
+      // Check for level select buttons
+      if ((b & BTN_SELECT) && ((b & BTN_SL) || (b & BTN_SR))) {
+        if ((b & BTN_SL) && --currentLevel == 255)
+          currentLevel = numLevels() - 1;
+        else if ((b & BTN_SR) && ++currentLevel >= numLevels())
+          currentLevel = 0;
+        WaitVsync(20); // delay
+        break; // restart level
+      }
     }
   }
 }
