@@ -333,11 +333,48 @@ void entity_update_dying(ENTITY* e)
     return;
   }
 
+  UPDATE_BITFLAGS u;
+
+  u.wasLeft = (bool)(e->dx < 0);
+  u.wasRight = (bool)(e->dx > 0);
+
+  int16_t ddx = 0;
+
+  if (e->left)
+    ddx -= WORLD_ACCEL;    // entity wants to go left
+  else if (u.wasLeft)
+    ddx += WORLD_FRICTION; // entity was going left, but not anymore
+
+  if (e->right)
+    ddx += WORLD_ACCEL;    // entity wants to go right
+  else if (u.wasRight)
+    ddx -= WORLD_FRICTION; // entity was going right, but not anymore
+
   int16_t ddy;
   if (e->up)
     ddy = -WORLD_GRAVITY / 4;
   else
     ddy = WORLD_GRAVITY;
+
+  // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->x += (e->dx / WORLD_FPS);
+  e->dx += (ddx / WORLD_FPS);
+  if (e->dx < -e->maxdx)
+    e->dx = -e->maxdx;
+  else if (e->dx > e->maxdx)
+    e->dx = e->maxdx;
+
+  // Clamp X to within screen bounds
+  if (e->x > ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT))) {
+    e->x = ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT));
+    e->dx = 0;
+    e->visible = false; // we hit the edge of the screen, so now hide the entity
+  }
+  if (e->x < 0) {
+    e->x = 0;
+    e->dx = 0;
+    e->visible = false; // we hit the edge of the screen, so now hide the entity
+  }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->y += (e->dy / WORLD_FPS);

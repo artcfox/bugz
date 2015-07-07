@@ -44,7 +44,7 @@
 #define LO8(x) ((uint8_t)((x) & 0xFF))
 #define HI8(x) ((uint8_t)(((x) >> 8) & 0xFF))
 
-#define PLAYERS 2
+#define PLAYERS 1
 #define MONSTERS 6
 
 #define FP_SHIFT   2

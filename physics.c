@@ -411,6 +411,7 @@ static void killPlayer(PLAYER* p)
   TriggerFx(3, 128, true);
   e->dead = true;
   e->up = true;                   // player dies upwards
+  e->left = e->right = false;
   e->dy = 0;
   e->enabled = false;
   e->input = null_input;
@@ -425,7 +426,7 @@ static void killMonster(ENTITY* e)
 {
   TriggerFx(1, 128, true);        // play the monster death sound
   e->dead = true;                  // kill the monster
-  e->up = false;                   // die downwards
+  e->up = e->left = e->right = false;                   // die downwards
   e->enabled = false;              // make sure we don't consider the entity again for collisions
   e->input = null_input;           // disable the entity's ai
   e->update = entity_update_dying; // disable normal physics
