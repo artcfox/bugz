@@ -619,7 +619,7 @@ int main()
         }
       }
 
-      // Animate treasure
+      // Animate treasure (another way to animate the treasure "for free" would be to switch the actual global tileset pointer
       static uint8_t treasureFrameCounter = 0;
       for (uint8_t i = 0; i < tcount; ++i) {
         uint8_t tx = treasureX(levelOffset, i);
