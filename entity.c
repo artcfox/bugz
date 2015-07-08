@@ -78,6 +78,12 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
 }
 
+static inline bool isSolidForEntity(uint8_t tx, uint8_t ty, int16_t prevY, uint8_t entityHeight)
+{
+  uint8_t t = GetTile(tx, ty);
+  return (isSolid(t) || (isOneWay(t) && ((prevY + entityHeight - 1) < vt2p(ty))));
+}
+
 void ai_walk_until_blocked(ENTITY* e)
 {
   // Collision Detection for X
@@ -120,15 +126,15 @@ void ai_walk_until_blocked_or_ledge(ENTITY* e)
   uint8_t ty = p2vt(e->y);
 
   if (e->left) {
-    uint8_t cell = isSolid(GetTile(tx, ty));
-    uint8_t celldown = isSolid(GetTile(tx, ty + 1));
+    uint8_t cell = isSolidForEntity(tx, ty, e->y, WORLD_METER);
+    uint8_t celldown = isSolidForEntity(tx, ty + 1, e->y, WORLD_METER);
     if (cell || (!celldown && !e->falling)) {
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
-    uint8_t cellright = isSolid(GetTile(tx + 1, ty));
-    uint8_t celldiag  = isSolid(GetTile(tx + 1, ty + 1));
+    uint8_t cellright = isSolidForEntity(tx + 1, ty, e->y, WORLD_METER);
+    uint8_t celldiag  = isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
     if (cellright || (!celldiag && !e->falling)) {
       e->right = false;
       e->left = true;
@@ -183,12 +189,6 @@ void ai_fly_horizontal(ENTITY* e)
       e->left = true;
     }
   }
-}
-
-static inline bool isSolidForEntity(uint8_t tx, uint8_t ty, int16_t prevY, uint8_t entityHeight)
-{
-  uint8_t t = GetTile(tx, ty);
-  return (isSolid(t) || (isOneWay(t) && ((prevY + entityHeight - 1) < vt2p(ty))));
 }
 
 void entity_update(ENTITY* e)

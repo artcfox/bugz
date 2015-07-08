@@ -527,7 +527,7 @@ int main()
 
     }
 
-    SetTile(25, 9, FIRST_ONE_WAY_TILE);
+    SetTile(24, 9, FIRST_ONE_WAY_TILE);
     SetTile(3, 24, FIRST_ONE_WAY_TILE);
     SetTile(4, 24, FIRST_ONE_WAY_TILE);
     SetTile(5, 24, FIRST_ONE_WAY_TILE);
