@@ -78,10 +78,10 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
 }
 
-static inline bool isSolidForEntity(uint8_t tx, uint8_t ty, int16_t prevY, uint8_t entityHeight)
+static inline bool isSolidForEntity(uint8_t tx, uint8_t ty, int16_t prevY, uint8_t entityHeight, bool down)
 {
   uint8_t t = GetTile(tx, ty);
-  return (isSolid(t) || (isOneWay(t) && ((prevY + entityHeight - 1) < vt2p(ty))));
+  return (isSolid(t) || (isOneWay(t) && ((prevY + entityHeight - 1) < vt2p(ty)) && !down));
 }
 
 void ai_walk_until_blocked(ENTITY* e)
@@ -126,15 +126,15 @@ void ai_walk_until_blocked_or_ledge(ENTITY* e)
   uint8_t ty = p2vt(e->y);
 
   if (e->left) {
-    uint8_t cell = isSolidForEntity(tx, ty, e->y, WORLD_METER);
-    uint8_t celldown = isSolidForEntity(tx, ty + 1, e->y, WORLD_METER);
+    uint8_t cell = isSolidForEntity(tx, ty, e->y, WORLD_METER, e->down);
+    uint8_t celldown = isSolidForEntity(tx, ty + 1, e->y, WORLD_METER, e->down);
     if (cell || (!celldown && !e->falling)) {
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
-    uint8_t cellright = isSolidForEntity(tx + 1, ty, e->y, WORLD_METER);
-    uint8_t celldiag  = isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
+    uint8_t cellright = isSolidForEntity(tx + 1, ty, e->y, WORLD_METER, e->down);
+    uint8_t celldiag  = isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER, e->down);
     if (cellright || (!celldiag && !e->falling)) {
       e->right = false;
       e->left = true;
@@ -235,10 +235,10 @@ void entity_update(ENTITY* e)
   uint8_t ty = p2vt(e->y);
   //u.nx = (bool)nh(e->x);  // true if entity overlaps right
   u.ny = (bool)nv(e->y);  // true if entity overlaps below
-  u.cell      = (bool)isSolidForEntity(tx,     ty,     e->y, WORLD_METER);
-  u.cellright = (bool)isSolidForEntity(tx + 1, ty,     e->y, WORLD_METER);
-  u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, e->y, WORLD_METER);
-  u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
+  u.cell      = (bool)isSolid(GetTile(tx,     ty    ));
+  u.cellright = (bool)isSolid(GetTile(tx + 1, ty    ));
+  u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+  u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
 
   if (e->dx > 0) {
     if ((u.cellright && !u.cell) ||
@@ -285,10 +285,10 @@ void entity_update(ENTITY* e)
   ty = p2vt(e->y);
   u.nx = (bool)nh(e->x);  // true if entity overlaps right
   //u.ny = (bool)nv(e->y);  // true if entity overlaps below
-  u.cell      = (bool)isSolidForEntity(tx,     ty, prevY,     WORLD_METER);
-  u.cellright = (bool)isSolidForEntity(tx + 1, ty, prevY,     WORLD_METER);
-  u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, prevY, WORLD_METER);
-  u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, prevY, WORLD_METER);
+  u.cell      = (bool)isSolidForEntity(tx,     ty, prevY,     WORLD_METER, e->down);
+  u.cellright = (bool)isSolidForEntity(tx + 1, ty, prevY,     WORLD_METER, e->down);
+  u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, prevY, WORLD_METER, e->down);
+  u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, prevY, WORLD_METER, e->down);
 
   if (e->dy > 0) {
     if ((u.celldown && !u.cell) ||
@@ -848,10 +848,10 @@ void player_update(ENTITY* e)
   uint8_t ty = p2vt(e->y);
   //u.nx = (bool)nh(e->x);  // true if player overlaps right
   u.ny = (bool)nv(e->y); // true if player overlaps below
-  u.cell      = (bool)isSolidForEntity(tx,     ty,     e->y, WORLD_METER);
-  u.cellright = (bool)isSolidForEntity(tx + 1, ty,     e->y, WORLD_METER);
-  u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, e->y, WORLD_METER);
-  u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
+  u.cell      = (bool)isSolid(GetTile(tx,     ty    ));
+  u.cellright = (bool)isSolid(GetTile(tx + 1, ty    ));
+  u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+  u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
 
   if (e->dx > 0) {
     if ((u.cellright && !u.cell) ||
@@ -860,8 +860,8 @@ void player_update(ENTITY* e)
       e->dx = 0;           // stop horizontal velocity
       //u.nx = false;        // player no longer overlaps the adjacent cell
       //tx = p2ht(e->x);
-      //u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, e->y, WORLD_METER);
-      //u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
+      //u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+      //u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
     }
   } else if (e->dx < 0) {
     if ((u.cell     && !u.cellright) ||
@@ -870,8 +870,8 @@ void player_update(ENTITY* e)
       e->dx = 0;           // stop horizontal velocity
       //u.nx = false;        // player no longer overlaps the adjacent cell
       //tx = p2ht(e->x);
-      //u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, e->y, WORLD_METER);
-      //u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER);
+      //u.celldown  = (bool)isSolid(GetTile(tx,     ty + 1));
+      //u.celldiag  = (bool)isSolid(GetTile(tx + 1, ty + 1));
     }
   }
 
@@ -898,10 +898,10 @@ void player_update(ENTITY* e)
   ty = p2vt(e->y);
   u.nx = (bool)nh(e->x);  // true if player overlaps right
   //u.ny = (bool)nv(e->y); // true if player overlaps below
-  u.cell      = (bool)isSolidForEntity(tx,     ty,     prevY, WORLD_METER);
-  u.cellright = (bool)isSolidForEntity(tx + 1, ty,     prevY, WORLD_METER);
-  u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, prevY, WORLD_METER);
-  u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, prevY, WORLD_METER);
+  u.cell      = (bool)isSolidForEntity(tx,     ty,     prevY, WORLD_METER, e->down);
+  u.cellright = (bool)isSolidForEntity(tx + 1, ty,     prevY, WORLD_METER, e->down);
+  u.celldown  = (bool)isSolidForEntity(tx,     ty + 1, prevY, WORLD_METER, e->down);
+  u.celldiag  = (bool)isSolidForEntity(tx + 1, ty + 1, prevY, WORLD_METER, e->down);
 
   if (e->dy > 0) {
     if ((u.celldown && !u.cell) ||

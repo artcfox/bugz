@@ -113,10 +113,18 @@
 #define FIRST_SOLID_TILE (FIRST_TREASURE_TILE + TREASURE_TILES_IN_TILESET * TILESETS_N + SKY_TILES_IN_TILESET * TILESETS_N)
 #define FIRST_ONE_WAY_TILE (FIRST_SOLID_TILE + TILESETS_N * SOLID_TILES_IN_TILESET)
 #define ONE_WAY_TILES_IN_TILESET 1
+#define ONE_WAY_LADDER_TILES_IN_TILESET 1
+#define LADDER_TILES_IN_TILESET 1
+#define LAST_ONE_WAY_TILE ((FIRST_ONE_WAY_TILE + TILESETS_N * ONE_WAY_TILES_IN_TILESET * ONE_WAY_LADDER_TILES_IN_TILESET) - 1)
+#define FIRST_LADDER_TILE (FIRST_ONE_WAY_TILE + TILESETS_N * ONE_WAY_TILES_IN_TILESET)
+#define LAST_LADDER_TILE ((FIRST_LADDER_TILE + TILESETS_N * ONE_WAY_LADDER_TILES_IN_TILESET + TILESETS_N * LADDER_TILES_IN_TILESET) - 1)
 
-#define isSolid(t) (((t) >= FIRST_SOLID_TILE) && ((t) < (FIRST_SOLID_TILE + TILESETS_N * SOLID_TILES_IN_TILESET)))
-#define isOneWay(t) (((t) >= FIRST_ONE_WAY_TILE) && ((t) < (FIRST_ONE_WAY_TILE + TILESETS_N * ONE_WAY_TILES_IN_TILESET)))
+// Ladder tiles must come immediately after one way tiles, because they overlap. The top-of-the-ladder tiles are also one way tiles.
+
 #define isTreasure(t) (((t) >= FIRST_TREASURE_TILE) && ((t) < (FIRST_TREASURE_TILE + TILESETS_N * TREASURE_TILES_IN_TILESET)))
+#define isSolid(t) (((t) >= FIRST_SOLID_TILE) && ((t) < (FIRST_SOLID_TILE + TILESETS_N * SOLID_TILES_IN_TILESET)))
+#define isOneWay(t) (((t) >= FIRST_ONE_WAY_TILE) && ((t) <= LAST_ONE_WAY_TILE))
+#define isLadder(t) (((t) >= FIRST_TREASURE_TILE) && ((t) <= LAST_LADDER_TILE))
 
 /*
   One way of implementing everthing is to extend the idea that I'm

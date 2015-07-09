@@ -549,6 +549,11 @@ int main()
       SetTile(6, 24, FIRST_ONE_WAY_TILE + tileSet);
     }
 
+    SetTile(0, 0, FIRST_ONE_WAY_TILE + tileSet);
+    SetTile(1, 0, FIRST_LADDER_TILE + tileSet);
+    SetTile(2, 0, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet);
+    SetTile(3, 0, LAST_LADDER_TILE);
+
     for (;;) {
       WaitVsync(1);
       /* static uint8_t tileCounter = 0; */
