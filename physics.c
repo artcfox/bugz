@@ -199,7 +199,7 @@ const uint8_t levelData[] PROGMEM = {
   /* 12, // uint8_t treasureCount */
   /* 1,  7,  4, 12, 18,  6, 24, 27, 21, 28, 13, 18, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureX[32] */
   /* 24, 5,  8, 11, 17,  3,  4, 18,  7, 12, 22, 23, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureY[32] */
-  MFLAG_DOWN|MFLAG_INSTAKILLS, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
+  MFLAG_DOWN, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
   LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                  // int16_t playerMaxDX[2]
   LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
   INPUT_PLAYER_INPUT, INPUT_PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
@@ -327,6 +327,8 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
   //   ...
   // };
   *tileSet = tileSet(levelOffset);
+  if (*tileSet >= TILESETS_N) // something major went wrong
+    return 0xFFFF;
 
   for (uint8_t y = 0; y < SCREEN_TILES_V; ++y) {
     for (uint8_t x = 0; x < SCREEN_TILES_H; ++x) {
@@ -454,25 +456,37 @@ static void collectTreasure(uint8_t tx, uint8_t ty, uint16_t levelOffset, uint8_
   }
 }
 
+/* volatile uint8_t globalFrameCounter = 0; */
+
+/* void VsyncCallBack() */
+/* { */
+/*   ++globalFrameCounter; */
+/* } */
+
 int main()
 {
+ begin:;
+  uint8_t canary = 0xAA;
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
   
+  //SetUserPostVsyncCallback(&VsyncCallBack);
   SetTileTable(tileset);
   SetSpritesTileBank(0, mysprites);
   InitMusicPlayer(patches);
-
   ClearVram();
 
   uint8_t currentLevel = 0;
-
-  uint16_t levelOffset;
+  uint16_t levelOffset = 0;
   uint8_t tileSet = 0;
 
   while (true) {
+    if (canary != 0xAA)
+      goto begin;
 
     levelOffset = LoadLevel(currentLevel, &tileSet);
+    if (levelOffset == -1)
+      goto begin;
 
     // Initialize players
     for (uint8_t i = 0; i < PLAYERS; ++i) {
@@ -527,14 +541,25 @@ int main()
 
     }
 
-    SetTile(24, 9, FIRST_ONE_WAY_TILE);
-    SetTile(3, 24, FIRST_ONE_WAY_TILE);
-    SetTile(4, 24, FIRST_ONE_WAY_TILE);
-    SetTile(5, 24, FIRST_ONE_WAY_TILE);
-    SetTile(6, 24, FIRST_ONE_WAY_TILE);
+    //SetTile(24, 9, FIRST_ONE_WAY_TILE + tileSet);
+    if (currentLevel == 0) {
+      SetTile(3, 24, FIRST_ONE_WAY_TILE + tileSet);
+      SetTile(4, 24, FIRST_ONE_WAY_TILE + tileSet);
+      SetTile(5, 24, FIRST_ONE_WAY_TILE + tileSet);
+      SetTile(6, 24, FIRST_ONE_WAY_TILE + tileSet);
+    }
 
     for (;;) {
       WaitVsync(1);
+      /* static uint8_t tileCounter = 0; */
+      /* static uint8_t treasureFrameCounter = 0; */
+      /* if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) { */
+      /*   SetTileTable(tileset + 64 * tileCounter++); */
+      /*   if (tileCounter > UNIQUE_TREASURE_TILES_IN_ANIMATION) */
+      /*     tileCounter = 0; */
+      /* } */
+      /* if (++treasureFrameCounter == TREASURE_FRAME_SKIP * UNIQUE_TREASURE_TILES_IN_ANIMATION) */
+      /*   treasureFrameCounter = 0; */
 
       // Get the inputs for every entity
       for (uint8_t i = 0; i < PLAYERS; ++i) {
@@ -619,6 +644,7 @@ int main()
         }
       }
 
+
       // Animate treasure (another way to animate the treasure "for free" would be to switch the actual global tileset pointer
       static uint8_t treasureFrameCounter = 0;
       for (uint8_t i = 0; i < tcount; ++i) {
@@ -672,12 +698,13 @@ int main()
         break; // restart level
 
       // Check for level select buttons
-      if ((b & BTN_SELECT) && ((b & BTN_SL) || (b & BTN_SR))) {
-        if ((b & BTN_SL) && --currentLevel == 255)
-          currentLevel = numLevels() - 1;
-        else if ((b & BTN_SR) && ++currentLevel >= numLevels())
+      //static uint8_t framesLevelSwitch = 0;
+      if ((b & BTN_SELECT) && ((b & BTN_SL) || (b & BTN_SR)) && (treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) {
+        uint8_t levels = numLevels();
+        if ((b & BTN_SL) && (--currentLevel == 255))
+          currentLevel = levels - 1;
+        else if ((b & BTN_SR) && (++currentLevel == levels))
           currentLevel = 0;
-        //WaitVsync(20); // delay
         break; // restart level
       }
 
