@@ -541,7 +541,7 @@ int main()
 
     }
 
-    //SetTile(24, 9, FIRST_ONE_WAY_TILE + tileSet);
+    SetTile(23, 9, FIRST_ONE_WAY_TILE + tileSet);
     if (currentLevel == 0) {
       SetTile(3, 24, FIRST_ONE_WAY_TILE + tileSet);
       SetTile(4, 24, FIRST_ONE_WAY_TILE + tileSet);
@@ -549,6 +549,7 @@ int main()
       SetTile(6, 24, FIRST_ONE_WAY_TILE + tileSet);
     }
 
+    //    SetTile(24, 8, FIRST_LADDER_TILE + tileSet);
     SetTile(24, 9, FIRST_LADDER_TILE + tileSet);
     SetTile(24, 10, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet);
     SetTile(24, 11, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet);

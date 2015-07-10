@@ -783,6 +783,41 @@ void player_input(ENTITY* e)
   }
 }
 
+void player_update_ladder(ENTITY* e)
+{
+  entity_update_flying(e);
+
+  UPDATE_BITFLAGS u;
+
+  // Collision detection for ladders
+  uint8_t tx = p2ht(e->x);
+  uint8_t ty = p2vt(e->y);
+  u.nx = (bool)nh(e->x);  // true if player overlaps right
+  u.ny = (bool)nv(e->y); // true if player overlaps below
+  u.cell      = (bool)isLadder(GetTile(tx,     ty    ));
+  u.cellright = (bool)isLadder(GetTile(tx + 1, ty    ));
+  u.celldown  = (bool)isLadder(GetTile(tx,     ty + 1));
+  u.celldiag  = (bool)isLadder(GetTile(tx + 1, ty + 1));
+
+  if (e->jump && !(e->up || e->down)) { // don't allow jumping if up or down is being held, because you wouldn't actually jump
+    TriggerFx(0, 128, true);
+    e->jumping = e->falling = false;
+    e->jump = true;
+    e->update = player_update;
+    player_update(e); // run this inline, so the jump and proper collision can happen this frame
+    return;
+  }
+
+  if (!(u.cell || (u.cellright && u.nx) || (u.celldown && u.ny) || (u.celldiag && u.ny)))
+    e->update = player_update;
+
+  /* if (!(u.cell || (u.cellright && u.nx))) { // no longer on ladder */
+  /*   // but bottom half of us is still on ladder */
+  /*   if (!((u.celldown && u.ny) || (u.celldiag && u.ny))) */
+  /*     e->update = player_update; */
+  /* } */
+}
+
 void player_update(ENTITY* e)
 {
   PLAYER* p = (PLAYER*)e; // upcast
@@ -922,31 +957,65 @@ void player_update(ENTITY* e)
     }
   }
 
+  // Collision detection for ladders
   if (e->up || e->down) {
-    tx = p2ht(e->x);
+    //tx = p2ht(e->x);
     ty = p2vt(e->y);
-    u.nx = (bool)nh(e->x);  // true if player overlaps right
+    //u.nx = (bool)nh(e->x);  // true if player overlaps right
     u.ny = (bool)nv(e->y); // true if player overlaps below
     u.cell      = (bool)isLadder(GetTile(tx,     ty    ));
     u.cellright = (bool)isLadder(GetTile(tx + 1, ty    ));
-    //u.celldown  = (bool)isLadder(GetTile(tx - 1, ty    ));
+    u.celldown  = (bool)isLadder(GetTile(tx,     ty + 1));
     u.celldiag  = (bool)isLadder(GetTile(tx + 1, ty + 1));
 
-
-    if (e->jumping) {
-      if (u.cellright && ((ht2p(tx + 1) - e->x) < (WORLD_METER >> 1))) {
-        e->update = null_update;
-        e->falling = e->jumping = false;
-        e->dx = e->dy = 0;
-        e->x = ht2p(tx + 1);
-      }
-      if (u.cell && ((e->x - ht2p(tx)) < (WORLD_METER >> 1))) {
-        e->update = null_update;
-        e->falling = e->jumping = false;
-        e->dx = e->dy = 0;
-        e->x = ht2p(tx);
-      }
+    if ((u.cell) || (u.cellright && u.nx) || (u.celldown && u.ny) || (u.celldiag && u.nx && u.ny)) {
+      e->update = player_update_ladder;
+      e->falling = e->jumping = false;
+      e->dx = e->dy = 0;
     }
+
+    // This code works! (and allows snapping to the center of the ladder)
+    /* if (u.cellright && u.nx) { */
+    /*   e->update = player_update_ladder; */
+    /*   e->falling = e->jumping = false; */
+    /*   e->dx = e->dy = 0; */
+    /*   //e->x = ht2p(tx + 1); */
+    /* } */
+    /* if (u.cell) { */
+    /*   e->update = player_update_ladder; */
+    /*   e->falling = e->jumping = false; */
+    /*   e->dx = e->dy = 0; */
+    /*   //e->x = ht2p(tx); */
+    /* } */
+    /* // is bottom half on ladder */
+    /* if (u.celldown && u.ny) { */
+    /*   e->update = player_update_ladder; */
+    /*   e->falling = e->jumping = false; */
+    /*   e->dx = e->dy = 0; */
+    /* } */
+
+    /* if (u.celldiag && u.ny) { */
+    /*   e->update = player_update_ladder; */
+    /*   e->falling = e->jumping = false; */
+    /*   e->dx = e->dy = 0; */
+    /* } */
+
+
+
+    /* if (e->jumping) { */
+    /*   if (u.cellright && ((ht2p(tx + 1) - e->x) < (WORLD_METER >> 1))) { */
+    /*     e->update = null_update; */
+    /*     e->falling = e->jumping = false; */
+    /*     e->dx = e->dy = 0; */
+    /*     e->x = ht2p(tx + 1); */
+    /*   } */
+    /*   if (u.cell && ((e->x - ht2p(tx)) < (WORLD_METER >> 1))) { */
+    /*     e->update = null_update; */
+    /*     e->falling = e->jumping = false; */
+    /*     e->dx = e->dy = 0; */
+    /*     e->x = ht2p(tx); */
+    /*   } */
+    /* } */
     /* if (u.cell || (u.cellright && u.nx) || (u.celldown) || (u.celldiag && u.nx)) { */
     /*   e->update = null_update; */
     /*   e->falling = e->jumping = false; */
