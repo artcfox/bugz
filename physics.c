@@ -549,10 +549,14 @@ int main()
       SetTile(6, 24, FIRST_ONE_WAY_TILE + tileSet);
     }
 
-    SetTile(0, 0, FIRST_ONE_WAY_TILE + tileSet);
-    SetTile(1, 0, FIRST_LADDER_TILE + tileSet);
-    SetTile(2, 0, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet);
-    SetTile(3, 0, LAST_LADDER_TILE);
+    SetTile(24, 9, FIRST_LADDER_TILE + tileSet);
+    SetTile(24, 10, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet);
+    SetTile(24, 11, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet);
+    SetTile(24, 12, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet);
+    SetTile(24, 13, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet);
+    SetTile(24, 14, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet);
+
+
 
     for (;;) {
       WaitVsync(1);

@@ -922,6 +922,43 @@ void player_update(ENTITY* e)
     }
   }
 
+  if (e->up || e->down) {
+    tx = p2ht(e->x);
+    ty = p2vt(e->y);
+    u.nx = (bool)nh(e->x);  // true if player overlaps right
+    u.ny = (bool)nv(e->y); // true if player overlaps below
+    u.cell      = (bool)isLadder(GetTile(tx,     ty    ));
+    u.cellright = (bool)isLadder(GetTile(tx + 1, ty    ));
+    //u.celldown  = (bool)isLadder(GetTile(tx - 1, ty    ));
+    u.celldiag  = (bool)isLadder(GetTile(tx + 1, ty + 1));
+
+
+    if (e->jumping) {
+      if (u.cellright && ((ht2p(tx + 1) - e->x) < (WORLD_METER >> 1))) {
+        e->update = null_update;
+        e->falling = e->jumping = false;
+        e->dx = e->dy = 0;
+        e->x = ht2p(tx + 1);
+      }
+      if (u.cell && ((e->x - ht2p(tx)) < (WORLD_METER >> 1))) {
+        e->update = null_update;
+        e->falling = e->jumping = false;
+        e->dx = e->dy = 0;
+        e->x = ht2p(tx);
+      }
+    }
+    /* if (u.cell || (u.cellright && u.nx) || (u.celldown) || (u.celldiag && u.nx)) { */
+    /*   e->update = null_update; */
+    /*   e->falling = e->jumping = false; */
+    /*   e->dx = e->dy = 0; */
+    /*   /\* if ((u.cell || (u.celldown && u.ny)) && (u.celldiag && u.nx)) *\/ */
+    /*   /\*   e->x = ht2p(tx); *\/ */
+    /*   /\* else  *\/if (((u.cell) || (u.celldown && u.ny)) && (!((u.cellright) || (u.celldiag && u.nx)))) */
+    /*     e->x = ht2p(tx - 1); */
+    /*   return; */
+    /* } */
+  }
+
   e->falling = !(u.celldown || (u.nx && u.celldiag)) && !e->jumping; // detect if we're now falling or not
   if (e->falling && p->framesFalling < 255)
     p->framesFalling++;
