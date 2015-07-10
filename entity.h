@@ -51,37 +51,43 @@
 #define nv(p) ((p) % (TILE_HEIGHT << FP_SHIFT))
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
+#define FAST_INTEGRATION 1
+
 #define PLAYERS 1
 #define MONSTERS 6
 
 #define FP_SHIFT   2
 
-/* // 1/30th of a second per frame */
-/* #define WORLD_FPS 32 */
-/* // arbitrary choice for 1m */
-/* #define WORLD_METER (8 << FP_SHIFT) */
-/* // very exagerated gravity (6x) */
-/* #define WORLD_GRAVITY 615 */
-/* //(WORLD_METER * 18) */
-/* // max horizontal speed (20 tiles per second) */
-/* #define WORLD_MAXDX 102 */
-/* //(WORLD_METER * 3) */
-/* // max vertical speed (60 tiles per second). If the jump impulse is increased, this should be increased as well. */
-/* #define WORLD_MAXDY 512 */
-/* //(WORLD_METER * 15) */
-/* // horizontal acceleration - take 1/2 second to reach maxdx */
-/* #define WORLD_ACCEL 655 */
-/* //(WORLD_MAXDX * 6) */
-/* // horizontal friction - take 1/6 second to stop from maxdx */
-/* #define WORLD_FRICTION 437 */
-/* //(WORLD_MAXDX * 4) */
-/* // (a large) instantaneous jump impulse */
-/* #define WORLD_JUMP_IMPULSE 13500 */
-/* //(WORLD_METER * 382) */
-/* // how many frames you can be falling and still jump */
-/* #define WORLD_FALLING_GRACE_FRAMES 6 */
-/* // parameter used for variable jumping (gravity / 10 is a good default) */
-/* #define WORLD_CUT_JUMP_SPEED_LIMIT (WORLD_GRAVITY / 10) */
+#if (FAST_INTEGRATION)
+
+// 1/30th of a second per frame
+#define WORLD_FPS 32
+// arbitrary choice for 1m
+#define WORLD_METER (8 << FP_SHIFT)
+// very exagerated gravity (6x)
+#define WORLD_GRAVITY 615
+//(WORLD_METER * 18)
+// max horizontal speed (20 tiles per second)
+#define WORLD_MAXDX 102
+//(WORLD_METER * 3)
+// max vertical speed (60 tiles per second). If the jump impulse is increased, this should be increased as well.
+#define WORLD_MAXDY 512
+//(WORLD_METER * 15)
+// horizontal acceleration - take 1/2 second to reach maxdx
+#define WORLD_ACCEL 655
+//(WORLD_MAXDX * 6)
+// horizontal friction - take 1/6 second to stop from maxdx
+#define WORLD_FRICTION 437
+//(WORLD_MAXDX * 4)
+// (a large) instantaneous jump impulse
+#define WORLD_JUMP_IMPULSE 13500
+//(WORLD_METER * 382)
+// how many frames you can be falling and still jump
+#define WORLD_FALLING_GRACE_FRAMES 6
+// parameter used for variable jumping (gravity / 10 is a good default)
+#define WORLD_CUT_JUMP_SPEED_LIMIT (WORLD_GRAVITY / 10)
+
+#else // FAST_INTEGRATION
 
 // 1/30th of a second per frame
 #define WORLD_FPS 30
@@ -103,6 +109,8 @@
 #define WORLD_FALLING_GRACE_FRAMES 6
 // parameter used for variable jumping (gravity / 10 is a good default)
 #define WORLD_CUT_JUMP_SPEED_LIMIT (WORLD_GRAVITY / 10)
+
+#endif // FAST_INTEGRATION
 
 #define TILESETS_N 3
 #define FIRST_TREASURE_TILE 1
