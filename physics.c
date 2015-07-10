@@ -541,7 +541,7 @@ int main()
 
     }
 
-    SetTile(23, 9, FIRST_ONE_WAY_TILE + tileSet);
+    //SetTile(23, 9, FIRST_ONE_WAY_TILE + tileSet);
     if (currentLevel == 0) {
       SetTile(3, 24, FIRST_ONE_WAY_TILE + tileSet);
       SetTile(4, 24, FIRST_ONE_WAY_TILE + tileSet);
@@ -550,6 +550,13 @@ int main()
     }
 
     //    SetTile(24, 8, FIRST_LADDER_TILE + tileSet);
+    /* SetTile(23, 9, FIRST_LADDER_TILE + tileSet); */
+    /* SetTile(23, 10, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
+    /* SetTile(23, 11, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
+    /* SetTile(23, 12, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
+    /* SetTile(23, 13, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
+    /* SetTile(23, 14, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
+
     SetTile(24, 9, FIRST_LADDER_TILE + tileSet);
     SetTile(24, 10, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet);
     SetTile(24, 11, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet);
@@ -657,21 +664,21 @@ int main()
 
       // Animate treasure (another way to animate the treasure "for free" would be to switch the actual global tileset pointer
       static uint8_t treasureFrameCounter = 0;
-      for (uint8_t i = 0; i < tcount; ++i) {
-        uint8_t tx = treasureX(levelOffset, i);
-        uint8_t ty = treasureY(levelOffset, i);
-        uint8_t t = GetTile(tx, ty);
-        // If the treasure hasn't been collected, animate it.
-        if (isTreasure(t)) { // is a treasure tile
-          if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) {
-            // Calculate what the initial treasure tile would be, and use that plus the animation offset to calculate the animated tile
-            uint8_t baseTreasureTile = pgm_read_byte(&BaseTreasureTile[t]) + (tileSet * TREASURE_TILES_IN_TILESET);
-            // The above algorithm performs the below computation, but much faster since it uses a LUT
-            //   uint8_t baseTreasureTile = (((t - 1) % 15) / 3) * 3 + (tileSet * 15) + 1;
-            SetTile(tx, ty, (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
-          }
-        }
-      }
+      /* for (uint8_t i = 0; i < tcount; ++i) { */
+      /*   uint8_t tx = treasureX(levelOffset, i); */
+      /*   uint8_t ty = treasureY(levelOffset, i); */
+      /*   uint8_t t = GetTile(tx, ty); */
+      /*   // If the treasure hasn't been collected, animate it. */
+      /*   if (isTreasure(t)) { // is a treasure tile */
+      /*     if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) { */
+      /*       // Calculate what the initial treasure tile would be, and use that plus the animation offset to calculate the animated tile */
+      /*       uint8_t baseTreasureTile = pgm_read_byte(&BaseTreasureTile[t]) + (tileSet * TREASURE_TILES_IN_TILESET); */
+      /*       // The above algorithm performs the below computation, but much faster since it uses a LUT */
+      /*       //   uint8_t baseTreasureTile = (((t - 1) % 15) / 3) * 3 + (tileSet * 15) + 1; */
+      /*       SetTile(tx, ty, (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP])); */
+      /*     } */
+      /*   } */
+      /* } */
       if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
         treasureFrameCounter = 0;
 

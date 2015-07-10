@@ -960,15 +960,22 @@ void player_update(ENTITY* e)
   // Collision detection for ladders
   if (e->up || e->down) {
     //tx = p2ht(e->x);
-    ty = p2vt(e->y);
+    if (e->down)
+      ty = p2vt(e->y + 1);
+    else // e->up
+      ty = p2vt(e->y - 1);
     //u.nx = (bool)nh(e->x);  // true if player overlaps right
-    u.ny = (bool)nv(e->y); // true if player overlaps below
+    u.ny = (bool)nv(e->y + 1); // true if player overlaps below
     u.cell      = (bool)isLadder(GetTile(tx,     ty    ));
     u.cellright = (bool)isLadder(GetTile(tx + 1, ty    ));
     u.celldown  = (bool)isLadder(GetTile(tx,     ty + 1));
     u.celldiag  = (bool)isLadder(GetTile(tx + 1, ty + 1));
 
     if ((u.cell) || (u.cellright && u.nx) || (u.celldown && u.ny) || (u.celldiag && u.nx && u.ny)) {
+      if (e->down)
+        e->y++;
+      else // e->up
+        e->y--;
       e->update = player_update_ladder;
       e->falling = e->jumping = false;
       e->dx = e->dy = 0;
