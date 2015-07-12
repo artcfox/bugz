@@ -160,7 +160,7 @@ enum MONSTER_FLAGS {
   MFLAG_DOWN = 8,
   MFLAG_AUTORESPAWN = 16,
   MFLAG_NOINTERACT = 32,
-  MFLAG_INSTAKILLS = 64,
+  MFLAG_INVINCIBLE = 64,
 };
 
 // Parenthesis cannot be placed around this macro expansion
@@ -224,7 +224,7 @@ const uint8_t levelData[] PROGMEM = {
   /* 12, // uint8_t treasureCount */
   /* 1,  7,  4, 12, 18,  6, 24, 27, 21, 28, 13, 18, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureX[32] */
   /* 24, 5,  8, 11, 17,  3,  4, 18,  7, 12, 22, 23, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureY[32] */
-  MFLAG_DOWN|MFLAG_INSTAKILLS, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
+  MFLAG_DOWN|MFLAG_INVINCIBLE, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
   LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                  // int16_t playerMaxDX[2]
   LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
   INPUT_PLAYER_INPUT, INPUT_PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
@@ -236,7 +236,7 @@ const uint8_t levelData[] PROGMEM = {
   UPDATE_ENTITY_UPDATE_FLYING, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   RENDER_BEE_RENDER, RENDER_CRICKET_RENDER, RENDER_LADYBUG_RENDER, RENDER_GRASSHOPPER_RENDER, RENDER_ANT_RENDER, RENDER_ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 
-  
+
  };
 
 #define LEVEL_HEADER_SIZE 1
@@ -328,7 +328,7 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
   // };
   *tileSet = tileSet(levelOffset);
   if (*tileSet >= TILESETS_N) // something major went wrong
-    return 0xFFFF;
+    return 0xFFFF; // bogus value
 
   for (uint8_t y = 0; y < SCREEN_TILES_V; ++y) {
     for (uint8_t x = 0; x < SCREEN_TILES_H; ++x) {
@@ -416,8 +416,7 @@ static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
   e->down = (bool)(monsterFlags & MFLAG_DOWN);
   e->autorespawn = (bool)(monsterFlags & MFLAG_AUTORESPAWN);
   e->enabled = (bool)!(monsterFlags & MFLAG_NOINTERACT);
-  //e->instakills = (bool)(monsterFlags & MFLAG_INSTAKILLS);
-  e->invincible = (bool)(monsterFlags & MFLAG_INSTAKILLS);
+  e->invincible = (bool)(monsterFlags & MFLAG_INVINCIBLE);
 }
 
 static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
@@ -469,7 +468,7 @@ int main()
   uint8_t canary = 0xAA;
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
-  
+
   //SetUserPostVsyncCallback(&VsyncCallBack);
   SetTileTable(tileset);
   SetSpritesTileBank(0, mysprites);
@@ -485,7 +484,7 @@ int main()
       goto begin;
 
     levelOffset = LoadLevel(currentLevel, &tileSet);
-    if (levelOffset == -1)
+    if (levelOffset == 0xFFFF)
       goto begin;
 
     // Initialize players
@@ -499,8 +498,7 @@ int main()
                   (int16_t)(playerMaxDX(levelOffset, i)),
                   (int16_t)(playerImpulse(levelOffset, i)));
       ((ENTITY*)(&player[i]))->enabled = true;
-      sprites[i].flags = 0;
-      //((ENTITY*)(&player[i]))->left = true;
+      sprites[i].flags = 0; // set the initial direction of the player
       if (i == 1) { // player 2 starts off hidden and disabled
         ((ENTITY*)(&player[i]))->render(((ENTITY*)(&player[i]))); // setup sprite
         ((ENTITY*)(&player[i]))->enabled = false;
@@ -512,6 +510,7 @@ int main()
     // Initialize monsters
     for (uint8_t i = 0; i < MONSTERS; ++i) {
       spawnMonster(&monster[i], levelOffset, i);
+      sprites[i].flags = 0; // set the initial direction of the monster
     }
 
     // Initialize treasure
@@ -596,7 +595,6 @@ int main()
       for (uint8_t i = 0; i < MONSTERS; ++i) {
         monster[i].input(&monster[i]);
       }
-    
 
       int16_t playerPrevY[PLAYERS];
 
@@ -610,16 +608,9 @@ int main()
       for (uint8_t i = 0; i < MONSTERS; ++i) {
         int16_t monsterPrevY = monster[i].y; // cache the previous Y value to use for collision detection below
         monster[i].update(&monster[i]);
-      
+
         // Collision detection
         // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
-
-        // TODO: With the new collision detection code (added below), this might not be true any longer:
-        //       If the player is moving down really fast, and an entity is moving up really fast, there is a slight chance
-        //       that it will kill you, because the entity might pass far enough through you that it's y position is above
-        //       you. To fix this, we might have to also check for collisions before updating the monsters positions (or cache
-        //       the previous x and y, and check that first)
-
         for (uint8_t p = 0; p < PLAYERS; ++p) {
           if (((ENTITY*)(&player[p]))->enabled && !(((ENTITY*)(&player[p]))->dead) && monster[i].enabled && !monster[i].dead &&
               overlap(((ENTITY*)(&player[p]))->x,
@@ -644,7 +635,7 @@ int main()
           }
         }
       }
-    
+
       // Render every entity
       for (uint8_t i = 0; i < PLAYERS; ++i) {
         ((ENTITY*)(&player[i]))->render((ENTITY*)(&player[i]));
@@ -668,7 +659,6 @@ int main()
       for (uint8_t p = 0; p < PLAYERS; ++p) {
         if (((ENTITY*)(&player[p]))->enabled && ((ENTITY*)(&player[p]))->dead) {
           killPlayer(&player[p]);
-          //return true;
         }
       }
 

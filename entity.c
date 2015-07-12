@@ -43,7 +43,7 @@
 
     The above copyright notice and this permission notice shall be
     included in all copies or substantial portions of the Software.
-  
+
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -52,7 +52,7 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
     DEALINGS IN THE SOFTWARE.
-  
+
 */
 
 #include "entity.h"
@@ -81,6 +81,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
 static inline bool isSolidForEntity(uint8_t tx, uint8_t ty, int16_t prevY, uint8_t entityHeight, bool down)
 {
   uint8_t t = GetTile(tx, ty);
+  // One-way tiles are only solid for Y collisions where your previous Y puts your feet above the tile, and you're not currently pressing down
   return (isSolid(t) || (isOneWay(t) && ((prevY + entityHeight - 1) < vt2p(ty)) && !down));
 }
 
@@ -155,14 +156,14 @@ void ai_fly_vertical(ENTITY* e)
 {
   // The high/low bytes of e->impulse are used to store the bounds for changing direction
   if (e->up) {
-    uint8_t yMin = (uint8_t)e->impulse;
+    uint8_t yMin = (uint8_t)e->impulse; // low byte
     int16_t yBound = vt2p(yMin);
     if (e->y <= yBound) {
       e->up = false;
       e->down = true;
     }
   } else if (e->down) {
-    uint8_t yMax = (uint8_t)(((uint16_t)e->impulse) >> 8); // e->impulse is originally signed, so cast before shift
+    uint8_t yMax = (uint8_t)(((uint16_t)e->impulse) >> 8); // high byte, e->impulse is originally signed, so cast before shift
     int16_t yBound = vt2p(yMax);
     if (e->y >= yBound) {
       e->down = false;
@@ -175,14 +176,14 @@ void ai_fly_horizontal(ENTITY* e)
 {
   // The high/low bytes of e->impulse are used to store the bounds for changing direction
   if (e->left) {
-    uint8_t xMin = (uint8_t)e->impulse;
+    uint8_t xMin = (uint8_t)e->impulse; // low byte
     int16_t xBound = ht2p(xMin);
     if (e->x <= xBound) {
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
-    uint8_t xMax = (uint8_t)(((uint16_t)e->impulse) >> 8); // e->impulse is originally signed, so cast before shift
+    uint8_t xMax = (uint8_t)(((uint16_t)e->impulse) >> 8); // high byte, e->impulse is originally signed, so cast before shift
     int16_t xBound = ht2p(xMax);
     if (e->x >= xBound) {
       e->right = false;
@@ -337,7 +338,7 @@ void entity_update_dying(ENTITY* e)
   else if (u.wasRight)
     ddx -= WORLD_FRICTION; // entity was going right, but not anymore
 
-  // Bounce a bit when you die if the monsterhop flag is set
+  // Repurpose the monsterhop flag to bounce a bit when you die
   if (e->monsterhop) {
     e->monsterhop = false;
     ddy -= (e->impulse >> 1);
@@ -376,7 +377,6 @@ void entity_update_dying(ENTITY* e)
     e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
     e->dy = 0;
     e->visible = false; // we hit the edge of the screen, so now hide the entity
-    
   }
   if (e->y < 0) {
     e->y = 0;
@@ -466,7 +466,7 @@ void entity_update_flying(ENTITY* e)
   e->y += (e->dy / WORLD_FPS);
   e->dy += (ddy / WORLD_FPS);
   if (e->turbo) {
-    if (e->dy < -(e->maxdx + WORLD_METER)) // uses e->maxdx as maxdy, since there is no gravity
+    if (e->dy < -(e->maxdx + WORLD_METER)) // use e->maxdx as maxdy, since there is no gravity
       e->dy = -(e->maxdx + WORLD_METER);
     else if (e->dy > (e->maxdx + WORLD_METER))
       e->dy = (e->maxdx + WORLD_METER);
@@ -744,7 +744,7 @@ void player_input(ENTITY* e)
   //p->buttons.pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
   //p->buttons.released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
 
-  // Allow player 2 to join/leave the game at any time 
+  // Allow player 2 to join/leave the game at any time
   if (e->tag) { // only for player 2
     uint16_t pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
     if (pressed & BTN_START) {
@@ -801,20 +801,21 @@ void player_update_ladder(ENTITY* e)
   u.celldiag  = (bool)isLadder(GetTile(tx + 1, ty + 1));
 
   // Check to see if we've left the ladder
+  /* if (!( (((u.cell) || (u.celldown && u.ny)) && ((e->x - ht2p(tx)) < (WORLD_METER - (2 << FP_SHIFT) ))) || */
+  /*        (((u.cellright && u.nx) || (u.celldiag && u.nx && u.ny)) && ((ht2p(tx + 1) - e->x) < (WORLD_METER - (2 << FP_SHIFT) ))) ) ) { */
   if (!(u.cell || (u.cellright && u.nx) || (u.celldown && u.ny) || (u.celldiag && u.ny))) {
     e->update = player_update;
     e->animationFrameCounter = 0;
-    p->framesFalling = 0;   // reset the counter so a jump is allowed if will soon fall
+    p->framesFalling = 0;   // reset the counter so a jump is allowed if moving off the ladder causes a fall
     e->jumpReleased = true; // force the release of the jump button so "early jumps" off a ladder happen as soon as you leave the ladder
   }
 
   // Allow jumping off the ladder if we are not moving up or down
   if (e->jump && (!(e->up || e->down))) { // don't allow jumping if up or down is being held, because you would immediately rejoin the ladder
     e->jumping = e->falling = false; // ensure jump happens when calling player_update
-    e->jump = true; 
+    e->jump = true;
     e->update = player_update;
     e->animationFrameCounter = 0;
-    //player_render(e); // to be technically correct
     player_update(e); // run this inline, so the jump and proper collision can happen this frame
   }
 }
@@ -944,9 +945,8 @@ void player_update(ENTITY* e)
         (u.celldiag && !u.cellright && u.nx)) {
       e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
       e->dy = 0;           // stop downward velocity
-      e->falling = false;  // no longer falling
+      e->falling = e->jumping = false;  // no longer falling or jumping
       p->framesFalling = 0;
-      e->jumping = false;  // (or jumping)
       //u.ny = false;        // no longer overlaps the cells below
     }
   } else if (e->dy < 0) {
@@ -961,26 +961,30 @@ void player_update(ENTITY* e)
   // Collision detection with ladders
   if (e->up || e->down) {
     //tx = p2ht(e->x);
-    if (e->down)
-      ty = p2vt(e->y + 1);
-    else // e->up
-      ty = p2vt(e->y - 1);
+    if (e->down) {
+      ty = p2vt(e->y + 1); // the tile one sub-sub-pixel below our position
+      u.ny = (bool)nv(e->y + 1); // true if player overlaps below
+    } else { // e->up
+      ty = p2vt(e->y - 1); // the tile one sub-sub-pixel above our position
+      u.ny = (bool)nv(e->y - 1); // true if player overlaps above
+    }
     //u.nx = (bool)nh(e->x);  // true if player overlaps right
-    u.ny = (bool)nv(e->y + 1); // true if player overlaps below
+    
     u.cell      = (bool)isLadder(GetTile(tx,     ty    ));
     u.cellright = (bool)isLadder(GetTile(tx + 1, ty    ));
     u.celldown  = (bool)isLadder(GetTile(tx,     ty + 1));
     u.celldiag  = (bool)isLadder(GetTile(tx + 1, ty + 1));
 
+    /* if ( (((u.cell) || (u.celldown && u.ny)) && ((e->x - ht2p(tx)) < (WORLD_METER - (2 << FP_SHIFT) ))) || */
+    /*      (((u.cellright && u.nx) || (u.celldiag && u.nx && u.ny)) && ((ht2p(tx + 1) - e->x) < (WORLD_METER - (2 << FP_SHIFT) ))) ) { */
     if ((u.cell) || (u.cellright && u.nx) || (u.celldown && u.ny) || (u.celldiag && u.nx && u.ny)) {
       if (e->down)
-        e->y++;
+        e->y++; // allow player to join ladder without jumping if the ladder is the tile immediately below them
       else // e->up
-        e->y--;
+        e->y--; // allow player to join ladder without jumping if the ladder is the tile immediately above them
       e->update = player_update_ladder;
       e->animationFrameCounter = 0;
       e->falling = e->jumping = false;
-      //e->jumpReleased = true;
       e->dx = e->dy = 0;
     }
   }
