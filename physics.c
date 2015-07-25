@@ -378,7 +378,6 @@ static void killPlayer(PLAYER* p)
     return;
   TriggerFx(3, 128, true);
   e->dead = true;
-  e->left = e->right = false;
   e->monsterhop = true;
   e->dy = 0;
   e->enabled = false;
@@ -390,9 +389,8 @@ static void killMonster(ENTITY* e)
 {
   if (e->invincible)
     return;
-  TriggerFx(1, 128, true);        // play the monster death sound
+  TriggerFx(1, 128, true);         // play the monster death sound
   e->dead = true;                  // kill the monster
-  e->left = e->right = false;      // release controls that matter to dying physics
   e->enabled = false;              // make sure we don't consider the entity again for collisions
   e->input = null_input;           // disable the entity's ai
   e->update = entity_update_dying; // use dying physics

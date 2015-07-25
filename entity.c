@@ -127,14 +127,14 @@ void ai_walk_until_blocked_or_ledge(ENTITY* e)
   uint8_t ty = p2vt(e->y);
 
   if (e->left) {
-    uint8_t cell = isSolidForEntity(tx, ty, e->y, WORLD_METER, e->down);
+    uint8_t cell = isSolid(GetTile(tx, ty));
     uint8_t celldown = isSolidForEntity(tx, ty + 1, e->y, WORLD_METER, e->down);
     if (cell || (!celldown && !e->falling)) {
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
-    uint8_t cellright = isSolidForEntity(tx + 1, ty, e->y, WORLD_METER, e->down);
+    uint8_t cellright = isSolid(GetTile(tx + 1, ty));
     uint8_t celldiag  = isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER, e->down);
     if (cellright || (!celldiag && !e->falling)) {
       e->right = false;
@@ -296,8 +296,7 @@ void entity_update(ENTITY* e)
         (u.celldiag && !u.cellright && u.nx)) {
       e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
       e->dy = 0;           // stop downward velocity
-      e->falling = false;  // no longer falling
-      e->jumping = false;  // (or jumping)
+      e->jumping = false;  // no longer jumping
       //u.ny = false;          // no longer overlaps the cells below
     }
   } else if (e->dy < 0) {
@@ -320,22 +319,12 @@ void entity_update_dying(ENTITY* e)
     return;
   }
 
-  UPDATE_BITFLAGS u;
-
-  u.wasLeft = (bool)(e->dx < 0);
-  u.wasRight = (bool)(e->dx > 0);
-
   int16_t ddx = 0;
   int16_t ddy = WORLD_GRAVITY;
 
-  if (e->left)
-    ddx -= WORLD_ACCEL;    // entity wants to go left
-  else if (u.wasLeft)
+  if (e->dx < 0)
     ddx += WORLD_FRICTION; // entity was going left, but not anymore
-
-  if (e->right)
-    ddx += WORLD_ACCEL;    // entity wants to go right
-  else if (u.wasRight)
+  else if (e->dx > 0)
     ddx -= WORLD_FRICTION; // entity was going right, but not anymore
 
   // Repurpose the monsterhop flag to bounce a bit when you die
@@ -945,7 +934,7 @@ void player_update(ENTITY* e)
         (u.celldiag && !u.cellright && u.nx)) {
       e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
       e->dy = 0;           // stop downward velocity
-      e->falling = e->jumping = false;  // no longer falling or jumping
+      e->jumping = false;  // no longer jumping
       p->framesFalling = 0;
       //u.ny = false;        // no longer overlaps the cells below
     }
@@ -957,6 +946,10 @@ void player_update(ENTITY* e)
       //u.ny = false;        // player no longer overlaps the cells below
     }
   }
+
+  e->falling = !(u.celldown || (u.nx && u.celldiag)) && !e->jumping; // detect if we're now falling or not
+  if (e->falling && p->framesFalling < 255)
+    p->framesFalling++;
 
   // Collision detection with ladders
   if (e->up || e->down) {
@@ -984,14 +977,10 @@ void player_update(ENTITY* e)
         e->y--; // allow player to join ladder without jumping if the ladder is the tile immediately above them
       e->update = player_update_ladder;
       e->animationFrameCounter = 0;
-      e->falling = e->jumping = false;
+      e->jumping = false;
       e->dx = e->dy = 0;
     }
   }
-
-  e->falling = !(u.celldown || (u.nx && u.celldiag)) && !e->jumping; // detect if we're now falling or not
-  if (e->falling && p->framesFalling < 255)
-    p->framesFalling++;
 }
 
 #define PLAYER_ANIMATION_START 3
