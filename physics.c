@@ -467,17 +467,17 @@ int main()
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
 
-  //SetUserPostVsyncCallback(&VsyncCallBack);
+  /* SetUserPostVsyncCallback(&VsyncCallBack); */
   SetTileTable(tileset);
   SetSpritesTileBank(0, mysprites);
   InitMusicPlayer(patches);
-  ClearVram();
+  //ClearVram();
 
   uint8_t currentLevel = 0;
   uint16_t levelOffset = 0;
   uint8_t tileSet = 0;
 
-  while (true) {
+  for (;;) {
     if (canary != 0xAA)
       goto begin;
 
@@ -575,7 +575,6 @@ int main()
     SetTile(22, 14, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
     }
 
-
     for (;;) {
       WaitVsync(1);
       /* static uint8_t tileCounter = 0; */
@@ -628,9 +627,7 @@ int main()
               ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
             } else {
               killPlayer(&player[p]);
-              /* while (ReadJoypad(((ENTITY*)(&players[p]))->tag) != BTN_START) { */
-              /*   // TODO: figure out how to get note to stop playing */
-              /* } */
+              /* while (ReadJoypad(((ENTITY*)(&player[p]))->tag) != BTN_START); */
             }
           }
         }
