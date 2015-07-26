@@ -380,7 +380,7 @@ static void killPlayer(PLAYER* p)
   e->dead = true;
   e->monsterhop = true;
   e->dy = 0;
-  e->enabled = false;
+  e->interacts = false;
   e->input = null_input;
   e->update = entity_update_dying;
 }
@@ -391,7 +391,7 @@ static void killMonster(ENTITY* e)
     return;
   TriggerFx(1, 128, true);         // play the monster death sound
   e->dead = true;                  // kill the monster
-  e->enabled = false;              // make sure we don't consider the entity again for collisions
+  e->interacts = false;              // make sure we don't consider the entity again for collisions
   e->input = null_input;           // disable the entity's ai
   e->update = entity_update_dying; // use dying physics
 }
@@ -413,7 +413,7 @@ static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
   e->up = (bool)(monsterFlags & MFLAG_UP);
   e->down = (bool)(monsterFlags & MFLAG_DOWN);
   e->autorespawn = (bool)(monsterFlags & MFLAG_AUTORESPAWN);
-  e->enabled = (bool)!(monsterFlags & MFLAG_NOINTERACT);
+  e->interacts = (bool)!(monsterFlags & MFLAG_NOINTERACT);
   e->invincible = (bool)(monsterFlags & MFLAG_INVINCIBLE);
 }
 
@@ -495,11 +495,11 @@ int main()
                   (int16_t)(playerInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
                   (int16_t)(playerMaxDX(levelOffset, i)),
                   (int16_t)(playerImpulse(levelOffset, i)));
-      ((ENTITY*)(&player[i]))->enabled = true;
+      ((ENTITY*)(&player[i]))->interacts = true;
       sprites[i].flags = 0; // set the initial direction of the player
       if (i == 1) { // player 2 starts off hidden and disabled
         ((ENTITY*)(&player[i]))->render(((ENTITY*)(&player[i]))); // setup sprite
-        ((ENTITY*)(&player[i]))->enabled = false;
+        ((ENTITY*)(&player[i]))->interacts = false;
         ((ENTITY*)(&player[i]))->render = null_render;
         ((ENTITY*)(&player[i]))->invincible = true;
       }
@@ -610,7 +610,7 @@ int main()
         // Collision detection
         // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
         for (uint8_t p = 0; p < PLAYERS; ++p) {
-          if (((ENTITY*)(&player[p]))->enabled && !(((ENTITY*)(&player[p]))->dead) && monster[i].enabled && !monster[i].dead &&
+          if (((ENTITY*)(&player[p]))->interacts && !(((ENTITY*)(&player[p]))->dead) && monster[i].interacts && !monster[i].dead &&
               overlap(((ENTITY*)(&player[p]))->x,
                       ((ENTITY*)(&player[p]))->y,
                       WORLD_METER,
@@ -644,7 +644,7 @@ int main()
 
       // Check if the dead flag has been set for a monster (from something other than a collision with a player)
       for (uint8_t i = 0; i < MONSTERS; ++i) {
-        if (monster[i].enabled && monster[i].dead) {
+        if (monster[i].interacts && monster[i].dead) {
           killMonster(&monster[i]);
         }
         // Check if we need to respawn the monster
@@ -655,7 +655,7 @@ int main()
       }
 
       for (uint8_t p = 0; p < PLAYERS; ++p) {
-        if (((ENTITY*)(&player[p]))->enabled && ((ENTITY*)(&player[p]))->dead) {
+        if (((ENTITY*)(&player[p]))->interacts && ((ENTITY*)(&player[p]))->dead) {
           killPlayer(&player[p]);
         }
       }
@@ -681,11 +681,11 @@ int main()
       if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
         treasureFrameCounter = 0;
 
-      // Here is the faster collision check for treasure. We just loop over the enabled players, and convert their (x, y)
-      // coordinates into tile coordinates, and then read those tiles to see if any overlapping ones are treasure tiles.
+      // Here is the faster collision check for treasure. We just loop over the interacting players, and convert their (x, y)
+      // coordinates into tile coordinates, and then read those tiles to see if any overlapping tiles are treasure tiles.
       for (uint8_t p = 0; p < PLAYERS; ++p) {
         ENTITY* e = (ENTITY*)(&player[p]);
-        if (e->enabled) {
+        if (e->interacts) {
           UPDATE_BITFLAGS u;
           uint8_t tx = p2ht(e->x);
           uint8_t ty = p2vt(e->y);

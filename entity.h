@@ -140,7 +140,7 @@
   player, and I could have a fixed size array of MONSTER structs whose
   size is the maximum number of monsters that I can have on the screen
   at any time, and i could have a BOSS struct for when there is a boss
-  fight. Each one would have an enabled flag, so they could be turned
+  fight. Each one would have an interacts flag, so they could be turned
   on or off as needed.
  */
 
@@ -173,7 +173,7 @@ struct ENTITY {
   int16_t maxdx;
   int16_t impulse; // used for jumping, and since flying entities don't jump, the high/low bytes are used to store flying limits
   uint8_t animationFrameCounter;
-  unsigned int enabled : 1;
+  unsigned int interacts : 1;
   unsigned int falling : 1;
   unsigned int jumping : 1;
   unsigned int left : 1;

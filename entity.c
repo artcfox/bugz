@@ -737,15 +737,15 @@ void player_input(ENTITY* e)
   if (e->tag) { // only for player 2
     uint16_t pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
     if (pressed & BTN_START) {
-      if (e->enabled) {
-        e->enabled = false;
+      if (e->interacts) {
+        e->interacts = false;
         e->render = null_render;
       } else {
-        e->enabled = true;
+        e->interacts = true;
         e->render = player_render;
       }
     }
-    if (!e->enabled)
+    if (!e->interacts)
       return;
     if (pressed & BTN_SELECT)
       e->invincible = !e->invincible;
@@ -792,7 +792,7 @@ void player_update_ladder(ENTITY* e)
   // Check to see if we've left the ladder
   /* if (!( (((u.cell) || (u.celldown && u.ny)) && ((e->x - ht2p(tx)) < (WORLD_METER - (2 << FP_SHIFT) ))) || */
   /*        (((u.cellright && u.nx) || (u.celldiag && u.nx && u.ny)) && ((ht2p(tx + 1) - e->x) < (WORLD_METER - (2 << FP_SHIFT) ))) ) ) { */
-  if (!(u.cell || (u.cellright && u.nx) || (u.celldown && u.ny) || (u.celldiag && u.ny))) {
+  if (!(u.cell || (u.cellright && u.nx) || (u.celldown && u.ny) || (u.celldiag && u.nx && u.ny))) {
     e->update = player_update;
     e->animationFrameCounter = 0;
     p->framesFalling = 0;   // reset the counter so a jump is allowed if moving off the ladder causes a fall
