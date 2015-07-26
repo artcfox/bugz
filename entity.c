@@ -218,11 +218,6 @@ void entity_update(ENTITY* e)
     e->jumping = true;
   }
 
-  // Clamp horizontal velocity to zero if we detect that the entities direction has changed
-  if ((u.wasLeft && (e->dx > 0)) || (u.wasRight && (e->dx < 0))) {
-    e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
-  }
-
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
   e->dx += (ddx / WORLD_FPS);
@@ -230,6 +225,10 @@ void entity_update(ENTITY* e)
     e->dx = -e->maxdx;
   else if (e->dx > e->maxdx)
     e->dx = e->maxdx;
+
+  // Clamp horizontal velocity to zero if we detect that the entities direction has changed
+  if ((u.wasLeft && (e->dx > 0)) || (u.wasRight && (e->dx < 0)))
+    e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
 
   // Collision Detection for X
   uint8_t tx = p2ht(e->x);
@@ -322,12 +321,13 @@ void entity_update_dying(ENTITY* e)
   int16_t ddx = 0;
   int16_t ddy = WORLD_GRAVITY;
 
+  // Decelerate any motion along the X axis
   if (e->dx < 0)
-    ddx += WORLD_FRICTION; // entity was going left, but not anymore
+    ddx += WORLD_FRICTION;
   else if (e->dx > 0)
-    ddx -= WORLD_FRICTION; // entity was going right, but not anymore
+    ddx -= WORLD_FRICTION;
 
-  // Repurpose the monsterhop flag to bounce a bit when you die
+  // Repurpose the monsterhop flag to bounce up a bit when you die
   if (e->monsterhop) {
     e->monsterhop = false;
     ddy -= (e->impulse >> 1);
@@ -336,18 +336,14 @@ void entity_update_dying(ENTITY* e)
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
   e->dx += (ddx / WORLD_FPS);
-  if (e->dx < -e->maxdx)
-    e->dx = -e->maxdx;
-  else if (e->dx > e->maxdx)
-    e->dx = e->maxdx;
+  // Since we can not accelerate (only decelerate), we can safely skip the bounds check for dx
 
   // Clamp X to within screen bounds
   if (e->x > ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT))) {
     e->x = ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT));
     e->dx = 0;
     e->visible = false; // we hit the edge of the screen, so now hide the entity
-  }
-  if (e->x < 0) {
+  } else if (e->x < 0) {
     e->x = 0;
     e->dx = 0;
     e->visible = false; // we hit the edge of the screen, so now hide the entity
@@ -366,8 +362,7 @@ void entity_update_dying(ENTITY* e)
     e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
     e->dy = 0;
     e->visible = false; // we hit the edge of the screen, so now hide the entity
-  }
-  if (e->y < 0) {
+  } else if (e->y < 0) {
     e->y = 0;
     e->dy = 0;
     e->visible = false; // we hit the edge of the screen, so now hide the entity
@@ -416,16 +411,6 @@ void entity_update_flying(ENTITY* e)
   else if (u.wasDown)
     ddy -= WORLD_FRICTION; // entity was going down, but not anymore
 
-  // Clamp horizontal velocity to zero if we detect that the entities direction has changed
-  if ((u.wasLeft && (e->dx > 0)) || (u.wasRight && (e->dx < 0))) {
-    e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
-  }
-
-  // Clamp vertical velocity to zero if we detect that the entities direction has changed
-  if ((u.wasUp && (e->dy > 0)) || (u.wasDown && (e->dy < 0))) {
-    e->dy = 0; // clamp at zero to prevent friction from making the entity jiggle up and down
-  }
-
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
   e->dx += (ddx / WORLD_FPS);
@@ -441,12 +426,15 @@ void entity_update_flying(ENTITY* e)
       e->dx = e->maxdx;
   }
 
+  // Clamp horizontal velocity to zero if we detect that the entities direction has changed
+  if ((u.wasLeft && (e->dx > 0)) || (u.wasRight && (e->dx < 0)))
+    e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
+
   // Clamp X to within screen bounds
   if (e->x > ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT))) {
     e->x = ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT));
     e->dx = 0;
-  }
-  if (e->x < 0) {
+  } else if (e->x < 0) {
     e->x = 0;
     e->dx = 0;
   }
@@ -466,12 +454,15 @@ void entity_update_flying(ENTITY* e)
       e->dy = e->maxdx;
   }
 
+  // Clamp vertical velocity to zero if we detect that the entities direction has changed
+  if ((u.wasUp && (e->dy > 0)) || (u.wasDown && (e->dy < 0)))
+    e->dy = 0; // clamp at zero to prevent friction from making the entity jiggle up and down
+
   // Clamp Y to within screen bounds
   if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
     e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
     e->dy = 0;
-  }
-  if (e->y < 0) {
+  } else if (e->y < 0) {
     e->y = 0;
     e->dy = 0;
   }
@@ -756,19 +747,16 @@ void player_input(ENTITY* e)
   e->up = (bool)(p->buttons.held & BTN_UP);
   e->down = (bool)(p->buttons.held & BTN_DOWN);
   e->turbo = (bool)(p->buttons.held & BTN_B);
-
+  
   // Improve the user experience, by allowing players to jump by holding the jump
   // button before landing, but require them to release it before they can jump again
-  if (e->jumpReleased) {                                      // Jumping multiple times requires releasing the jump button between jumps
-    e->jump = (bool)(p->buttons.held & BTN_A);                      // player[i].jump can only be true if BTN_A has been released from the previous jump
-    if (e->jump && !(e->jumping || (e->falling && p->framesFalling > WORLD_FALLING_GRACE_FRAMES))) { // if player[i] is currently holding BTN_A, (and is on the ground)
-      e->jumpReleased = false;                                // a jump will occur during the next call to update(), so clear the jumpReleased flag.
-    }
-  } else {                                                           // Otherwise, it means that we just jumped, and BTN_A is still being held down
-    e->jump = false;                                          // so explicitly disallow any additional jumps until
-    uint16_t released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
-    if (released & BTN_A)                                 // BTN_A is released again
-      e->jumpReleased = true;                                 // at which point reset the jumpReleased flag so another jump may occur.
+  if (e->jumpReleased) {                                      // jumping multiple times requires releasing the jump button between jumps
+    e->jump = (bool)(p->buttons.held & BTN_A);                // player[i].jump can only be true if BTN_A has been released from the previous jump
+  } else {                                                    // otherwise, it means that we just jumped, and BTN_A is still being held down
+    e->jump = false;                                          // explicitly disallow any additional jumps
+    uint16_t jumpReleased = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
+    if (jumpReleased & BTN_A)                                 // until BTN_A has been released
+      e->jumpReleased = true;                                 // reset the jumpReleased flag so another jump may occur.
   }
 }
 
@@ -835,6 +823,7 @@ void player_update(ENTITY* e)
     e->dy = 0;             // reset vertical velocity so jumps during grace period are consistent with jumps from ground
     ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
     e->jumping = true;
+    e->jumpReleased = false;
   }
 
   // Bounce a bit when you stomp a monster
@@ -848,11 +837,6 @@ void player_update(ENTITY* e)
   // Variable height jumping
   if (e->jumping && e->jumpReleased && (e->dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
       e->dy = -WORLD_CUT_JUMP_SPEED_LIMIT;
-
-  // Clamp horizontal velocity to zero if we detect that the players direction has changed
-  if ((u.wasLeft && (e->dx > 0)) || (u.wasRight && (e->dx < 0))) {
-    e->dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
-  }
 
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
@@ -868,6 +852,10 @@ void player_update(ENTITY* e)
     else if (e->dx > e->maxdx)
       e->dx = e->maxdx;
   }
+
+  // Clamp horizontal velocity to zero if we detect that the players direction has changed
+  if ((u.wasLeft && (e->dx > 0)) || (u.wasRight && (e->dx < 0)))
+    e->dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
 
   // Collision Detection for X
   uint8_t tx = p2ht(e->x);
