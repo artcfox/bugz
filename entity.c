@@ -724,6 +724,7 @@ void player_input(ENTITY* e)
   //p->buttons.pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
   //p->buttons.released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
 
+#if (PLAYERS > 1)
   // Allow player 2 to join/leave the game at any time
   if (e->tag) { // only for player 2
     uint16_t pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
@@ -741,6 +742,7 @@ void player_input(ENTITY* e)
     if (pressed & BTN_SELECT)
       e->invincible = !e->invincible;
   }
+#endif // (PLAYERS > 1)
 
   e->left = (bool)(p->buttons.held & BTN_LEFT);
   e->right = (bool)(p->buttons.held & BTN_RIGHT);

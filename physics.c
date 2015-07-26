@@ -497,12 +497,14 @@ int main()
                   (int16_t)(playerImpulse(levelOffset, i)));
       ((ENTITY*)(&player[i]))->interacts = true;
       sprites[i].flags = 0; // set the initial direction of the player
-      if (i == 1) { // player 2 starts off hidden and disabled
+#if (PLAYERS > 1)
+      if (i > 0) { // player 2 starts off hidden and disabled
         ((ENTITY*)(&player[i]))->render(((ENTITY*)(&player[i]))); // setup sprite
         ((ENTITY*)(&player[i]))->interacts = false;
         ((ENTITY*)(&player[i]))->render = null_render;
         ((ENTITY*)(&player[i]))->invincible = true;
       }
+#endif // (PLAYERS > 1)
     }
 
     // Initialize monsters
