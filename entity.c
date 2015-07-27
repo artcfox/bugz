@@ -383,10 +383,10 @@ void entity_update_flying(ENTITY* e)
 {
   UPDATE_FLYING_BITFLAGS u;
 
-  u.wasLeft = e->dx < 0;
-  u.wasRight = e->dx > 0;
-  u.wasUp = e->dy < 0;
-  u.wasDown = e->dy > 0;
+  u.wasLeft = (bool)(e->dx < 0);
+  u.wasRight = (bool)(e->dx > 0);
+  u.wasUp = (bool)(e->dy < 0);
+  u.wasDown = (bool)(e->dy > 0);
 
   int16_t ddx = 0;
   int16_t ddy = 0;
@@ -804,8 +804,8 @@ void player_update(ENTITY* e)
   PLAYER* p = (PLAYER*)e; // upcast
   UPDATE_BITFLAGS u;
 
-  u.wasLeft = e->dx < 0;
-  u.wasRight = e->dx > 0;
+  u.wasLeft = (bool)(e->dx < 0);
+  u.wasRight = (bool)(e->dx > 0);
 
   int16_t ddx = 0;
   int16_t ddy = WORLD_GRAVITY;

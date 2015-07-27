@@ -417,7 +417,7 @@ static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
   e->invincible = (bool)(monsterFlags & MFLAG_INVINCIBLE);
 }
 
-static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
+static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
 {
   return !(((x1 + w1 - 1) < x2) ||
            ((x2 + w2 - 1) < x1) ||
@@ -566,13 +566,13 @@ int main()
     /* SetTile(23, 13, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
     /* SetTile(23, 14, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
 
-    if (currentLevel == 0 || currentLevel == 1) {
-    SetTile(22, 9, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * tileSet);
-    SetTile(22, 10, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
-    SetTile(22, 11, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
-    SetTile(22, 12, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
-    SetTile(22, 13, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
-    SetTile(22, 14, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
+    if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) {
+      SetTile(22, 9, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * tileSet);
+      SetTile(22, 10, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
+      SetTile(22, 11, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
+      SetTile(22, 12, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
+      SetTile(22, 13, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
+      SetTile(22, 14, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
     }
 
     for (;;) {
@@ -588,12 +588,10 @@ int main()
       /*   treasureFrameCounter = 0; */
 
       // Get the inputs for every entity
-      for (uint8_t i = 0; i < PLAYERS; ++i) {
+      for (uint8_t i = 0; i < PLAYERS; ++i)
         ((ENTITY*)(&player[i]))->input((ENTITY*)(&player[i]));
-      }
-      for (uint8_t i = 0; i < MONSTERS; ++i) {
+      for (uint8_t i = 0; i < MONSTERS; ++i)
         monster[i].input(&monster[i]);
-      }
 
       int16_t playerPrevY[PLAYERS];
 
@@ -609,9 +607,10 @@ int main()
         monster[i].update(&monster[i]);
 
         // Collision detection
+
         // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
         for (uint8_t p = 0; p < PLAYERS; ++p) {
-          if (((ENTITY*)(&player[p]))->interacts && !(((ENTITY*)(&player[p]))->dead) && monster[i].interacts && !monster[i].dead &&
+          if (monster[i].interacts && !monster[i].dead && ((ENTITY*)(&player[p]))->interacts && !(((ENTITY*)(&player[p]))->dead) &&
               overlap(((ENTITY*)(&player[p]))->x,
                       ((ENTITY*)(&player[p]))->y,
                       WORLD_METER,
@@ -631,34 +630,26 @@ int main()
             }
           }
         }
+
       }
 
       // Render every entity
-      for (uint8_t i = 0; i < PLAYERS; ++i) {
+      for (uint8_t i = 0; i < PLAYERS; ++i)
         ((ENTITY*)(&player[i]))->render((ENTITY*)(&player[i]));
-      }
-      for (uint8_t i = 0; i < MONSTERS; ++i) {
+      for (uint8_t i = 0; i < MONSTERS; ++i)
         monster[i].render(&monster[i]);
-      }
 
-      // Check if the dead flag has been set for a monster (from something other than a collision with a player)
+      // Check if the dead flag has been set for a monster and/or if we need to respawn the monster
       for (uint8_t i = 0; i < MONSTERS; ++i) {
-        if (monster[i].interacts && monster[i].dead) {
+        if (monster[i].interacts && monster[i].dead)
           killMonster(&monster[i]);
-        }
-        // Check if we need to respawn the monster
-        if (monster[i].dead && monster[i].autorespawn && monster[i].render == null_render) {
-          // The monster is dead, and its dying animation has finished
+        if (monster[i].dead && monster[i].autorespawn && monster[i].render == null_render) // monster is dead, and its dying animation has finished
           spawnMonster(&monster[i], levelOffset, i);
-        }
       }
 
-      for (uint8_t p = 0; p < PLAYERS; ++p) {
-        if (((ENTITY*)(&player[p]))->interacts && ((ENTITY*)(&player[p]))->dead) {
-          killPlayer(&player[p]);
-        }
-      }
-
+      for (uint8_t i = 0; i < PLAYERS; ++i)
+        if (((ENTITY*)(&player[i]))->interacts && ((ENTITY*)(&player[i]))->dead)
+          killPlayer(&player[i]);
 
       // Animate treasure (another way to animate the treasure "for free" would be to switch the actual global tileset pointer
       static uint8_t treasureFrameCounter = 0;
