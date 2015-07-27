@@ -881,7 +881,7 @@ void player_update(ENTITY* e)
     }
   } else if (e->dx < 0) {
     if ((u.cell     && !u.cellright) ||
-        (u.celldown && !u.celldiag && u.ny)) {
+        (u.celldown && !u.celldiag && u.ny && !isLadder(GetTile(tx + 1, ty + 1)))) { // isLadder() check avoids potential glitch
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
       e->dx = 0;           // stop horizontal velocity
       //u.nx = false;        // player no longer overlaps the adjacent cell
@@ -968,7 +968,7 @@ void player_update(ENTITY* e)
       e->update = player_update_ladder;
       e->animationFrameCounter = 0;
       e->jumping = false;
-      e->dx = e->dy = 0;
+      //e->dx = e->dy = 0;
     }
   }
 }
