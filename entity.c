@@ -968,7 +968,7 @@ void player_update(ENTITY* e)
       e->update = player_update_ladder;
       e->animationFrameCounter = 0;
       e->jumping = false;
-      //e->dx = e->dy = 0;
+      e->dx = e->dy = 0;
     }
   }
 }
@@ -979,22 +979,27 @@ void player_update(ENTITY* e)
 #define PLAYER_STATIONARY (PLAYER_ANIMATION_START - 2)
 #define PLAYER_JUMP (PLAYER_ANIMATION_START - 1)
 #define PLAYER_ANIMATION_FRAME_SKIP 4
-#define PLAYER_LADDER_ANIMATION_FRAME_SKIP 8
+#define PLAYER_LADDER_ANIMATION_FRAME_SKIP 4
 #define PLAYER_NUM_SPRITES 9
 const uint8_t playerAnimation[] PROGMEM = { 0, 1, 2, 1 };
-const uint8_t playerLadderAnimation[] PROGMEM = { 0, 1, 0, 2 };
+const uint8_t playerLadderAnimation[] PROGMEM = { 0, 1, 2, 1, 0, 1, 2, 1 };
 
 void player_render(ENTITY* e)
 {
   if (e->dead) {
     sprites[e->tag].tileIndex = PLAYER_DEAD + e->tag * PLAYER_NUM_SPRITES;
   } else if (e->update == player_update_ladder) {
-    if (e->up || e->down) {
+    if (e->up || e->down || e->left || e->right) {
       for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
         if ((e->animationFrameCounter % PLAYER_ANIMATION_FRAME_SKIP) == 0)
           sprites[e->tag].tileIndex = PLAYER_LADDER_ANIMATION_START + pgm_read_byte(&playerLadderAnimation[e->animationFrameCounter / PLAYER_LADDER_ANIMATION_FRAME_SKIP]) + e->tag * PLAYER_NUM_SPRITES;
         if (++e->animationFrameCounter == PLAYER_LADDER_ANIMATION_FRAME_SKIP * NELEMS(playerLadderAnimation))
           e->animationFrameCounter = 0;
+
+        if (e->animationFrameCounter < PLAYER_LADDER_ANIMATION_FRAME_SKIP * NELEMS(playerLadderAnimation) / 2)
+          sprites[e->tag].flags = 0;
+        else
+          sprites[e->tag].flags = SPRITE_FLIP_X;
       }
     } else {
       sprites[e->tag].tileIndex = PLAYER_LADDER_ANIMATION_START + e->tag * PLAYER_NUM_SPRITES;
@@ -1019,10 +1024,12 @@ void player_render(ENTITY* e)
     }
   }
 
-  if (e->left)
-    sprites[e->tag].flags = 0;
-  if (e->right)
-    sprites[e->tag].flags = SPRITE_FLIP_X;
+  if (e->update != player_update_ladder) {
+    if (e->left)
+      sprites[e->tag].flags = 0;
+    if (e->right)
+      sprites[e->tag].flags = SPRITE_FLIP_X;
+  }
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;

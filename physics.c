@@ -567,7 +567,11 @@ int main()
     /* SetTile(23, 14, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
 
     if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) {
-      SetTile(22, 9, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * tileSet);
+      if (currentLevel == 2)
+        SetTile(22, 9, 2 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * tileSet);
+      else
+        SetTile(22, 9, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * tileSet);
+
       SetTile(22, 10, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
       SetTile(22, 11, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
       SetTile(22, 12, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
