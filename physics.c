@@ -426,8 +426,7 @@ static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16
 }
 
 // Given an absolute treasure tile, returns an index to the first absolute treasure tile for that animated treasure/background combo
-// If adding tilesets, copy and paste the sequence from the end, since the beginning has an extra 1 (for the blank tile in the beginning)
-const uint8_t BaseTreasureTile[] PROGMEM = { 1, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, 1, 1, 1, 4, 4, 4, 7, 7, 7, 10, 10, 10, 13, 13, 13, };
+const uint8_t BaseTreasureTile[] PROGMEM = { 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, };
 
 static void collectTreasure(uint8_t tx, uint8_t ty, uint16_t levelOffset, uint8_t tileSet)
 {
