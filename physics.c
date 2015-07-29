@@ -171,7 +171,27 @@ const uint8_t levelData[] PROGMEM = {
   LO8HI8(7),   // uint16_t levelOffsets[numLevels] = offsets to each level (little endian)
   LO8HI8(256),
   LO8HI8(505),
-          // ---------- start of level 0 data
+  //LO8HI8(756),
+
+/*           // ---------- start of level 0 data */
+/*   1,      // uint8_t tileSet; */
+
+/* #include "editor/levels/title_level.png.inc" */
+
+/*   MFLAG_RIGHT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6] */
+/*   LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                  // int16_t playerMaxDX[2] */
+/*   LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2] */
+/*   INPUT_PLAYER_INPUT, INPUT_PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2] */
+/*   UPDATE_PLAYER_UPDATE, UPDATE_PLAYER_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2] */
+/*   RENDER_PLAYER_RENDER, RENDER_PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2] */
+/*   LO8HI8(WORLD_METER * 6), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 3), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 1), // int16_t monsterMaxDX[6] */
+/*   3, 25, LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), // int16_t monsterImpulse[6] */
+/*   INPUT_AI_FLY_HORIZONTAL, INPUT_AI_HOP_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED_OR_LEDGE, INPUT_AI_HOP_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, INPUT_AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6] */
+/*   UPDATE_ENTITY_UPDATE_FLYING, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, UPDATE_ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6] */
+/*   RENDER_BEE_RENDER, RENDER_CRICKET_RENDER, RENDER_LADYBUG_RENDER, RENDER_GRASSHOPPER_RENDER, RENDER_ANT_RENDER, RENDER_ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6] */
+
+
+          // ---------- start of level 1 data
   0,      // uint8_t tileSet;
 
 #include "editor/levels/prototype_level.png.inc"
@@ -367,7 +387,7 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
 #define MAX_TREASURE_COUNT 32
 // How many frames to wait between animating treasure
 #define TREASURE_FRAME_SKIP 16
-// Offsets that are added to the tile number when animating treasure
+// Defines the order in which the tileset "rows" are swapped in for animating treasure and background tiles
 const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 1 };
 
 
@@ -517,6 +537,9 @@ int main()
       SetTile(6, 24, FIRST_ONE_WAY_TILE + tileSet);
     }
 
+      SetTile(4, 26, FIRST_FIRE_TILE + tileSet);
+      SetTile(5, 26, FIRST_FIRE_TILE + tileSet);
+
     if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) {
       if (currentLevel == 2)
         SetTile(22, 9, 2 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * tileSet);
@@ -533,15 +556,11 @@ int main()
     for (;;) {
       WaitVsync(1);
 
-      // Animate treasure (and other background tiles)
-      static uint8_t tileCounter = 0;
+      // Animate treasure tiles (and every other background tile) at once by modifying the tileset pointer
       static uint8_t treasureFrameCounter = 0;
-      if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) {
-        SetTileTable(tileset + 64 * ALLTILES_WIDTH * pgm_read_byte(&treasureAnimation[tileCounter++]));
-        if (tileCounter > NELEMS(treasureAnimation) - 1)
-          tileCounter = 0;
-      }
-      if (++treasureFrameCounter == TREASURE_FRAME_SKIP * UNIQUE_TREASURE_TILES_IN_ANIMATION)
+      if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0)
+        SetTileTable(tileset + 64 * ALLTILES_WIDTH * pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
+      if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
         treasureFrameCounter = 0;
 
       // Get the inputs for every entity
@@ -550,17 +569,17 @@ int main()
       for (uint8_t i = 0; i < MONSTERS; ++i)
         monster[i].input(&monster[i]);
 
-      int16_t playerPrevY[PLAYERS];
+      int16_t playerPrevY[PLAYERS]; // proper kill detection requires the previous Y value for each entity
 
       // Update the state of the players
       for (uint8_t i = 0; i < PLAYERS; ++i) {
-        playerPrevY[i] = ((ENTITY*)(&player[i]))->y; // cache the previous Y value to use for collision detection below
+        playerPrevY[i] = ((ENTITY*)(&player[i]))->y; // cache the previous Y value to use for kill detection below
         ((ENTITY*)(&player[i]))->update((ENTITY*)(&player[i]));
       }
 
       // Update the state of the monsters
       for (uint8_t i = 0; i < MONSTERS; ++i) {
-        int16_t monsterPrevY = monster[i].y; // cache the previous Y value to use for collision detection below
+        int16_t monsterPrevY = monster[i].y; // cache the previous Y value to use for kill detection below
         monster[i].update(&monster[i]);
 
         // Collision detection
@@ -576,8 +595,8 @@ int main()
                       monster[i].y + (3 << FP_SHIFT),
                       WORLD_METER - (2 << FP_SHIFT),
                       WORLD_METER - (4 << FP_SHIFT))) {
-            // If we are overlapping, and the bottom pixel of the player's previous Y is above the top
-            // of the monster's previous Y then player kills monster, otherwise monster kills player.
+            // If a player and a monster overlap, and the bottom pixel of the player's previous Y is above the top
+            // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
               ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
@@ -604,12 +623,13 @@ int main()
           spawnMonster(&monster[i], levelOffset, i);
       }
 
+      // Check if the dead flag has been set for a player
       for (uint8_t i = 0; i < PLAYERS; ++i)
         if (((ENTITY*)(&player[i]))->interacts && ((ENTITY*)(&player[i]))->dead)
           killPlayer(&player[i]);
 
-      // Here is the faster collision check for treasure. We just loop over the interacting players, and convert their (x, y)
-      // coordinates into tile coordinates, and then read those tiles to see if any overlapping tiles are treasure tiles.
+      // Check if the player has collected any treasure. We just loop over the interacting players, and convert their (x, y)
+      // coordinates into tile coordinates, and then check if any tiles the player overlaps with are treasure tiles.
       for (uint8_t p = 0; p < PLAYERS; ++p) {
         ENTITY* e = (ENTITY*)(&player[p]);
         if (e->interacts) {

@@ -117,7 +117,6 @@
 #define FIRST_TREASURE_TILE 0
 #define LAST_TREASURE_TILE ((FIRST_TREASURE_TILE + TILESETS_N * TREASURE_TILES_IN_TILESET) - 1)
 #define SKY_TILES_IN_TILESET 5
-#define UNIQUE_TREASURE_TILES_IN_ANIMATION 1
 #define SOLID_TILES_IN_TILESET 2
 #define FIRST_SOLID_TILE (FIRST_TREASURE_TILE + TREASURE_TILES_IN_TILESET * TILESETS_N + SKY_TILES_IN_TILESET * TILESETS_N)
 #define LAST_SOLID_TILE ((FIRST_SOLID_TILE + TILESETS_N * SOLID_TILES_IN_TILESET) - 1)
@@ -128,6 +127,9 @@
 #define LAST_ONE_WAY_TILE ((FIRST_ONE_WAY_TILE + TILESETS_N * ONE_WAY_TILES_IN_TILESET + TILESETS_N * ONE_WAY_LADDER_TILES_IN_TILESET) - 1)
 #define FIRST_LADDER_TILE (FIRST_ONE_WAY_TILE + TILESETS_N * ONE_WAY_TILES_IN_TILESET)
 #define LAST_LADDER_TILE ((FIRST_LADDER_TILE + TILESETS_N * ONE_WAY_LADDER_TILES_IN_TILESET + TILESETS_N * LADDER_TILES_IN_TILESET) - 1)
+#define FIRE_TILES_IN_TILESET 1
+#define FIRST_FIRE_TILE (LAST_LADDER_TILE + 1)
+#define LAST_FIRE_TILE ((FIRST_FIRE_TILE + TILESETS_N * FIRE_TILES_IN_TILESET) - 1)
 
 // Ladder tiles must come immediately after one way tiles, because they partially overlap (the topmost ladder tiles are also one way tiles).
 
@@ -135,7 +137,7 @@
 #define isSolid(t) (((t) >= FIRST_SOLID_TILE) && ((t) <= LAST_SOLID_TILE))
 #define isOneWay(t) (((t) >= FIRST_ONE_WAY_TILE) && ((t) <= LAST_ONE_WAY_TILE))
 #define isLadder(t) (((t) >= FIRST_LADDER_TILE) && ((t) <= LAST_LADDER_TILE))
-
+#define isFire(t) (((t) >= FIRST_FIRE_TILE) && ((t) <= LAST_FIRE_TILE))
 /*
   One way of implementing everthing is to extend the idea that I'm
   already using, which is to have an array of PLAYER structs for each
