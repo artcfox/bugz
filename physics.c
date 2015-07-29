@@ -445,12 +445,6 @@ static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16
            ((y2 + h2 - 1) < y1));
 }
 
-static void collectTreasure(uint8_t tx, uint8_t ty)
-{
-  TriggerFx(2, 128, true);
-  SetTile(tx, ty, GetTile(tx, ty) + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
-}
-
 /* volatile uint8_t globalFrameCounter = 0; */
 
 /* void VsyncCallBack() */
@@ -633,24 +627,36 @@ int main()
       for (uint8_t p = 0; p < PLAYERS; ++p) {
         ENTITY* e = (ENTITY*)(&player[p]);
         if (e->interacts) {
-          UPDATE_BITFLAGS u;
           uint8_t tx = p2ht(e->x);
           uint8_t ty = p2vt(e->y);
-          u.nx = (bool)nh(e->x);  // true if entity overlaps right
-          u.ny = (bool)nv(e->y);  // true if entity overlaps below
-          u.cell      = (bool)isTreasure(GetTile(tx,     ty));
-          u.cellright = (bool)isTreasure(GetTile(tx + 1, ty));
-          u.celldown  = (bool)isTreasure(GetTile(tx,     ty + 1));
-          u.celldiag  = (bool)isTreasure(GetTile(tx + 1, ty + 1));
+          bool nx = nh(e->x);  // true if entity overlaps right
+          bool ny = nv(e->y);  // true if entity overlaps below
 
-          if (u.cell)
-            collectTreasure(tx, ty);
-          if (u.nx && u.cellright)
-            collectTreasure(tx + 1, ty);
-          if (u.ny && u.celldown)
-            collectTreasure(tx, ty + 1);
-          if (u.nx && u.ny && u.celldiag)
-            collectTreasure(tx + 1, ty + 1);
+          bool collectedTreasure = false;
+
+          uint8_t t = GetTile(tx, ty);
+          if (isTreasure(t)) {
+            SetTile(tx, ty, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+            collectedTreasure = true;
+          }
+          t = GetTile(tx + 1, ty);
+          if (nx && isTreasure(t)) {
+            SetTile(tx + 1, ty, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+            collectedTreasure = true;
+          }
+          t = GetTile(tx, ty + 1);
+          if (ny && isTreasure(t)) {
+            SetTile(tx, ty + 1, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+            collectedTreasure = true;
+          }
+          t = GetTile(tx + 1, ty + 1);
+          if (nx && ny && isTreasure(t)) {
+            SetTile(tx + 1, ty + 1, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+            collectedTreasure = true;
+          }
+
+          if (collectedTreasure)
+            TriggerFx(2, 128, true);
         }
       }
 
