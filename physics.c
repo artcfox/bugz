@@ -425,8 +425,8 @@ static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16
            ((y2 + h2 - 1) < y1));
 }
 
-// Given an absolute treasure tile, returns an index to the first absolute treasure tile for that animated treasure/background combo
-const uint8_t BaseTreasureTile[] PROGMEM = { 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, };
+/* // Given an absolute treasure tile, returns an index to the first absolute treasure tile for that animated treasure/background combo */
+/* const uint8_t BaseTreasureTile[] PROGMEM = { 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, }; */
 
 static void collectTreasure(uint8_t tx, uint8_t ty, uint16_t levelOffset, uint8_t tileSet)
 {
@@ -580,15 +580,15 @@ int main()
 
     for (;;) {
       WaitVsync(1);
-      /* static uint8_t tileCounter = 0; */
-      /* static uint8_t treasureFrameCounter = 0; */
-      /* if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) { */
-      /*   SetTileTable(tileset + 64 * tileCounter++); */
-      /*   if (tileCounter > UNIQUE_TREASURE_TILES_IN_ANIMATION) */
-      /*     tileCounter = 0; */
-      /* } */
-      /* if (++treasureFrameCounter == TREASURE_FRAME_SKIP * UNIQUE_TREASURE_TILES_IN_ANIMATION) */
-      /*   treasureFrameCounter = 0; */
+      static uint8_t tileCounter = 0;
+      static uint8_t treasureFrameCounter = 0;
+      if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) {
+        SetTileTable(tileset + 64 * ALLTILES_WIDTH * pgm_read_byte(&treasureAnimation[tileCounter++]));
+        if (tileCounter > NELEMS(treasureAnimation) - 1)
+          tileCounter = 0;
+      }
+      if (++treasureFrameCounter == TREASURE_FRAME_SKIP * UNIQUE_TREASURE_TILES_IN_ANIMATION)
+        treasureFrameCounter = 0;
 
       // Get the inputs for every entity
       for (uint8_t i = 0; i < PLAYERS; ++i)
@@ -655,24 +655,24 @@ int main()
           killPlayer(&player[i]);
 
       // Animate treasure (another way to animate the treasure "for free" would be to switch the actual global tileset pointer
-      static uint8_t treasureFrameCounter = 0;
-      for (uint8_t i = 0; i < tcount; ++i) {
-        uint8_t tx = treasureX(levelOffset, i);
-        uint8_t ty = treasureY(levelOffset, i);
-        uint8_t t = GetTile(tx, ty);
-        // If the treasure hasn't been collected, animate it.
-        if (isTreasure(t)) { // is a treasure tile
-          if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) {
-            // Calculate what the initial treasure tile would be, and use that plus the animation offset to calculate the animated tile
-            uint8_t baseTreasureTile = pgm_read_byte(&BaseTreasureTile[t]) + (tileSet * TREASURE_TILES_IN_TILESET);
-            // The above algorithm performs the below computation, but much faster since it uses a LUT
-            //   uint8_t baseTreasureTile = (((t - 1) % 15) / 3) * 3 + (tileSet * 15) + 1;
-            SetTile(tx, ty, (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
-          }
-        }
-      }
-      if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
-        treasureFrameCounter = 0;
+      /* static uint8_t treasureFrameCounter = 0; */
+      /* for (uint8_t i = 0; i < tcount; ++i) { */
+      /*   uint8_t tx = treasureX(levelOffset, i); */
+      /*   uint8_t ty = treasureY(levelOffset, i); */
+      /*   uint8_t t = GetTile(tx, ty); */
+      /*   // If the treasure hasn't been collected, animate it. */
+      /*   if (isTreasure(t)) { // is a treasure tile */
+      /*     if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) { */
+      /*       // Calculate what the initial treasure tile would be, and use that plus the animation offset to calculate the animated tile */
+      /*       uint8_t baseTreasureTile = pgm_read_byte(&BaseTreasureTile[t]) + (tileSet * TREASURE_TILES_IN_TILESET); */
+      /*       // The above algorithm performs the below computation, but much faster since it uses a LUT */
+      /*       //   uint8_t baseTreasureTile = (((t - 1) % 15) / 3) * 3 + (tileSet * 15) + 1; */
+      /*       SetTile(tx, ty, (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP])); */
+      /*     } */
+      /*   } */
+      /* } */
+      /* if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation)) */
+      /*   treasureFrameCounter = 0; */
 
       // Here is the faster collision check for treasure. We just loop over the interacting players, and convert their (x, y)
       // coordinates into tile coordinates, and then read those tiles to see if any overlapping tiles are treasure tiles.

@@ -4,7 +4,7 @@
   <output file="tileset.inc">
     <tiles var-name="tileset"/>
     <maps pointers-size="8">
-      <map var-name="alltiles" left="0" top="0" width="100" height="1"/>
+      <map var-name="alltiles" left="0" top="0" width="54" height="3"/>
     </maps>
   </output>
 </gfx-xform>
