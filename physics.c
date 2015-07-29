@@ -425,31 +425,10 @@ static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16
            ((y2 + h2 - 1) < y1));
 }
 
-/* // Given an absolute treasure tile, returns an index to the first absolute treasure tile for that animated treasure/background combo */
-/* const uint8_t BaseTreasureTile[] PROGMEM = { 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, 0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9, 12, 12, 12, }; */
-
-static void collectTreasure(uint8_t tx, uint8_t ty, uint16_t levelOffset, uint8_t tileSet)
+static void collectTreasure(uint8_t tx, uint8_t ty)
 {
   TriggerFx(2, 128, true);
-  // Inidcate treasure is collected by changing the tile to one that isn't a treasure
-  if (ty == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-    SetTile(tx, ty, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET)); // full sky tile
-  } else { // interior tile
-    bool solidLDiag = (bool)((tx == 0) || BaseMapIsSolid(tx - 1, ty + 1, levelOffset));
-    bool solidRDiag = (bool)((tx == SCREEN_TILES_H - 1) || BaseMapIsSolid(tx + 1, ty + 1, levelOffset));
-    bool solidBelow = BaseMapIsSolid(tx, ty + 1, levelOffset);
-
-    if (!solidLDiag && !solidRDiag && solidBelow) // island
-      SetTile(tx, ty, 1 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-    else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-      SetTile(tx, ty, 2 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-    else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-      SetTile(tx, ty, 3 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-    else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-      SetTile(tx, ty, 4 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-    else // clear all around
-      SetTile(tx, ty, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (tileSet * SKY_TILES_IN_TILESET));
-  }
+  SetTile(tx, ty, GetTile(tx, ty) + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
 }
 
 /* volatile uint8_t globalFrameCounter = 0; */
@@ -484,6 +463,14 @@ int main()
     if (levelOffset == 0xFFFF)
       goto begin;
 
+    // Initialize treasure
+    uint8_t tcount = treasureCount(levelOffset);
+    for (uint8_t i = 0; i < tcount; ++i) {
+      uint8_t x = treasureX(levelOffset, i);
+      uint8_t y = treasureY(levelOffset, i);
+      SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+    }
+
     // Initialize players
     for (uint8_t i = 0; i < PLAYERS; ++i) {
       player_init(&player[i],
@@ -512,33 +499,6 @@ int main()
       sprites[i].flags = 0; // set the initial direction of the monster
     }
 
-    // Initialize treasure
-    uint8_t tcount = treasureCount(levelOffset);
-    for (uint8_t i = 0; i < tcount; ++i) {
-      uint8_t x = treasureX(levelOffset, i);
-      uint8_t y = treasureY(levelOffset, i);
-
-      if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky treasure tiles
-        SetTile(x, y, (0 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET)); // full sky treasure tile
-      } else { // interior tile
-        bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(x - 1, y + 1, levelOffset));
-        bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(x + 1, y + 1, levelOffset));
-        bool solidBelow = BaseMapIsSolid(x, y + 1, levelOffset);
-
-        if (!solidLDiag && !solidRDiag && solidBelow) // treasure island
-          SetTile(x, y, (1 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET));
-        else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-          SetTile(x, y, (2 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET));
-        else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-          SetTile(x, y, (3 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET));
-        else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-          SetTile(x, y, (4 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET));
-        else // clear all around
-          SetTile(x, y, (0 * UNIQUE_TREASURE_TILES_IN_ANIMATION) + FIRST_TREASURE_TILE + (tileSet * TREASURE_TILES_IN_TILESET));
-      }
-
-    }
-
     //SetTile(23, 9, FIRST_ONE_WAY_TILE + tileSet);
     if (currentLevel == 0) {
       SetTile(12, 6, FIRST_ONE_WAY_TILE + tileSet);
@@ -557,14 +517,6 @@ int main()
       SetTile(6, 24, FIRST_ONE_WAY_TILE + tileSet);
     }
 
-    //    SetTile(24, 8, FIRST_LADDER_TILE + tileSet);
-    /* SetTile(23, 9, FIRST_LADDER_TILE + tileSet); */
-    /* SetTile(23, 10, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
-    /* SetTile(23, 11, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
-    /* SetTile(23, 12, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
-    /* SetTile(23, 13, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
-    /* SetTile(23, 14, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + tileSet); */
-
     if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) {
       if (currentLevel == 2)
         SetTile(22, 9, 2 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * tileSet);
@@ -580,6 +532,8 @@ int main()
 
     for (;;) {
       WaitVsync(1);
+
+      // Animate treasure (and other background tiles)
       static uint8_t tileCounter = 0;
       static uint8_t treasureFrameCounter = 0;
       if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) {
@@ -654,26 +608,6 @@ int main()
         if (((ENTITY*)(&player[i]))->interacts && ((ENTITY*)(&player[i]))->dead)
           killPlayer(&player[i]);
 
-      // Animate treasure (another way to animate the treasure "for free" would be to switch the actual global tileset pointer
-      /* static uint8_t treasureFrameCounter = 0; */
-      /* for (uint8_t i = 0; i < tcount; ++i) { */
-      /*   uint8_t tx = treasureX(levelOffset, i); */
-      /*   uint8_t ty = treasureY(levelOffset, i); */
-      /*   uint8_t t = GetTile(tx, ty); */
-      /*   // If the treasure hasn't been collected, animate it. */
-      /*   if (isTreasure(t)) { // is a treasure tile */
-      /*     if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) { */
-      /*       // Calculate what the initial treasure tile would be, and use that plus the animation offset to calculate the animated tile */
-      /*       uint8_t baseTreasureTile = pgm_read_byte(&BaseTreasureTile[t]) + (tileSet * TREASURE_TILES_IN_TILESET); */
-      /*       // The above algorithm performs the below computation, but much faster since it uses a LUT */
-      /*       //   uint8_t baseTreasureTile = (((t - 1) % 15) / 3) * 3 + (tileSet * 15) + 1; */
-      /*       SetTile(tx, ty, (uint16_t)baseTreasureTile + pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP])); */
-      /*     } */
-      /*   } */
-      /* } */
-      /* if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation)) */
-      /*   treasureFrameCounter = 0; */
-
       // Here is the faster collision check for treasure. We just loop over the interacting players, and convert their (x, y)
       // coordinates into tile coordinates, and then read those tiles to see if any overlapping tiles are treasure tiles.
       for (uint8_t p = 0; p < PLAYERS; ++p) {
@@ -690,13 +624,13 @@ int main()
           u.celldiag  = (bool)isTreasure(GetTile(tx + 1, ty + 1));
 
           if (u.cell)
-            collectTreasure(tx, ty, levelOffset, tileSet);
+            collectTreasure(tx, ty);
           if (u.nx && u.cellright)
-            collectTreasure(tx + 1, ty, levelOffset, tileSet);
+            collectTreasure(tx + 1, ty);
           if (u.ny && u.celldown)
-            collectTreasure(tx, ty + 1, levelOffset, tileSet);
+            collectTreasure(tx, ty + 1);
           if (u.nx && u.ny && u.celldiag)
-            collectTreasure(tx + 1, ty + 1, levelOffset, tileSet);
+            collectTreasure(tx + 1, ty + 1);
         }
       }
 
