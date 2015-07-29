@@ -148,20 +148,6 @@
   on or off as needed.
  */
 
-struct UPDATE_BITFLAGS;
-typedef struct UPDATE_BITFLAGS UPDATE_BITFLAGS;
-
-struct UPDATE_BITFLAGS {
-  unsigned int wasLeft : 1;
-  unsigned int wasRight : 1;
-  unsigned int nx : 1;
-  unsigned int ny : 1;
-  unsigned int cell : 1;
-  unsigned int cellright : 1;
-  unsigned int celldown : 1;
-  unsigned int celldiag : 1;
-};
-
 struct ENTITY;
 typedef struct ENTITY ENTITY;
 
