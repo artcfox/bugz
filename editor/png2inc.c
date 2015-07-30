@@ -164,6 +164,36 @@ bool isTreasure(const PIXEL_DATA* p)
           (p->b == 0));
 }
 
+// Given an x and a y in the range of 0-31, packs the coordinate into a byte array at logical index 'position'
+void Pack5BitXY(uint8_t *xyData, uint8_t position, uint8_t x, uint8_t y)
+{
+  // Truncate x and y to the range 0-31, then pack them into 10 bits
+  uint16_t value = ((x & 31) << 5) | (y & 31);
+  uint16_t i = position * 5 / 4; // = position * 10 / 8, 10 bits packed into 8
+  switch (position % 4) {
+  case 0:
+    xyData[i] = (value >> 2);                               // bits: 9 8 7 6 5 4 3 2
+    ++i;
+    xyData[i] = (xyData[i] & 0x3F) | (uint8_t)(value << 6); // bits: 1 0 x x x x x x
+    break;
+  case 1:
+    xyData[i] = (xyData[i] & 0xC0) | (value >> 4);          // bits: x x 9 8 7 6 5 4
+    ++i;
+    xyData[i] = (xyData[i] & 0x0F) | (uint8_t)(value << 4); // bits: 3 2 1 0 x x x x
+    break;
+  case 2:
+    xyData[i] = (xyData[i] & 0xF0) | (value >> 6);          // bits: x x x x 9 8 7 6
+    ++i;
+    xyData[i] = (xyData[i] & 0x03) | (uint8_t)(value << 2); // bits: 5 4 3 2 1 0 x x
+    break;
+  default: // case 3
+    xyData[i] = (xyData[i] & 0xFC) | (value >> 8);          // bits: x x x x x x 9 8
+    ++i;
+    xyData[i] = (uint8_t)value;                             // bits: 7 6 5 4 3 2 1 0
+    break;
+  }
+}
+
 int addPNG(char *pngfile) {
   // decode PNG file
   FILE *fp = fopen(pngfile, "rb");
@@ -353,6 +383,30 @@ int addPNG(char *pngfile) {
     fprintf(fpInc, "%d,", playerInitialY[i]);
   fprintf(fpInc, " // playerInitialY[%d]\n", (int)sizeof(playerInitialY));
 
+
+  /*
+    So, I have two arrays of length 32, and each value is within the range of 0-31, so I only need 5 bits to store each element.
+
+    Packed into bytes, the data looks like this:
+
+    01234567
+    --------
+    01234012
+    34012340
+    12340123
+    40123401
+    23401234
+
+    01234567
+    89012345
+    67890123
+    45678901
+    23456789
+
+    So I should have a header: uint8_t players, uint8_t monsters, uint8_t treasures
+   */
+
+
   fprintf(fpInc, "  ");
   for (uint8_t i = 0; i < sizeof(monsterInitialX); ++i)
     fprintf(fpInc, "%d,", monsterInitialX[i]);
@@ -362,6 +416,9 @@ int addPNG(char *pngfile) {
   for (uint8_t i = 0; i < sizeof(monsterInitialY); ++i)
     fprintf(fpInc, "%d,", monsterInitialY[i]);
   fprintf(fpInc, " // monsterInitialY[%d]\n", (int)sizeof(monsterInitialY));
+
+
+
 
   fprintf(fpInc, "  ");
   fprintf(fpInc, "%d, // treasureCount\n", treasureOffset);

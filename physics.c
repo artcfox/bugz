@@ -455,7 +455,7 @@ static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16
 int main()
 {
  begin:;
-  uint8_t canary = 0xAA;
+  /* uint8_t canary = 0xAA; */
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
 
@@ -470,8 +470,8 @@ int main()
   uint8_t tileSet = 0;
 
   for (;;) {
-    if (canary != 0xAA)
-      goto begin;
+    /* if (canary != 0xAA) */
+    /*   goto begin; */
 
     levelOffset = LoadLevel(currentLevel, &tileSet);
     if (levelOffset == 0xFFFF)
@@ -549,6 +549,10 @@ int main()
 
     for (;;) {
       WaitVsync(1);
+
+      uint16_t sc = StackCount();
+      SetTile(0, 0, (uint8_t)(sc << 8));
+      SetTile(1, 0, (uint8_t)sc);
 
       // Animate treasure tiles (and every other background tile) at once by modifying the tileset pointer
       static uint8_t treasureFrameCounter = 0;
