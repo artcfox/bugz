@@ -37,6 +37,7 @@
 
 #include "entity.h"
 #include "data/tileset.inc"
+#include "stackmon.h"
 
 extern const char mysprites[] PROGMEM;
 extern const struct PatchStruct patches[] PROGMEM;
@@ -396,7 +397,7 @@ static void killPlayer(PLAYER* p)
   ENTITY* e = (ENTITY*)p;
   if (e->invincible)
     return;
-  TriggerFx(3, 128, true);
+  TriggerFx(1, 128, true);
   e->dead = true;
   e->monsterhop = true;
   e->dy = 0;
@@ -409,7 +410,7 @@ static void killMonster(ENTITY* e)
 {
   if (e->invincible)
     return;
-  TriggerFx(1, 128, true);         // play the monster death sound
+  TriggerFx(3, 128, true);         // play the monster death sound
   e->dead = true;                  // kill the monster
   e->interacts = false;              // make sure we don't consider the entity again for collisions
   e->input = null_input;           // disable the entity's ai
@@ -452,12 +453,29 @@ static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16
 /*   ++globalFrameCounter; */
 /* } */
 
+#define FIRST_DIGIT_TILE 57
+
+static void DisplayNumber(const uint8_t x, const uint8_t y, uint16_t n)
+{
+  uint8_t xx = x;
+  do {
+    SetTile(xx--, y, (n % 10) + FIRST_DIGIT_TILE);  // get next digit
+  } while ((n /= 10) != 0);                        // delete it
+  while (x - xx < 5)                            // pad with 0's up to 5 digits
+    SetTile(xx--, y, FIRST_DIGIT_TILE);
+}
+
 int main()
 {
- begin:;
   /* uint8_t canary = 0xAA; */
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
+
+  uint8_t currentLevel;
+  uint16_t levelOffset;
+  uint8_t tileSet;
+
+ begin:
 
   /* SetUserPostVsyncCallback(&VsyncCallBack); */
   SetTileTable(tileset);
@@ -465,9 +483,7 @@ int main()
   InitMusicPlayer(patches);
   //ClearVram();
 
-  uint8_t currentLevel = 0;
-  uint16_t levelOffset = 0;
-  uint8_t tileSet = 0;
+  currentLevel = levelOffset = tileSet = 0;
 
   for (;;) {
     /* if (canary != 0xAA) */
@@ -548,11 +564,18 @@ int main()
     }
 
     for (;;) {
-      WaitVsync(1);
+    /* if (canary != 0xAA) */
+    /*   goto begin; */
 
+      WaitVsync(1);
       uint16_t sc = StackCount();
-      SetTile(0, 0, (uint8_t)(sc << 8));
-      SetTile(1, 0, (uint8_t)sc);
+      DisplayNumber(5, 0, sc);
+      DisplayNumber(SCREEN_TILES_H - 2, 0, (uint16_t)tracks[2].patchCommandStreamPos);
+      DisplayNumber(SCREEN_TILES_H - 2, 1, (uint16_t)tracks[2].patchCurrDeltaTime);
+      DisplayNumber(SCREEN_TILES_H - 2, 2, (uint16_t)tracks[2].patchNextDeltaTime);
+      DisplayNumber(SCREEN_TILES_H - 2, 3, (uint16_t)tracks[3].patchCommandStreamPos);
+      DisplayNumber(SCREEN_TILES_H - 2, 4, (uint16_t)tracks[3].patchCurrDeltaTime);
+      DisplayNumber(SCREEN_TILES_H - 2, 5, (uint16_t)tracks[3].patchNextDeltaTime);
 
       // Animate treasure tiles (and every other background tile) at once by modifying the tileset pointer
       static uint8_t treasureFrameCounter = 0;
