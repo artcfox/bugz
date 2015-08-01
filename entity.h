@@ -53,7 +53,7 @@
 
 #define FAST_INTEGRATION 1
 
-#define PLAYERS 1
+#define PLAYERS 2
 #define MONSTERS 6
 
 #define FP_SHIFT   2

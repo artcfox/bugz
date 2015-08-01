@@ -455,14 +455,10 @@ static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16
 
 #define FIRST_DIGIT_TILE 57
 
-static void DisplayNumber(const uint8_t x, const uint8_t y, uint16_t n)
+static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad)
 {
-  uint8_t xx = x;
-  do {
-    SetTile(xx--, y, (n % 10) + FIRST_DIGIT_TILE);  // get next digit
-  } while ((n /= 10) != 0);                        // delete it
-  while (x - xx < 5)                            // pad with 0's up to 5 digits
-    SetTile(xx--, y, FIRST_DIGIT_TILE);
+  for (uint8_t i = 0; i < pad; ++i, n /= 10)
+    SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE);  // get next digit
 }
 
 int main()
@@ -490,8 +486,13 @@ int main()
     /*   goto begin; */
 
     levelOffset = LoadLevel(currentLevel, &tileSet);
-    if (levelOffset == 0xFFFF)
+
+    if (levelOffset == 0xFFFF) {
+      ClearVram();
+      DisplayNumber(16, 12, currentLevel, 3);
+      WaitVsync(200);
       goto begin;
+    }
 
     // Initialize treasure
     uint8_t tcount = treasureCount(levelOffset);
@@ -513,14 +514,14 @@ int main()
                   (int16_t)(playerImpulse(levelOffset, i)));
       ((ENTITY*)(&player[i]))->interacts = true;
       sprites[i].flags = 0; // set the initial direction of the player
-#if (PLAYERS > 1)
-      if (i > 0) { // player 2 starts off hidden and disabled
-        ((ENTITY*)(&player[i]))->render(((ENTITY*)(&player[i]))); // setup sprite
-        ((ENTITY*)(&player[i]))->interacts = false;
-        ((ENTITY*)(&player[i]))->render = null_render;
-        ((ENTITY*)(&player[i]))->invincible = true;
-      }
-#endif // (PLAYERS > 1)
+/* #if (PLAYERS > 1) */
+/*       if (i > 0) { // player 2 starts off hidden and disabled */
+/*         ((ENTITY*)(&player[i]))->render(((ENTITY*)(&player[i]))); // setup sprite */
+/*         ((ENTITY*)(&player[i]))->interacts = false; */
+/*         ((ENTITY*)(&player[i]))->render = null_render; */
+/*         ((ENTITY*)(&player[i]))->invincible = true; */
+/*       } */
+/* #endif // (PLAYERS > 1) */
     }
 
     // Initialize monsters
@@ -568,21 +569,21 @@ int main()
     /*   goto begin; */
 
       WaitVsync(1);
-      uint16_t sc = StackCount();
-      DisplayNumber(5, 0, sc);
-      DisplayNumber(SCREEN_TILES_H - 2, 0, (uint16_t)tracks[2].patchCommandStreamPos);
-      DisplayNumber(SCREEN_TILES_H - 2, 1, (uint16_t)tracks[2].patchCurrDeltaTime);
-      DisplayNumber(SCREEN_TILES_H - 2, 2, (uint16_t)tracks[2].patchNextDeltaTime);
-      DisplayNumber(SCREEN_TILES_H - 2, 3, (uint16_t)tracks[3].patchCommandStreamPos);
-      DisplayNumber(SCREEN_TILES_H - 2, 4, (uint16_t)tracks[3].patchCurrDeltaTime);
-      DisplayNumber(SCREEN_TILES_H - 2, 5, (uint16_t)tracks[3].patchNextDeltaTime);
-
       // Animate treasure tiles (and every other background tile) at once by modifying the tileset pointer
       static uint8_t treasureFrameCounter = 0;
       if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0)
         SetTileTable(tileset + 64 * ALLTILES_WIDTH * pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
       if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
         treasureFrameCounter = 0;
+
+      uint16_t sc = StackCount();
+      DisplayNumber(SCREEN_TILES_H - 1, 0, sc, 4);
+      /* DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
+      /* DisplayNumber(9, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3); */
+      /* DisplayNumber(13, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3); */
+      /* DisplayNumber(19, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5); */
+      /* DisplayNumber(23, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3); */
+      /* DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3); */
 
       // Get the inputs for every entity
       for (uint8_t i = 0; i < PLAYERS; ++i)

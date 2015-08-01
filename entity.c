@@ -65,6 +65,7 @@ void null_render(ENTITY* e) { sprites[e->tag].x = OFF_SCREEN; }
 
 void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
 {
+  memset(e, 0, sizeof(ENTITY));
   e->input = input;
   e->update = update;
   e->render = render;
@@ -75,7 +76,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->impulse = impulse;
   e->visible = true;
   e->jumpReleased = true;
-  e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
+  //e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
 }
 
 static inline bool isSolidForEntity(uint8_t tx, uint8_t ty, int16_t prevY, uint8_t entityHeight, bool down)
@@ -696,7 +697,7 @@ void spider_render(ENTITY* e)
 void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
 {
   entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx, impulse);
-  memset(&p->buttons, 0, sizeof(p->buttons));
+  memset(&p->buttons, 0, sizeof(BUTTON_INFO));
   p->framesFalling = 0;
 }
 
@@ -710,25 +711,25 @@ void player_input(ENTITY* e)
   //p->buttons.pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
   //p->buttons.released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
 
-#if (PLAYERS > 1)
-  // Allow player 2 to join/leave the game at any time
-  if (e->tag) { // only for player 2
-    uint16_t pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
-    if (pressed & BTN_START) {
-      if (e->interacts) {
-        e->interacts = false;
-        e->render = null_render;
-      } else {
-        e->interacts = true;
-        e->render = player_render;
-      }
-    }
-    if (!e->interacts)
-      return;
-    if (pressed & BTN_SELECT)
-      e->invincible = !e->invincible;
-  }
-#endif // (PLAYERS > 1)
+/* #if (PLAYERS > 1) */
+/*   // Allow player 2 to join/leave the game at any time */
+/*   if (e->tag) { // only for player 2 */
+/*     uint16_t pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev); */
+/*     if (pressed & BTN_START) { */
+/*       if (e->interacts) { */
+/*         e->interacts = false; */
+/*         e->render = null_render; */
+/*       } else { */
+/*         e->interacts = true; */
+/*         e->render = player_render; */
+/*       } */
+/*     } */
+/*     if (!e->interacts) */
+/*       return; */
+/*     if (pressed & BTN_SELECT) */
+/*       e->invincible = !e->invincible; */
+/*   } */
+/* #endif // (PLAYERS > 1) */
 
   e->left = (bool)(p->buttons.held & BTN_LEFT);
   e->right = (bool)(p->buttons.held & BTN_RIGHT);
