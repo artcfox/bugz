@@ -464,11 +464,11 @@ static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad)
 
 int main()
 {
-  PLAYER player[PLAYERS + 2];
-  ENTITY monster[MONSTERS + 6];
+  PLAYER player[PLAYERS + 0];
+  ENTITY monster[MONSTERS + 0];
 
-  memset(player, 0, sizeof(PLAYER) * (PLAYERS + 2));
-  memset(monster, 0, sizeof(ENTITY) * (MONSTERS + 6));
+  /* memset(player, 0, sizeof(PLAYER) * (PLAYERS + 2)); */
+  /* memset(monster, 0, sizeof(ENTITY) * (MONSTERS + 6)); */
 
   /* uint32_t canary = 0xAA; */
 
@@ -581,28 +581,28 @@ int main()
       if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
         treasureFrameCounter = 0;
 
-      // sanity check
-      for (uint8_t* pByte = (uint8_t*)&player[PLAYERS]; pByte < (uint8_t*)&player[PLAYERS + 2]; ++pByte)
-        if (*pByte != 0) {
-          ClearVram();
-          WaitVsync(200);
-          for (;;);
-        }
-      for (uint8_t* pByte = (uint8_t*)&monster[MONSTERS]; pByte < (uint8_t*)&monster[MONSTERS + 6]; ++pByte)
-        if (*pByte != 0) {
-          ClearVram();
-          WaitVsync(200);
-          for (;;);
-        }
+      /* // sanity check */
+      /* for (uint8_t* pByte = (uint8_t*)&player[PLAYERS]; pByte < (uint8_t*)&player[PLAYERS + 2]; ++pByte) */
+      /*   if (*pByte != 0) { */
+      /*     ClearVram(); */
+      /*     WaitVsync(200); */
+      /*     for (;;); */
+      /*   } */
+      /* for (uint8_t* pByte = (uint8_t*)&monster[MONSTERS]; pByte < (uint8_t*)&monster[MONSTERS + 6]; ++pByte) */
+      /*   if (*pByte != 0) { */
+      /*     ClearVram(); */
+      /*     WaitVsync(200); */
+      /*     for (;;); */
+      /*   } */
         
       uint16_t sc = StackCount();
       DisplayNumber(SCREEN_TILES_H - 2, 0, sc, 4);
-      /* DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
-      /* DisplayNumber(9, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3); */
-      /* //DisplayNumber(13, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3); */
-      /* DisplayNumber(15, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5); */
-      /* DisplayNumber(19, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3); */
-      /* //DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3); */
+      DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5);
+      DisplayNumber(9, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3);
+      //DisplayNumber(13, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3);
+      DisplayNumber(15, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5);
+      DisplayNumber(19, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3);
+      //DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3);
       DisplayNumber(23, 0, currentLevel, 3);
 
       /* DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, canary, 3); */
