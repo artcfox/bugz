@@ -512,6 +512,8 @@ int main()
       SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
     }
 
+    WaitVsync(1);
+
     // Initialize players
     for (uint8_t i = 0; i < PLAYERS; ++i) {
       player_init(&player[i],
@@ -531,6 +533,8 @@ int main()
 /*       } */
 /* #endif // (PLAYERS > 1) */
     }
+
+    WaitVsync(1);
 
     // Initialize monsters
     for (uint8_t i = 0; i < MONSTERS; ++i)
