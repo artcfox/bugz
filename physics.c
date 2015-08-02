@@ -464,11 +464,11 @@ static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad)
 
 int main()
 {
-  PLAYER player[PLAYERS + 0];
-  ENTITY monster[MONSTERS + 0];
+  PLAYER player[PLAYERS + 1];
+  ENTITY monster[MONSTERS + 1];
 
-  /* memset(player, 0, sizeof(PLAYER) * (PLAYERS + 2)); */
-  /* memset(monster, 0, sizeof(ENTITY) * (MONSTERS + 6)); */
+  memset(player, 0, sizeof(PLAYER) * (PLAYERS + 1));
+  memset(monster, 0, sizeof(ENTITY) * (MONSTERS + 1));
 
   /* uint32_t canary = 0xAA; */
 
@@ -491,9 +491,7 @@ int main()
   for (;;) {
     /* if (canary != 0xAA) */
     /*   goto begin; */
-
     levelOffset = LoadLevel(currentLevel, &tileSet);
-
     if (levelOffset == 0xFFFF) {
       //ClearVram();
       DisplayNumber(16, 12, currentLevel, 3);
@@ -582,13 +580,13 @@ int main()
         treasureFrameCounter = 0;
 
       /* // sanity check */
-      /* for (uint8_t* pByte = (uint8_t*)&player[PLAYERS]; pByte < (uint8_t*)&player[PLAYERS + 2]; ++pByte) */
+      /* for (uint8_t* pByte = (uint8_t*)&player[PLAYERS]; pByte < (uint8_t*)&player[PLAYERS + 1]; ++pByte) */
       /*   if (*pByte != 0) { */
       /*     ClearVram(); */
       /*     WaitVsync(200); */
       /*     for (;;); */
       /*   } */
-      /* for (uint8_t* pByte = (uint8_t*)&monster[MONSTERS]; pByte < (uint8_t*)&monster[MONSTERS + 6]; ++pByte) */
+      /* for (uint8_t* pByte = (uint8_t*)&monster[MONSTERS]; pByte < (uint8_t*)&monster[MONSTERS + 1]; ++pByte) */
       /*   if (*pByte != 0) { */
       /*     ClearVram(); */
       /*     WaitVsync(200); */
@@ -683,8 +681,8 @@ int main()
           if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V)
             continue;
 
-          bool nx = nh(e->x) && tx + 1 < SCREEN_TILES_H;  // true if entity overlaps right
-          bool ny = nv(e->y) && ty + 1 < SCREEN_TILES_V;  // true if entity overlaps below
+          bool nx = nh(e->x) && tx + 1 < SCREEN_TILES_H - 1;  // true if entity overlaps right
+          bool ny = nv(e->y) && ty + 1 < SCREEN_TILES_V - 1;  // true if entity overlaps below
 
           bool collectedTreasure = false;
           bool killedByFire = false;
