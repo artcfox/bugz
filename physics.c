@@ -400,7 +400,7 @@ static void killPlayer(PLAYER* p)
   ENTITY* e = (ENTITY*)p;
   if (e->invincible)
     return;
-  //TriggerFx(1, 128, true);
+  TriggerFx(1, 128, true);
   e->dead = true;
   e->monsterhop = true;
   e->dy = 0;
@@ -413,7 +413,7 @@ static void killMonster(ENTITY* e)
 {
   if (e->invincible)
     return;
-  //TriggerFx(3, 128, true);         // play the monster death sound
+  TriggerFx(3, 128, true);         // play the monster death sound
   e->dead = true;                  // kill the monster
   e->interacts = false;              // make sure we don't consider the entity again for collisions
   e->input = null_input;           // disable the entity's ai
@@ -766,8 +766,8 @@ int main()
               }
             }
           }
-          /* if (collectedTreasure) */
-          /*   TriggerFx(2, 128, true); */
+          if (collectedTreasure)
+            TriggerFx(2, 128, true);
           if (killedByFire)
             e->dead = true;
         }
