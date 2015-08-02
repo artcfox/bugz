@@ -612,7 +612,7 @@ int main()
       //DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3);
       DisplayNumber(23, 0, currentLevel, 3);
 
-      DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, levelOffset, 5);
+      //DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, levelOffset, 5);
 
       // Get the inputs for every entity
       for (uint8_t i = 0; i < PLAYERS; ++i)
@@ -799,7 +799,7 @@ int main()
       // Check for level select buttons
       static uint8_t framesLevelSwitch = 0;
       if ((b & BTN_SELECT) && ((b & BTN_SL) || (b & BTN_SR)) && (++framesLevelSwitch % 8) == 0) {
-        uint8_t levels = numLevels();
+        //uint8_t levels = numLevels();
         if (b & BTN_SL) {
           newLevel = currentLevel - 1;
           if (newLevel == 255)

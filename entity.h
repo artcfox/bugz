@@ -167,21 +167,21 @@ struct ENTITY {
   int16_t maxdx;
   int16_t impulse; // used for jumping, and since flying entities don't jump, the high/low bytes are used to store flying limits
   uint8_t animationFrameCounter;
-  unsigned int interacts : 1;
-  unsigned int falling : 1;
-  unsigned int jumping : 1;
-  unsigned int left : 1;
-  unsigned int right : 1;
-  unsigned int up : 1;
-  unsigned int down : 1;
-  unsigned int jump : 1;
-  unsigned int jumpReleased : 1; // state variable used for allowing jump to be pressed early, and for implementing variable jumping
-  unsigned int turbo : 1;
-  unsigned int monsterhop : 1;
-  unsigned int visible : 1;
-  unsigned int dead : 1;
-  unsigned int autorespawn : 1;
-  unsigned int invincible : 1;
+  bool interacts;
+  bool falling;
+  bool jumping;
+  bool left;
+  bool right;
+  bool up;
+  bool down;
+  bool jump;
+  bool jumpReleased; // state variable used for allowing jump to be pressed early, and for implementing variable jumping
+  bool turbo;
+  bool monsterhop;
+  bool visible;
+  bool dead;
+  bool autorespawn;
+  bool invincible;
 } __attribute__ ((packed));
 
 // Default functions that do nothing
