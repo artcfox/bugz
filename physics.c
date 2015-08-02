@@ -302,7 +302,7 @@ const uint8_t levelData[] PROGMEM = {
 #define LEVEL_MONSTER_RENDER_START (LEVEL_MONSTER_UPDATE_START + LEVEL_MONSTER_UPDATE_SIZE)
 #define LEVEL_MONSTER_RENDER_SIZE 6
 
-#define numLevels ((uint8_t)pgm_read_byte(&levelData[0]))
+#define numLevels() ((uint8_t)pgm_read_byte(&levelData[0]))
 #define levelOffset(level) ((uint16_t)pgm_read_word(&levelData[LEVEL_HEADER_SIZE + ((level) * sizeof(uint16_t))]))
 #define tileSet(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TILESET_START]))
 #define compressedMapChunk(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MAP_START + (i)]))
@@ -400,7 +400,7 @@ static void killPlayer(PLAYER* p)
   ENTITY* e = (ENTITY*)p;
   if (e->invincible)
     return;
-  TriggerFx(1, 128, true);
+  //TriggerFx(1, 128, true);
   e->dead = true;
   e->monsterhop = true;
   e->dy = 0;
@@ -413,7 +413,7 @@ static void killMonster(ENTITY* e)
 {
   if (e->invincible)
     return;
-  TriggerFx(3, 128, true);         // play the monster death sound
+  //TriggerFx(3, 128, true);         // play the monster death sound
   e->dead = true;                  // kill the monster
   e->interacts = false;              // make sure we don't consider the entity again for collisions
   e->input = null_input;           // disable the entity's ai
@@ -462,21 +462,20 @@ static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad)
     SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE);  // get next digit
 }
 
+uint8_t currentLevel, newLevel;
+uint16_t levelOffset;
+uint8_t tileSet;
+
 int main()
 {
-  PLAYER player[PLAYERS + 1];
-  ENTITY monster[MONSTERS + 1];
+  PLAYER player[PLAYERS + 0];
+  ENTITY monster[MONSTERS + 0];
 
-  memset(player, 0, sizeof(PLAYER) * (PLAYERS + 1));
-  memset(monster, 0, sizeof(ENTITY) * (MONSTERS + 1));
+  /* memset(player, 0, sizeof(PLAYER) * (PLAYERS + 1)); */
+  /* memset(monster, 0, sizeof(ENTITY) * (MONSTERS + 1)); */
 
   /* uint32_t canary = 0xAA; */
 
-  uint8_t currentLevel;
-  uint16_t levelOffset;
-  uint8_t tileSet;
-
- begin:
 
   /* SetUserPostVsyncCallback(&VsyncCallBack); */
   SetTileTable(tileset);
@@ -486,17 +485,23 @@ int main()
   /* DisableSoundEngine(); */
   //ClearVram();
 
-  currentLevel = levelOffset = tileSet = 0;
+ begin:
+
+  currentLevel = newLevel = levelOffset = tileSet = 0;
 
   for (;;) {
     /* if (canary != 0xAA) */
     /*   goto begin; */
-    levelOffset = LoadLevel(currentLevel, &tileSet);
+    WaitVsync(1);
+    levelOffset = LoadLevel(newLevel, &tileSet);
+    WaitVsync(1);
     if (levelOffset == 0xFFFF) {
       //ClearVram();
-      DisplayNumber(16, 12, currentLevel, 3);
+      DisplayNumber(16, 12, newLevel, 3);
       WaitVsync(200);
       goto begin;
+    } else {
+      currentLevel = newLevel;
     }
 
     // Initialize treasure
@@ -603,7 +608,7 @@ int main()
       //DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3);
       DisplayNumber(23, 0, currentLevel, 3);
 
-      /* DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, canary, 3); */
+      DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, levelOffset, 5);
 
       // Get the inputs for every entity
       for (uint8_t i = 0; i < PLAYERS; ++i)
@@ -644,7 +649,7 @@ int main()
               killMonster(&monster[i]);
               e->monsterhop = true;             // player should now do the monster hop
             } else {
-              killPlayer(e);
+              killPlayer((PLAYER*)e);
               /* while (ReadJoypad(((ENTITY*)(&player[p]))->tag) != BTN_START); */
             }
           }
@@ -757,8 +762,8 @@ int main()
               }
             }
           }
-          if (collectedTreasure)
-            TriggerFx(2, 128, true);
+          /* if (collectedTreasure) */
+          /*   TriggerFx(2, 128, true); */
           if (killedByFire)
             e->dead = true;
         }
@@ -790,11 +795,16 @@ int main()
       // Check for level select buttons
       static uint8_t framesLevelSwitch = 0;
       if ((b & BTN_SELECT) && ((b & BTN_SL) || (b & BTN_SR)) && (++framesLevelSwitch % 8) == 0) {
-        //uint8_t levels = numLevels;
-        if ((b & BTN_SL) && (--currentLevel == 255))
-          currentLevel = LEVELS - 1;
-        else if ((b & BTN_SR) && (++currentLevel == LEVELS))
-          currentLevel = 0;
+        uint8_t levels = numLevels();
+        if (b & BTN_SL) {
+          newLevel = currentLevel - 1;
+          if (newLevel == 255)
+            newLevel = LEVELS - 1;
+        } else if (b & BTN_SR) {
+          newLevel = currentLevel + 1;
+          if (newLevel == LEVELS)
+            newLevel = 0;
+        }
         break; // restart level
       }
 
