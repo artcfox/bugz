@@ -75,10 +75,20 @@ const char patch03[] PROGMEM ={
 1,PC_NOTE_CUT,0,
 0,PATCH_END
 };
+
+/* //FX: unused */
+/* const char patch04[] PROGMEM ={ */
+/* 0,PC_WAVE,4, */
+/* 0,PC_ENV_SPEED,0, */
+/* 1,PC_PITCH,100, */
+/* 1,PC_NOTE_CUT,0, */
+/* 0,PATCH_END */
+/* }; */
 	
 const struct PatchStruct patches[] PROGMEM = {
 {0,NULL,patch00,0,0},
 {0,NULL,patch01,0,0},
 {0,NULL,patch02,0,0},
 {0,NULL,patch03,0,0},
+/* {0,NULL,patch04,0,0}, */
 };

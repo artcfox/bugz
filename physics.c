@@ -453,8 +453,6 @@ static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16
 /*   ++globalFrameCounter; */
 /* } */
 
-#define FIRST_DIGIT_TILE 57
-
 static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad)
 {
   for (uint8_t i = 0; i < pad; ++i, n /= 10)
@@ -488,9 +486,9 @@ int main()
     levelOffset = LoadLevel(currentLevel, &tileSet);
 
     if (levelOffset == 0xFFFF) {
-      ClearVram();
-      DisplayNumber(16, 12, currentLevel, 3);
-      WaitVsync(200);
+    /*   //ClearVram(); */
+    /*   DisplayNumber(16, 12, currentLevel, 3); */
+    /*   WaitVsync(200); */
       goto begin;
     }
 
@@ -577,13 +575,13 @@ int main()
         treasureFrameCounter = 0;
 
       uint16_t sc = StackCount();
-      DisplayNumber(SCREEN_TILES_H - 1, 0, sc, 4);
-      /* DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
-      /* DisplayNumber(9, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3); */
-      /* DisplayNumber(13, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3); */
-      /* DisplayNumber(19, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5); */
-      /* DisplayNumber(23, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3); */
-      /* DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3); */
+      DisplayNumber(SCREEN_TILES_H - 2, 0, sc, 4);
+      DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5);
+      DisplayNumber(9, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3);
+      //DisplayNumber(13, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3);
+      DisplayNumber(15, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5);
+      DisplayNumber(19, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3);
+      //DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3);
 
       // Get the inputs for every entity
       for (uint8_t i = 0; i < PLAYERS; ++i)
@@ -693,6 +691,23 @@ int main()
       uint16_t b = ReadJoypad(0);
       if (b & BTN_START)
         break; // restart level
+      /* if ((b & BTN_SELECT) && (b & BTN_A)) { */
+      /*   DisplayNumber(5, 2, (uint16_t)((ENTITY*)(&player[0]))->tag, 3); */
+      /*   DisplayNumber(5, 3, (uint16_t)((ENTITY*)(&player[1]))->tag, 3); */
+      /*   DisplayNumber(5, 4, (uint16_t)monster[0].tag, 3); */
+      /*   DisplayNumber(5, 5, (uint16_t)monster[1].tag, 3); */
+      /*   DisplayNumber(5, 6, (uint16_t)monster[2].tag, 3); */
+      /*   DisplayNumber(5, 7, (uint16_t)monster[3].tag, 3); */
+      /*   DisplayNumber(5, 8, (uint16_t)monster[4].tag, 3); */
+      /*   DisplayNumber(5, 9, (uint16_t)monster[5].tag, 3); */
+      /*   DisplayNumber(5, 10, (uint16_t)((ENTITY*)(&player[0]))->x, 5); */
+      /*   DisplayNumber(5, 11, (uint16_t)((ENTITY*)(&player[0]))->y, 5); */
+      /*   DisplayNumber(5, 12, (uint16_t)((ENTITY*)(&player[1]))->x, 5); */
+      /*   DisplayNumber(5, 13, (uint16_t)((ENTITY*)(&player[1]))->y, 5); */
+      /*   DisplayNumber(5, 14, (uint16_t)currentLevel, 3); */
+      /*   WaitVsync(1); */
+      /*   for (;;); */
+      /* } */
 
       // Check for level select buttons
       //static uint8_t framesLevelSwitch = 0;

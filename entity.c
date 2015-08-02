@@ -697,7 +697,7 @@ void spider_render(ENTITY* e)
 void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
 {
   entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx, impulse);
-  memset(&p->buttons, 0, sizeof(BUTTON_INFO));
+  memset(&(p->buttons), 0, sizeof(BUTTON_INFO));
   p->framesFalling = 0;
 }
 
