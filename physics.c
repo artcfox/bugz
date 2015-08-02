@@ -438,7 +438,7 @@ static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
   e->invincible = (bool)(monsterFlags & MFLAG_INVINCIBLE);
 }
 
-static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
+static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
 {
   return !(((x1 + w1 - 1) < x2) ||
            ((x2 + w2 - 1) < x1) ||
@@ -546,8 +546,8 @@ int main()
       SetTile(6, 24, FIRST_ONE_WAY_TILE + tileSet);
     }
 
-      SetTile(4, 26, FIRST_FIRE_TILE + tileSet);
-      SetTile(5, 26, FIRST_FIRE_TILE + tileSet);
+    //SetTile(21, 26, FIRST_FIRE_TILE + tileSet);
+    SetTile(22, 26, FIRST_FIRE_TILE + tileSet);
 
     if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) {
       if (currentLevel == 2)
@@ -659,30 +659,82 @@ int main()
           bool ny = nv(e->y);  // true if entity overlaps below
 
           bool collectedTreasure = false;
+          bool killedByFire = false;
 
           uint8_t t = GetTile(tx, ty);
           if (isTreasure(t)) {
             SetTile(tx, ty, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
             collectedTreasure = true;
+          } else if (isFire(t)) {
+            if (overlap(e->x,
+                        e->y,
+                        WORLD_METER,
+                        WORLD_METER,
+                        ht2p(tx) + (1 << FP_SHIFT),
+                        vt2p(ty) + (5 << FP_SHIFT),
+                        WORLD_METER - (2 << FP_SHIFT),
+                        WORLD_METER - (3 << FP_SHIFT))) {
+              killedByFire = true;
+            }
           }
           t = GetTile(tx + 1, ty);
-          if (nx && isTreasure(t)) {
-            SetTile(tx + 1, ty, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
-            collectedTreasure = true;
+          if (nx) {
+            if (isTreasure(t)) {
+              SetTile(tx + 1, ty, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+              collectedTreasure = true;
+            } else if (isFire(t)) {
+              if (overlap(e->x,
+                          e->y,
+                          WORLD_METER,
+                          WORLD_METER,
+                          ht2p(tx + 1) + (1 << FP_SHIFT),
+                          vt2p(ty) + (5 << FP_SHIFT),
+                          WORLD_METER - (2 << FP_SHIFT),
+                          WORLD_METER - (3 << FP_SHIFT))) {
+                killedByFire = true;
+              }
+            }
           }
           t = GetTile(tx, ty + 1);
-          if (ny && isTreasure(t)) {
-            SetTile(tx, ty + 1, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
-            collectedTreasure = true;
+          if (ny) {
+            if (isTreasure(t)) {
+              SetTile(tx, ty + 1, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+              collectedTreasure = true;
+            } else if (isFire(t)) {
+              if (overlap(e->x,
+                          e->y,
+                          WORLD_METER,
+                          WORLD_METER,
+                          ht2p(tx) + (1 << FP_SHIFT),
+                          vt2p(ty + 1) + (5 << FP_SHIFT),
+                          WORLD_METER - (2 << FP_SHIFT),
+                          WORLD_METER - (3 << FP_SHIFT))) {
+                killedByFire = true;
+              }
+            }
           }
           t = GetTile(tx + 1, ty + 1);
-          if (nx && ny && isTreasure(t)) {
-            SetTile(tx + 1, ty + 1, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
-            collectedTreasure = true;
+          if (nx && ny) {
+            if (isTreasure(t)) {
+              SetTile(tx + 1, ty + 1, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+              collectedTreasure = true;
+            } else if (isFire(t)) {
+              if (overlap(e->x,
+                          e->y,
+                          WORLD_METER,
+                          WORLD_METER,
+                          ht2p(tx + 1) + (1 << FP_SHIFT),
+                          vt2p(ty + 1) + (5 << FP_SHIFT),
+                          WORLD_METER - (2 << FP_SHIFT),
+                          WORLD_METER - (3 << FP_SHIFT))) {
+                killedByFire = true;
+              }
+            }
           }
-
           if (collectedTreasure)
             TriggerFx(2, 128, true);
+          if (killedByFire)
+            e->dead = true;
         }
       }
 
