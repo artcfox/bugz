@@ -509,7 +509,8 @@ int main()
     for (uint8_t i = 0; i < tcount; ++i) {
       uint8_t x = treasureX(levelOffset, i);
       uint8_t y = treasureY(levelOffset, i);
-      SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+      if (x < SCREEN_TILES_H && y < SCREEN_TILES_V)
+        SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
     }
 
     WaitVsync(1);
@@ -621,7 +622,6 @@ int main()
         monster[i].input(&monster[i]);
 
       int16_t playerPrevY[PLAYERS]; // proper kill detection requires the previous Y value for each entity
-
       // Update the state of the players
       for (uint8_t i = 0; i < PLAYERS; ++i) {
         playerPrevY[i] = ((ENTITY*)(&player[i]))->y; // cache the previous Y value to use for kill detection below
