@@ -302,8 +302,8 @@ const uint8_t levelData[] PROGMEM = {
 #define LEVEL_MONSTER_RENDER_START (LEVEL_MONSTER_UPDATE_START + LEVEL_MONSTER_UPDATE_SIZE)
 #define LEVEL_MONSTER_RENDER_SIZE 6
 
-#define numLevels() ((uint8_t)pgm_read_byte(&levelData[0]))
-#define levelOffset(level) ((uint16_t)pgm_read_word(&levelData[LEVEL_HEADER_SIZE + (level) * sizeof(uint16_t)]))
+#define numLevels ((uint8_t)pgm_read_byte(&levelData[0]))
+#define levelOffset(level) ((uint16_t)pgm_read_word(&levelData[LEVEL_HEADER_SIZE + ((level) * sizeof(uint16_t))]))
 #define tileSet(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TILESET_START]))
 #define compressedMapChunk(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MAP_START + (i)]))
 #define playerInitialX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INITIAL_X_START + (i)]))
@@ -314,13 +314,13 @@ const uint8_t levelData[] PROGMEM = {
 #define treasureCount(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_COUNT_START]))
 #define treasureX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_X_START + (i)]))
 #define treasureY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_Y_START + (i)]))
-#define playerMaxDX(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_MAXDX_START + (i) * sizeof(int16_t)]))
-#define playerImpulse(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_IMPULSE_START + (i) * sizeof(int16_t)]))
+#define playerMaxDX(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_MAXDX_START + ((i) * sizeof(int16_t))]))
+#define playerImpulse(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_IMPULSE_START + ((i) * sizeof(int16_t))]))
 #define playerInput(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INPUT_START + (i)]))
 #define playerUpdate(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_UPDATE_START + (i)]))
 #define playerRender(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_RENDER_START + (i)]))
-#define monsterMaxDX(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_MONSTER_MAXDX_START + (i) * sizeof(int16_t)]))
-#define monsterImpulse(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_MONSTER_IMPULSE_START + (i) * sizeof(int16_t)]))
+#define monsterMaxDX(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_MONSTER_MAXDX_START + ((i) * sizeof(int16_t))]))
+#define monsterImpulse(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_MONSTER_IMPULSE_START + ((i) * sizeof(int16_t))]))
 #define monsterInput(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INPUT_START + (i)]))
 #define monsterUpdate(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_UPDATE_START + (i)]))
 #define monsterRender(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_RENDER_START + (i)]))
@@ -331,7 +331,7 @@ const uint8_t levelData[] PROGMEM = {
 static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
 {
   // Bounds check level
-  if (level >= numLevels())
+  if (level >= LEVELS)
     return 0xFFFF; // bogus value
 
   // Determine the offset into the PROGMEM array where the level data begins
@@ -381,6 +381,9 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
       }
     }
   }
+
+  for (uint8_t i = 0; i < SCREEN_TILES_H; ++i)
+    SetTile(i, 0, LAST_SOLID_TILE);
 
   return levelOffset;
 }
@@ -461,9 +464,13 @@ static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad)
 
 int main()
 {
-  /* uint8_t canary = 0xAA; */
-  PLAYER player[PLAYERS];
-  ENTITY monster[MONSTERS];
+  PLAYER player[PLAYERS + 2];
+  ENTITY monster[MONSTERS + 6];
+
+  memset(player, 0, sizeof(PLAYER) * (PLAYERS + 2));
+  memset(monster, 0, sizeof(ENTITY) * (MONSTERS + 6));
+
+  /* uint32_t canary = 0xAA; */
 
   uint8_t currentLevel;
   uint16_t levelOffset;
@@ -474,7 +481,9 @@ int main()
   /* SetUserPostVsyncCallback(&VsyncCallBack); */
   SetTileTable(tileset);
   SetSpritesTileBank(0, mysprites);
+  /* SetSpriteVisibility(false); */
   InitMusicPlayer(patches);
+  /* DisableSoundEngine(); */
   //ClearVram();
 
   currentLevel = levelOffset = tileSet = 0;
@@ -486,9 +495,9 @@ int main()
     levelOffset = LoadLevel(currentLevel, &tileSet);
 
     if (levelOffset == 0xFFFF) {
-    /*   //ClearVram(); */
-    /*   DisplayNumber(16, 12, currentLevel, 3); */
-    /*   WaitVsync(200); */
+      //ClearVram();
+      DisplayNumber(16, 12, currentLevel, 3);
+      WaitVsync(200);
       goto begin;
     }
 
@@ -510,8 +519,6 @@ int main()
                   (int16_t)(playerInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
                   (int16_t)(playerMaxDX(levelOffset, i)),
                   (int16_t)(playerImpulse(levelOffset, i)));
-      ((ENTITY*)(&player[i]))->interacts = true;
-      sprites[i].flags = 0; // set the initial direction of the player
 /* #if (PLAYERS > 1) */
 /*       if (i > 0) { // player 2 starts off hidden and disabled */
 /*         ((ENTITY*)(&player[i]))->render(((ENTITY*)(&player[i]))); // setup sprite */
@@ -523,10 +530,10 @@ int main()
     }
 
     // Initialize monsters
-    for (uint8_t i = 0; i < MONSTERS; ++i) {
+    for (uint8_t i = 0; i < MONSTERS; ++i)
       spawnMonster(&monster[i], levelOffset, i);
-      sprites[i].flags = 0; // set the initial direction of the monster
-    }
+
+    /* SetSpriteVisibility(true); */
 
     //SetTile(23, 9, FIRST_ONE_WAY_TILE + tileSet);
     if (currentLevel == 0) {
@@ -574,14 +581,31 @@ int main()
       if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
         treasureFrameCounter = 0;
 
+      // sanity check
+      for (uint8_t* pByte = (uint8_t*)&player[PLAYERS]; pByte < (uint8_t*)&player[PLAYERS + 2]; ++pByte)
+        if (*pByte != 0) {
+          ClearVram();
+          WaitVsync(200);
+          for (;;);
+        }
+      for (uint8_t* pByte = (uint8_t*)&monster[MONSTERS]; pByte < (uint8_t*)&monster[MONSTERS + 6]; ++pByte)
+        if (*pByte != 0) {
+          ClearVram();
+          WaitVsync(200);
+          for (;;);
+        }
+        
       uint16_t sc = StackCount();
       DisplayNumber(SCREEN_TILES_H - 2, 0, sc, 4);
-      DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5);
-      DisplayNumber(9, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3);
-      //DisplayNumber(13, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3);
-      DisplayNumber(15, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5);
-      DisplayNumber(19, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3);
-      //DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3);
+      /* DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
+      /* DisplayNumber(9, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3); */
+      /* //DisplayNumber(13, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3); */
+      /* DisplayNumber(15, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5); */
+      /* DisplayNumber(19, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3); */
+      /* //DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3); */
+      DisplayNumber(23, 0, currentLevel, 3);
+
+      /* DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, canary, 3); */
 
       // Get the inputs for every entity
       for (uint8_t i = 0; i < PLAYERS; ++i)
@@ -606,9 +630,10 @@ int main()
 
         // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
         for (uint8_t p = 0; p < PLAYERS; ++p) {
-          if (monster[i].interacts && !monster[i].dead && ((ENTITY*)(&player[p]))->interacts && !(((ENTITY*)(&player[p]))->dead) &&
-              overlap(((ENTITY*)(&player[p]))->x,
-                      ((ENTITY*)(&player[p]))->y,
+          ENTITY* e = (ENTITY*)(&player[p]);
+          if (monster[i].interacts && !monster[i].dead && e->interacts && !e->dead &&
+              overlap(e->x,
+                      e->y,
                       WORLD_METER,
                       WORLD_METER,
                       monster[i].x + (1 << FP_SHIFT),
@@ -619,9 +644,9 @@ int main()
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
-              ((ENTITY*)(&player[p]))->monsterhop = true;             // player should now do the monster hop
+              e->monsterhop = true;             // player should now do the monster hop
             } else {
-              killPlayer(&player[p]);
+              killPlayer(e);
               /* while (ReadJoypad(((ENTITY*)(&player[p]))->tag) != BTN_START); */
             }
           }
@@ -652,11 +677,14 @@ int main()
       // coordinates into tile coordinates, and then check if any tiles the player overlaps with are treasure tiles.
       for (uint8_t p = 0; p < PLAYERS; ++p) {
         ENTITY* e = (ENTITY*)(&player[p]);
-        if (e->interacts) {
+        if (e->interacts && !e->dead) {
           uint8_t tx = p2ht(e->x);
           uint8_t ty = p2vt(e->y);
-          bool nx = nh(e->x);  // true if entity overlaps right
-          bool ny = nv(e->y);  // true if entity overlaps below
+          if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V)
+            continue;
+
+          bool nx = nh(e->x) && tx + 1 < SCREEN_TILES_H;  // true if entity overlaps right
+          bool ny = nv(e->y) && ty + 1 < SCREEN_TILES_V;  // true if entity overlaps below
 
           bool collectedTreasure = false;
           bool killedByFire = false;
@@ -762,12 +790,12 @@ int main()
       /* } */
 
       // Check for level select buttons
-      //static uint8_t framesLevelSwitch = 0;
-      if ((b & BTN_SELECT) && ((b & BTN_SL) || (b & BTN_SR)) && (treasureFrameCounter % TREASURE_FRAME_SKIP) == 0) {
-        uint8_t levels = numLevels();
+      static uint8_t framesLevelSwitch = 0;
+      if ((b & BTN_SELECT) && ((b & BTN_SL) || (b & BTN_SR)) && (++framesLevelSwitch % 8) == 0) {
+        //uint8_t levels = numLevels;
         if ((b & BTN_SL) && (--currentLevel == 255))
-          currentLevel = levels - 1;
-        else if ((b & BTN_SR) && (++currentLevel == levels))
+          currentLevel = LEVELS - 1;
+        else if ((b & BTN_SR) && (++currentLevel == LEVELS))
           currentLevel = 0;
         break; // restart level
       }

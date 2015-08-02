@@ -76,6 +76,10 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->impulse = impulse;
   e->visible = true;
   e->jumpReleased = true;
+  e->interacts = true;
+  sprites[tag].flags = 0; // set the initial direction of the entity
+  sprites[tag].x = x;
+  sprites[tag].y = y;
   //e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
 }
 

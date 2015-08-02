@@ -9,4 +9,4 @@ cd ../data && \
 cd ../default && \
 make clean && \
 make && \
-~/uzebox/bin/uzem physics.uze -s .
+~/uzebox/bin/uzem -f physics.hex -s .
