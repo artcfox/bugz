@@ -382,6 +382,7 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
     }
   }
 
+  // Draw a solid black bar across the top of the screen
   for (uint8_t i = 0; i < SCREEN_TILES_H; ++i)
     SetTile(i, 0, LAST_SOLID_TILE);
 
@@ -390,10 +391,9 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
 
 #define MAX_TREASURE_COUNT 32
 // How many frames to wait between animating treasure
-#define TREASURE_FRAME_SKIP 16
-// Defines the order in which the tileset "rows" are swapped in for animating treasure and background tiles
-const uint8_t treasureAnimation[] PROGMEM = { 0, 1, 2, 1 };
-
+#define BACKGROUND_FRAME_SKIP 16
+// Defines the order in which the tileset "rows" are swapped in for animating tiles
+const uint8_t backgroundAnimation[] PROGMEM = { 0, 1, 2, 1 };
 
 static void killPlayer(PLAYER* p)
 {
@@ -462,47 +462,33 @@ static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad)
     SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE);  // get next digit
 }
 
-uint8_t currentLevel, newLevel;
-uint16_t levelOffset;
-uint8_t tileSet;
-
 int main()
 {
-  PLAYER player[PLAYERS + 0];
-  ENTITY monster[MONSTERS + 0];
+  PLAYER player[PLAYERS];
+  ENTITY monster[MONSTERS];
 
-  /* memset(player, 0, sizeof(PLAYER) * (PLAYERS + 1)); */
-  /* memset(monster, 0, sizeof(ENTITY) * (MONSTERS + 1)); */
-
-  /* uint32_t canary = 0xAA; */
-
+  uint8_t currentLevel, newLevel;
+  uint16_t levelOffset;
+  uint8_t tileSet;
 
   /* SetUserPostVsyncCallback(&VsyncCallBack); */
   SetTileTable(tileset);
   SetSpritesTileBank(0, mysprites);
-  /* SetSpriteVisibility(false); */
   InitMusicPlayer(patches);
-  /* DisableSoundEngine(); */
-  //ClearVram();
 
  begin:
 
   currentLevel = newLevel = levelOffset = tileSet = 0;
 
   for (;;) {
-    /* if (canary != 0xAA) */
-    /*   goto begin; */
-    WaitVsync(1);
+    WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
     levelOffset = LoadLevel(newLevel, &tileSet);
-    WaitVsync(1);
-    if (levelOffset == 0xFFFF) {
-      //ClearVram();
-      DisplayNumber(16, 12, newLevel, 3);
-      WaitVsync(200);
+
+    // Check the return value of LoadLevel
+    if (levelOffset == 0xFFFF)
       goto begin;
-    } else {
+    else
       currentLevel = newLevel;
-    }
 
     // Initialize treasure
     uint8_t tcount = treasureCount(levelOffset);
@@ -512,8 +498,6 @@ int main()
       if (x < SCREEN_TILES_H && y < SCREEN_TILES_V)
         SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
     }
-
-    WaitVsync(1);
 
     // Initialize players
     for (uint8_t i = 0; i < PLAYERS; ++i) {
@@ -535,15 +519,14 @@ int main()
 /* #endif // (PLAYERS > 1) */
     }
 
-    WaitVsync(1);
+    WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
 
     // Initialize monsters
     for (uint8_t i = 0; i < MONSTERS; ++i)
       spawnMonster(&monster[i], levelOffset, i);
 
-    /* SetSpriteVisibility(true); */
 
-    //SetTile(23, 9, FIRST_ONE_WAY_TILE + tileSet);
+    // Since the level compiler doesn't support one-way tiles, ladders, or fire yet, these are hardcoded for now
     if (currentLevel == 0) {
       SetTile(12, 6, FIRST_ONE_WAY_TILE + tileSet);
       SetTile(13, 6, FIRST_ONE_WAY_TILE + tileSet);
@@ -561,7 +544,6 @@ int main()
       SetTile(6, 24, FIRST_ONE_WAY_TILE + tileSet);
     }
 
-    //SetTile(21, 26, FIRST_FIRE_TILE + tileSet);
     SetTile(22, 26, FIRST_FIRE_TILE + tileSet);
 
     if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) {
@@ -577,42 +559,27 @@ int main()
       SetTile(22, 14, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
     }
 
+    // Main game loop
     for (;;) {
-    /* if (canary != 0xAA) */
-    /*   goto begin; */
-
       WaitVsync(1);
-      // Animate treasure tiles (and every other background tile) at once by modifying the tileset pointer
-      static uint8_t treasureFrameCounter = 0;
-      if ((treasureFrameCounter % TREASURE_FRAME_SKIP) == 0)
-        SetTileTable(tileset + 64 * ALLTILES_WIDTH * pgm_read_byte(&treasureAnimation[treasureFrameCounter / TREASURE_FRAME_SKIP]));
-      if (++treasureFrameCounter == TREASURE_FRAME_SKIP * NELEMS(treasureAnimation))
-        treasureFrameCounter = 0;
 
-      /* // sanity check */
-      /* for (uint8_t* pByte = (uint8_t*)&player[PLAYERS]; pByte < (uint8_t*)&player[PLAYERS + 1]; ++pByte) */
-      /*   if (*pByte != 0) { */
-      /*     ClearVram(); */
-      /*     WaitVsync(200); */
-      /*     for (;;); */
-      /*   } */
-      /* for (uint8_t* pByte = (uint8_t*)&monster[MONSTERS]; pByte < (uint8_t*)&monster[MONSTERS + 1]; ++pByte) */
-      /*   if (*pByte != 0) { */
-      /*     ClearVram(); */
-      /*     WaitVsync(200); */
-      /*     for (;;); */
-      /*   } */
-        
+      // Animate all background tiles at once by modifying the tileset pointer
+      static uint8_t backgroundFrameCounter = 0;
+      if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0)
+        SetTileTable(tileset + 64 * ALLTILES_WIDTH * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
+      if (++backgroundFrameCounter == BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation))
+        backgroundFrameCounter = 0;
+
+      // Display debugging information
       uint16_t sc = StackCount();
       DisplayNumber(SCREEN_TILES_H - 2, 0, sc, 4);
-      DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5);
-      DisplayNumber(9, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3);
+      /* DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
+      /* DisplayNumber(9, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3); */
       //DisplayNumber(13, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3);
-      DisplayNumber(15, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5);
-      DisplayNumber(19, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3);
+      /* DisplayNumber(15, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5); */
+      /* DisplayNumber(19, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3); */
       //DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3);
       DisplayNumber(23, 0, currentLevel, 3);
-
       //DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, levelOffset, 5);
 
       // Get the inputs for every entity
@@ -621,21 +588,21 @@ int main()
       for (uint8_t i = 0; i < MONSTERS; ++i)
         monster[i].input(&monster[i]);
 
-      int16_t playerPrevY[PLAYERS]; // proper kill detection requires the previous Y value for each entity
+      // Proper kill detection requires the previous Y value for each entity
+      int16_t playerPrevY[PLAYERS];
+
       // Update the state of the players
       for (uint8_t i = 0; i < PLAYERS; ++i) {
         playerPrevY[i] = ((ENTITY*)(&player[i]))->y; // cache the previous Y value to use for kill detection below
         ((ENTITY*)(&player[i]))->update((ENTITY*)(&player[i]));
       }
 
-      // Update the state of the monsters
+      // Update the state of the monsters, and perform collision detection with each player
       for (uint8_t i = 0; i < MONSTERS; ++i) {
         int16_t monsterPrevY = monster[i].y; // cache the previous Y value to use for kill detection below
         monster[i].update(&monster[i]);
 
-        // Collision detection
-
-        // The calculation below assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster
+        // Collision detection (calculation assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster)
         for (uint8_t p = 0; p < PLAYERS; ++p) {
           ENTITY* e = (ENTITY*)(&player[p]);
           if (monster[i].interacts && !monster[i].dead && e->interacts && !e->dead &&
@@ -651,14 +618,12 @@ int main()
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
-              e->monsterhop = true;             // player should now do the monster hop
+              e->monsterhop = true; // player should now do the monster hop
             } else {
               killPlayer((PLAYER*)e);
-              /* while (ReadJoypad(((ENTITY*)(&player[p]))->tag) != BTN_START); */
             }
           }
         }
-
       }
 
       // Render every entity
@@ -667,7 +632,7 @@ int main()
       for (uint8_t i = 0; i < MONSTERS; ++i)
         monster[i].render(&monster[i]);
 
-      // Check if the dead flag has been set for a monster and/or if we need to respawn the monster
+      // Check if the dead flag has been set for a monster and/or if we need to respawn a monster
       for (uint8_t i = 0; i < MONSTERS; ++i) {
         if (monster[i].interacts && monster[i].dead)
           killMonster(&monster[i]);
@@ -680,18 +645,18 @@ int main()
         if (((ENTITY*)(&player[i]))->interacts && ((ENTITY*)(&player[i]))->dead)
           killPlayer(&player[i]);
 
-      // Check if the player has collected any treasure. We just loop over the interacting players, and convert their (x, y)
-      // coordinates into tile coordinates, and then check if any tiles the player overlaps with are treasure tiles.
+      // Check for environmental collisions (treasure, fire) by looping over the interacting players, converting
+      // their (x, y) coordinates into tile coordinates, and then reading any overlapping tiles.
       for (uint8_t p = 0; p < PLAYERS; ++p) {
         ENTITY* e = (ENTITY*)(&player[p]);
         if (e->interacts && !e->dead) {
           uint8_t tx = p2ht(e->x);
           uint8_t ty = p2vt(e->y);
-          if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V)
+          if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) // bounds check to prevent writing outside of VRAM
             continue;
 
-          bool nx = nh(e->x) && tx + 1 < SCREEN_TILES_H - 1;  // true if entity overlaps right
-          bool ny = nv(e->y) && ty + 1 < SCREEN_TILES_V - 1;  // true if entity overlaps below
+          bool nx = nh(e->x) && (tx + 1 < SCREEN_TILES_H);  // true if entity overlaps right
+          bool ny = nv(e->y) && (ty + 1 < SCREEN_TILES_V);  // true if entity overlaps below
 
           bool collectedTreasure = false;
           bool killedByFire = false;
@@ -774,42 +739,28 @@ int main()
       }
 
 
-      // Check for level restart button
-      uint16_t b = ReadJoypad(0);
-      if (b & BTN_START)
-        break; // restart level
-      /* if ((b & BTN_SELECT) && (b & BTN_A)) { */
-      /*   DisplayNumber(5, 2, (uint16_t)((ENTITY*)(&player[0]))->tag, 3); */
-      /*   DisplayNumber(5, 3, (uint16_t)((ENTITY*)(&player[1]))->tag, 3); */
-      /*   DisplayNumber(5, 4, (uint16_t)monster[0].tag, 3); */
-      /*   DisplayNumber(5, 5, (uint16_t)monster[1].tag, 3); */
-      /*   DisplayNumber(5, 6, (uint16_t)monster[2].tag, 3); */
-      /*   DisplayNumber(5, 7, (uint16_t)monster[3].tag, 3); */
-      /*   DisplayNumber(5, 8, (uint16_t)monster[4].tag, 3); */
-      /*   DisplayNumber(5, 9, (uint16_t)monster[5].tag, 3); */
-      /*   DisplayNumber(5, 10, (uint16_t)((ENTITY*)(&player[0]))->x, 5); */
-      /*   DisplayNumber(5, 11, (uint16_t)((ENTITY*)(&player[0]))->y, 5); */
-      /*   DisplayNumber(5, 12, (uint16_t)((ENTITY*)(&player[1]))->x, 5); */
-      /*   DisplayNumber(5, 13, (uint16_t)((ENTITY*)(&player[1]))->y, 5); */
-      /*   DisplayNumber(5, 14, (uint16_t)currentLevel, 3); */
-      /*   WaitVsync(1); */
-      /*   for (;;); */
-      /* } */
+      // Read joypad independently of the players, because when a player dies, their joypad is no longer polled
+      static uint16_t prev;
+      static uint16_t held;
+      prev = held;
+      held = ReadJoypad(0);
 
-      // Check for level select buttons
-      static uint8_t framesLevelSwitch = 0;
-      if ((b & BTN_SELECT) && ((b & BTN_SL) || (b & BTN_SR)) && (++framesLevelSwitch % 8) == 0) {
-        //uint8_t levels = numLevels();
-        if (b & BTN_SL) {
-          newLevel = currentLevel - 1;
-          if (newLevel == 255)
-            newLevel = LEVELS - 1;
-        } else if (b & BTN_SR) {
-          newLevel = currentLevel + 1;
-          if (newLevel == LEVELS)
-            newLevel = 0;
-        }
+      // Check for level restart button
+      if (held & BTN_START)
         break; // restart level
+
+      // Check for level select buttons (hold select, and press a left or right shoulder button)
+      if (((held & BTN_SELECT) && (held & BTN_SL)) && !(prev & BTN_SL)) {
+        newLevel = currentLevel - 1;
+        if (newLevel == 255)
+          newLevel = LEVELS - 1;
+        break;
+      }
+      if (((held & BTN_SELECT) && (held & BTN_SR)) && !(prev & BTN_SR)) {
+        newLevel = currentLevel + 1;
+        if (newLevel == LEVELS)
+          newLevel = 0;
+        break;
       }
 
     }
