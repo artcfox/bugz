@@ -746,8 +746,8 @@ void player_input(ENTITY* e)
     e->jump = (bool)(p->buttons.held & BTN_A);                // player[i].jump can only be true if BTN_A has been released from the previous jump
   } else {                                                    // otherwise, it means that we just jumped, and BTN_A is still being held down
     e->jump = false;                                          // explicitly disallow any additional jumps
-    uint16_t jumpReleased = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
-    if (jumpReleased & BTN_A)                                 // until BTN_A has been released
+    uint16_t released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
+    if (released & BTN_A)                                     // until BTN_A has been released
       e->jumpReleased = true;                                 // reset the jumpReleased flag so another jump may occur.
   }
 }

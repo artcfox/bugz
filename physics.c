@@ -175,7 +175,7 @@ const uint8_t levelData[] PROGMEM = {
   //LO8HI8(756),
 
 /*           // ---------- start of level 0 data */
-/*   1,      // uint8_t tileSet; */
+/*   1,      // uint8_t theme; */
 
 /* #include "editor/levels/title_level.png.inc" */
 
@@ -193,7 +193,7 @@ const uint8_t levelData[] PROGMEM = {
 
 
           // ---------- start of level 1 data
-  0,      // uint8_t tileSet;
+  0,      // uint8_t theme;
 
 #include "editor/levels/prototype_level.png.inc"
 
@@ -209,7 +209,7 @@ const uint8_t levelData[] PROGMEM = {
   ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 
-  1,      // uint8_t tileSet;
+  1,      // uint8_t theme;
 #include "editor/levels/test_level.png.inc"
 
   /* 255, 255, 255, 254, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 255, 0, 1, 128, 0, 0, 6, 0, 0, 15, 24, 0, 0, 0, 127, 255, 255, 255, // uint8_t map[105]; */
@@ -234,7 +234,7 @@ const uint8_t levelData[] PROGMEM = {
 
 
 
-  2,      // uint8_t tileSet;
+  2,      // uint8_t theme;
 #include "editor/levels/space_level.png.inc"
 
   /* 255, 255, 255, 254, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 255, 0, 1, 128, 0, 0, 6, 0, 0, 15, 24, 0, 0, 0, 127, 255, 255, 255, // uint8_t map[105]; */
@@ -261,9 +261,9 @@ const uint8_t levelData[] PROGMEM = {
  };
 
 #define LEVEL_HEADER_SIZE 1
-#define LEVEL_TILESET_START 0
-#define LEVEL_TILESET_SIZE 1
-#define LEVEL_MAP_START (LEVEL_TILESET_START + LEVEL_TILESET_SIZE)
+#define LEVEL_THEME_START 0
+#define LEVEL_THEME_SIZE 1
+#define LEVEL_MAP_START (LEVEL_THEME_START + LEVEL_THEME_SIZE)
 #define LEVEL_MAP_SIZE 105
 #define LEVEL_PLAYER_INITIAL_X_START (LEVEL_MAP_START + LEVEL_MAP_SIZE)
 #define LEVEL_PLAYER_INITIAL_X_SIZE 2
@@ -304,7 +304,7 @@ const uint8_t levelData[] PROGMEM = {
 
 #define numLevels() ((uint8_t)pgm_read_byte(&levelData[0]))
 #define levelOffset(level) ((uint16_t)pgm_read_word(&levelData[LEVEL_HEADER_SIZE + ((level) * sizeof(uint16_t))]))
-#define tileSet(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TILESET_START]))
+#define theme(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_THEME_START]))
 #define compressedMapChunk(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MAP_START + (i)]))
 #define playerInitialX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INITIAL_X_START + (i)]))
 #define playerInitialY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INITIAL_Y_START + (i)]))
@@ -328,7 +328,7 @@ const uint8_t levelData[] PROGMEM = {
 #define BaseMapIsSolid(x, y, levelOffset) (PgmBitArray_readBit(&levelData[(levelOffset) + LEVEL_MAP_START], (y) * SCREEN_TILES_H + (x)))
 
 // Returns offset into levelData PROGMEM array
-static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
+static uint16_t LoadLevel(uint8_t level, uint8_t* theme)
 {
   // Bounds check level
   if (level >= LEVELS)
@@ -343,48 +343,48 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* tileSet)
 
   // Using that offset, read the tile set, and draw the map
   // struct LEVEL_DATA {
-  //   uint8_t tileSet;
+  //   uint8_t theme;
   //   uint8_t map[105];
   //   ...
   // };
-  *tileSet = tileSet(levelOffset);
-  if (*tileSet >= TILESETS_N) // something major went wrong
+  *theme = theme(levelOffset);
+  if (*theme >= THEMES_N) // something major went wrong
     return 0xFFFF; // bogus value
 
   for (uint8_t y = 0; y < SCREEN_TILES_V; ++y) {
     for (uint8_t x = 0; x < SCREEN_TILES_H; ++x) {
       if (BaseMapIsSolid(x, y, levelOffset)) {
         if (y == 0 || BaseMapIsSolid(x, y - 1, levelOffset)) { // if we are the top tile, or there is a solid tile above us
-          SetTile(x, y, 0 + FIRST_SOLID_TILE + (*tileSet * SOLID_TILES_IN_TILESET)); // underground tile
+          SetTile(x, y, 0 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // underground tile
         } else {
-          SetTile(x, y, 1 + FIRST_SOLID_TILE + (*tileSet * SOLID_TILES_IN_TILESET)); // aboveground tile
+          SetTile(x, y, 1 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // aboveground tile
         }
       } else { // we are a sky tile
         if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-          SetTile(x, y, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET)); // full sky tile
+          SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME)); // full sky tile
         } else { // interior tile
           bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(x - 1, y + 1, levelOffset));
           bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(x + 1, y + 1, levelOffset));
           bool solidBelow = BaseMapIsSolid(x, y + 1, levelOffset);
 
           if (!solidLDiag && !solidRDiag && solidBelow) // island
-            SetTile(x, y, 1 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
+            SetTile(x, y, 1 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-            SetTile(x, y, 2 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
+            SetTile(x, y, 2 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-            SetTile(x, y, 3 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
+            SetTile(x, y, 3 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-            SetTile(x, y, 4 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
+            SetTile(x, y, 4 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else // clear all around
-            SetTile(x, y, 0 + FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET) + (*tileSet * SKY_TILES_IN_TILESET));
+            SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
         }
       }
     }
   }
 
   // Draw a solid black bar across the top of the screen
-  for (uint8_t i = 0; i < SCREEN_TILES_H; ++i)
-    SetTile(i, 0, LAST_SOLID_TILE);
+  /* for (uint8_t i = 0; i < SCREEN_TILES_H; ++i) */
+  /*   SetTile(i, 0, LAST_SOLID_TILE); */
 
   return levelOffset;
 }
@@ -467,28 +467,27 @@ int main()
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
 
-  uint8_t currentLevel, newLevel;
+  uint8_t currentLevel;
   uint16_t levelOffset;
-  uint8_t tileSet;
+  uint8_t theme;
 
-  /* SetUserPostVsyncCallback(&VsyncCallBack); */
   SetTileTable(tileset);
   SetSpritesTileBank(0, mysprites);
   InitMusicPlayer(patches);
 
  begin:
 
-  currentLevel = newLevel = levelOffset = tileSet = 0;
+  currentLevel = levelOffset = theme = 0;
 
   for (;;) {
-    WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
-    levelOffset = LoadLevel(newLevel, &tileSet);
+    //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
+    levelOffset = LoadLevel(currentLevel, &theme);
+
+    /* SetUserPostVsyncCallback(&VsyncCallBack);   */
 
     // Check the return value of LoadLevel
     if (levelOffset == 0xFFFF)
       goto begin;
-    else
-      currentLevel = newLevel;
 
     // Initialize treasure
     uint8_t tcount = treasureCount(levelOffset);
@@ -496,11 +495,11 @@ int main()
       uint8_t x = treasureX(levelOffset, i);
       uint8_t y = treasureY(levelOffset, i);
       if (x < SCREEN_TILES_H && y < SCREEN_TILES_V)
-        SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+        SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME)));
     }
 
     // Initialize players
-    for (uint8_t i = 0; i < PLAYERS; ++i) {
+    for (uint8_t i = 0; i < PLAYERS; ++i)
       player_init(&player[i],
                   inputFunc(playerInput(levelOffset, i)),
                   updateFunc(playerUpdate(levelOffset, i)),
@@ -509,17 +508,16 @@ int main()
                   (int16_t)(playerInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
                   (int16_t)(playerMaxDX(levelOffset, i)),
                   (int16_t)(playerImpulse(levelOffset, i)));
-/* #if (PLAYERS > 1) */
-/*       if (i > 0) { // player 2 starts off hidden and disabled */
-/*         ((ENTITY*)(&player[i]))->render(((ENTITY*)(&player[i]))); // setup sprite */
-/*         ((ENTITY*)(&player[i]))->interacts = false; */
-/*         ((ENTITY*)(&player[i]))->render = null_render; */
-/*         ((ENTITY*)(&player[i]))->invincible = true; */
-/*       } */
-/* #endif // (PLAYERS > 1) */
-    }
 
-    WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
+/* #if (PLAYERS == 2) */
+/*     // Player 2 starts off hidden and disabled */
+/*     ((ENTITY*)(&player[1]))->render(((ENTITY*)(&player[1]))); // setup sprite */
+/*     ((ENTITY*)(&player[1]))->interacts = false; */
+/*     ((ENTITY*)(&player[1]))->render = null_render; */
+/*     ((ENTITY*)(&player[1]))->invincible = true; */
+/* #endif // (PLAYERS == 2) */
+
+    //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
 
     // Initialize monsters
     for (uint8_t i = 0; i < MONSTERS; ++i)
@@ -528,43 +526,44 @@ int main()
 
     // Since the level compiler doesn't support one-way tiles, ladders, or fire yet, these are hardcoded for now
     if (currentLevel == 0) {
-      SetTile(12, 6, FIRST_ONE_WAY_TILE + tileSet);
-      SetTile(13, 6, FIRST_ONE_WAY_TILE + tileSet);
-      SetTile(14, 6, FIRST_ONE_WAY_TILE + tileSet);
-      SetTile(15, 6, FIRST_ONE_WAY_TILE + tileSet);
+      SetTile(12, 6, FIRST_ONE_WAY_TILE + theme);
+      SetTile(13, 6, FIRST_ONE_WAY_TILE + theme);
+      SetTile(14, 6, FIRST_ONE_WAY_TILE + theme);
+      SetTile(15, 6, FIRST_ONE_WAY_TILE + theme);
 
-      SetTile(20, 6, FIRST_ONE_WAY_TILE + tileSet);
-      SetTile(21, 6, FIRST_ONE_WAY_TILE + tileSet);
-      SetTile(22, 6, FIRST_ONE_WAY_TILE + tileSet);
-      SetTile(23, 6, FIRST_ONE_WAY_TILE + tileSet);
+      SetTile(20, 6, FIRST_ONE_WAY_TILE + theme);
+      SetTile(21, 6, FIRST_ONE_WAY_TILE + theme);
+      SetTile(22, 6, FIRST_ONE_WAY_TILE + theme);
+      SetTile(23, 6, FIRST_ONE_WAY_TILE + theme);
 
-      SetTile(3, 24, FIRST_ONE_WAY_TILE + tileSet);
-      SetTile(4, 24, FIRST_ONE_WAY_TILE + tileSet);
-      SetTile(5, 24, FIRST_ONE_WAY_TILE + tileSet);
-      SetTile(6, 24, FIRST_ONE_WAY_TILE + tileSet);
+      SetTile(3, 24, FIRST_ONE_WAY_TILE + theme);
+      SetTile(4, 24, FIRST_ONE_WAY_TILE + theme);
+      SetTile(5, 24, FIRST_ONE_WAY_TILE + theme);
+      SetTile(6, 24, FIRST_ONE_WAY_TILE + theme);
     }
 
-    SetTile(22, 26, FIRST_FIRE_TILE + tileSet);
+    SetTile(22, 26, FIRST_FIRE_TILE + theme);
 
     if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) {
       if (currentLevel == 2)
-        SetTile(22, 9, 2 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * tileSet);
+        SetTile(22, 9, 2 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * theme);
       else
-        SetTile(22, 9, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * tileSet);
+        SetTile(22, 9, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * theme);
 
-      SetTile(22, 10, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
-      SetTile(22, 11, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
-      SetTile(22, 12, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
-      SetTile(22, 13, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
-      SetTile(22, 14, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_TILESET * TILESETS_N + LADDER_TILES_IN_TILESET * tileSet);
+      SetTile(22, 10, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme);
+      SetTile(22, 11, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme);
+      SetTile(22, 12, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme);
+      SetTile(22, 13, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme);
+      SetTile(22, 14, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme);
     }
 
     // Main game loop
     for (;;) {
+      /* static uint8_t localFrameCounter; */
       WaitVsync(1);
 
       // Animate all background tiles at once by modifying the tileset pointer
-      static uint8_t backgroundFrameCounter = 0;
+      static uint8_t backgroundFrameCounter;
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0)
         SetTileTable(tileset + 64 * ALLTILES_WIDTH * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
       if (++backgroundFrameCounter == BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation))
@@ -573,14 +572,16 @@ int main()
       // Display debugging information
       uint16_t sc = StackCount();
       DisplayNumber(SCREEN_TILES_H - 2, 0, sc, 4);
+      /* DisplayNumber(2, 0, globalFrameCounter, 3); */
+      /* DisplayNumber(6, 0, localFrameCounter++, 3); */
       /* DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
       /* DisplayNumber(9, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3); */
-      //DisplayNumber(13, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3);
+      /* //DisplayNumber(13, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3); */
       /* DisplayNumber(15, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5); */
       /* DisplayNumber(19, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3); */
-      //DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3);
-      DisplayNumber(23, 0, currentLevel, 3);
-      //DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, levelOffset, 5);
+      /* //DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3); */
+      /* DisplayNumber(23, 0, currentLevel, 3); */
+      /* //DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, levelOffset, 5); */
 
       // Get the inputs for every entity
       for (uint8_t i = 0; i < PLAYERS; ++i)
@@ -663,7 +664,7 @@ int main()
 
           uint8_t t = GetTile(tx, ty);
           if (isTreasure(t)) {
-            SetTile(tx, ty, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+            SetTile(tx, ty, t + (FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME)));
             collectedTreasure = true;
           } else if (isFire(t)) {
             if (overlap(e->x,
@@ -680,7 +681,7 @@ int main()
           t = GetTile(tx + 1, ty);
           if (nx) {
             if (isTreasure(t)) {
-              SetTile(tx + 1, ty, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+              SetTile(tx + 1, ty, t + (FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME)));
               collectedTreasure = true;
             } else if (isFire(t)) {
               if (overlap(e->x,
@@ -698,7 +699,7 @@ int main()
           t = GetTile(tx, ty + 1);
           if (ny) {
             if (isTreasure(t)) {
-              SetTile(tx, ty + 1, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+              SetTile(tx, ty + 1, t + (FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME)));
               collectedTreasure = true;
             } else if (isFire(t)) {
               if (overlap(e->x,
@@ -716,7 +717,7 @@ int main()
           t = GetTile(tx + 1, ty + 1);
           if (nx && ny) {
             if (isTreasure(t)) {
-              SetTile(tx + 1, ty + 1, t + (FIRST_TREASURE_TILE + (TILESETS_N * TREASURE_TILES_IN_TILESET)));
+              SetTile(tx + 1, ty + 1, t + (FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME)));
               collectedTreasure = true;
             } else if (isFire(t)) {
               if (overlap(e->x,
@@ -744,23 +745,23 @@ int main()
       static uint16_t held;
       prev = held;
       held = ReadJoypad(0);
+      uint16_t pressed = held & (held ^ prev);
 
       // Check for level restart button
-      if (held & BTN_START)
+      if (pressed & BTN_START)
         break; // restart level
 
       // Check for level select buttons (hold select, and press a left or right shoulder button)
-      if (((held & BTN_SELECT) && (held & BTN_SL)) && !(prev & BTN_SL)) {
-        newLevel = currentLevel - 1;
-        if (newLevel == 255)
-          newLevel = LEVELS - 1;
-        break;
-      }
-      if (((held & BTN_SELECT) && (held & BTN_SR)) && !(prev & BTN_SR)) {
-        newLevel = currentLevel + 1;
-        if (newLevel == LEVELS)
-          newLevel = 0;
-        break;
+      if (held & BTN_SELECT) {
+        if (pressed & BTN_SL) {
+          if (--currentLevel == 255)
+            currentLevel = LEVELS - 1;
+          break; // load previous level
+        } else if (pressed & BTN_SR) {
+          if (++currentLevel == LEVELS)
+            currentLevel = 0;
+          break; // load next level
+        }
       }
 
     }

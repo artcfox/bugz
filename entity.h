@@ -51,16 +51,13 @@
 #define nv(p) ((p) % (TILE_HEIGHT << FP_SHIFT))
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
-#define FAST_INTEGRATION 1
-
-#define PLAYERS 2
+#define PLAYERS 1
 #define MONSTERS 6
 
 #define LEVELS 3
 
-#define FP_SHIFT   2
-
-#if (FAST_INTEGRATION)
+// Fixed point shift
+#define FP_SHIFT 2
 
 // 1/30th of a second per frame
 #define WORLD_FPS 32
@@ -89,51 +86,26 @@
 // parameter used for variable jumping (gravity / 10 is a good default)
 #define WORLD_CUT_JUMP_SPEED_LIMIT (WORLD_GRAVITY / 10)
 
-#else // FAST_INTEGRATION
-
-// 1/30th of a second per frame
-#define WORLD_FPS 30
-// arbitrary choice for 1m
-#define WORLD_METER (8 << FP_SHIFT)
-// very exagerated gravity (6x)
-#define WORLD_GRAVITY (WORLD_METER * 18)
-// max horizontal speed (20 tiles per second)
-#define WORLD_MAXDX (WORLD_METER * 3)
-// max vertical speed (60 tiles per second). If the jump impulse is increased, this should be increased as well.
-#define WORLD_MAXDY (WORLD_METER * 15)
-// horizontal acceleration - take 1/2 second to reach maxdx
-#define WORLD_ACCEL (WORLD_MAXDX * 6)
-// horizontal friction - take 1/6 second to stop from maxdx
-#define WORLD_FRICTION (WORLD_MAXDX * 4)
-// (a large) instantaneous jump impulse
-#define WORLD_JUMP_IMPULSE (WORLD_METER * 382)
-// how many frames you can be falling and still jump
-#define WORLD_FALLING_GRACE_FRAMES 6
-// parameter used for variable jumping (gravity / 10 is a good default)
-#define WORLD_CUT_JUMP_SPEED_LIMIT (WORLD_GRAVITY / 10)
-
-#endif // FAST_INTEGRATION
-
-#define TILESETS_N 3
-#define TREASURE_TILES_IN_TILESET 5
+#define THEMES_N 3
+#define TREASURE_TILES_IN_THEME 5
 #define FIRST_TREASURE_TILE 0
-#define LAST_TREASURE_TILE ((FIRST_TREASURE_TILE + TILESETS_N * TREASURE_TILES_IN_TILESET) - 1)
-#define SKY_TILES_IN_TILESET 5
-#define SOLID_TILES_IN_TILESET 2
-#define FIRST_SOLID_TILE (FIRST_TREASURE_TILE + TREASURE_TILES_IN_TILESET * TILESETS_N + SKY_TILES_IN_TILESET * TILESETS_N)
+#define LAST_TREASURE_TILE ((FIRST_TREASURE_TILE + THEMES_N * TREASURE_TILES_IN_THEME) - 1)
+#define SKY_TILES_IN_THEME 5
+#define SOLID_TILES_IN_THEME 2
+#define FIRST_SOLID_TILE (FIRST_TREASURE_TILE + TREASURE_TILES_IN_THEME * THEMES_N + SKY_TILES_IN_THEME * THEMES_N)
 #define DIGIT_TILES 11
-#define FIRST_DIGIT_TILE (FIRST_SOLID_TILE + TILESETS_N * SOLID_TILES_IN_TILESET)
+#define FIRST_DIGIT_TILE (FIRST_SOLID_TILE + THEMES_N * SOLID_TILES_IN_THEME)
 #define LAST_SOLID_TILE (FIRST_DIGIT_TILE + DIGIT_TILES - 1)
 #define FIRST_ONE_WAY_TILE (LAST_SOLID_TILE + 1)
-#define ONE_WAY_TILES_IN_TILESET 1
-#define ONE_WAY_LADDER_TILES_IN_TILESET 3
-#define LADDER_TILES_IN_TILESET 2
-#define LAST_ONE_WAY_TILE ((FIRST_ONE_WAY_TILE + TILESETS_N * ONE_WAY_TILES_IN_TILESET + TILESETS_N * ONE_WAY_LADDER_TILES_IN_TILESET) - 1)
-#define FIRST_LADDER_TILE (FIRST_ONE_WAY_TILE + TILESETS_N * ONE_WAY_TILES_IN_TILESET)
-#define LAST_LADDER_TILE ((FIRST_LADDER_TILE + TILESETS_N * ONE_WAY_LADDER_TILES_IN_TILESET + TILESETS_N * LADDER_TILES_IN_TILESET) - 1)
-#define FIRE_TILES_IN_TILESET 1
+#define ONE_WAY_TILES_IN_THEME 1
+#define ONE_WAY_LADDER_TILES_IN_THEME 3
+#define LADDER_TILES_IN_THEME 2
+#define LAST_ONE_WAY_TILE ((FIRST_ONE_WAY_TILE + THEMES_N * ONE_WAY_TILES_IN_THEME + THEMES_N * ONE_WAY_LADDER_TILES_IN_THEME) - 1)
+#define FIRST_LADDER_TILE (FIRST_ONE_WAY_TILE + THEMES_N * ONE_WAY_TILES_IN_THEME)
+#define LAST_LADDER_TILE ((FIRST_LADDER_TILE + THEMES_N * ONE_WAY_LADDER_TILES_IN_THEME + THEMES_N * LADDER_TILES_IN_THEME) - 1)
+#define FIRE_TILES_IN_THEME 1
 #define FIRST_FIRE_TILE (LAST_LADDER_TILE + 1)
-#define LAST_FIRE_TILE ((FIRST_FIRE_TILE + TILESETS_N * FIRE_TILES_IN_TILESET) - 1)
+#define LAST_FIRE_TILE ((FIRST_FIRE_TILE + THEMES_N * FIRE_TILES_IN_THEME) - 1)
 
 // Ladder tiles must come immediately after one way tiles, because they partially overlap (the topmost ladder tiles are also one way tiles).
 
@@ -142,15 +114,6 @@
 #define isOneWay(t) (((t) >= FIRST_ONE_WAY_TILE) && ((t) <= LAST_ONE_WAY_TILE))
 #define isLadder(t) (((t) >= FIRST_LADDER_TILE) && ((t) <= LAST_LADDER_TILE))
 #define isFire(t) (((t) >= FIRST_FIRE_TILE) && ((t) <= LAST_FIRE_TILE))
-/*
-  One way of implementing everthing is to extend the idea that I'm
-  already using, which is to have an array of PLAYER structs for each
-  player, and I could have a fixed size array of MONSTER structs whose
-  size is the maximum number of monsters that I can have on the screen
-  at any time, and i could have a BOSS struct for when there is a boss
-  fight. Each one would have an interacts flag, so they could be turned
-  on or off as needed.
- */
 
 struct ENTITY;
 typedef struct ENTITY ENTITY;
