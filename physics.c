@@ -577,12 +577,12 @@ int main()
       /* DisplayNumber(SCREEN_TILES_H - 2, 0, sc, 4); */
       /* DisplayNumber(2, 0, globalFrameCounter, 3); */
       /* DisplayNumber(6, 0, localFrameCounter++, 3); */
-      /* DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
-      /* DisplayNumber(9, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3); */
-      /* //DisplayNumber(13, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3); */
-      /* DisplayNumber(15, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5); */
-      /* DisplayNumber(19, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3); */
-      /* //DisplayNumber(27, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3); */
+      DisplayNumber(4, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5);
+      DisplayNumber(8, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3);
+      DisplayNumber(12, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3);
+      DisplayNumber(18, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5);
+      DisplayNumber(22, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3);
+      DisplayNumber(26, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3);
       /* DisplayNumber(23, 0, currentLevel, 3); */
       /* //DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, levelOffset, 5); */
 
