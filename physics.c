@@ -573,8 +573,8 @@ int main()
       /*   backgroundFrameCounter = 0; */
 
       // Display debugging information
-      uint16_t sc = StackCount();
-      DisplayNumber(SCREEN_TILES_H - 2, 0, sc, 4);
+      /* uint16_t sc = StackCount(); */
+      /* DisplayNumber(SCREEN_TILES_H - 2, 0, sc, 4); */
       /* DisplayNumber(2, 0, globalFrameCounter, 3); */
       /* DisplayNumber(6, 0, localFrameCounter++, 3); */
       /* DisplayNumber(5, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
