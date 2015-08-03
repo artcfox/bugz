@@ -463,7 +463,7 @@ void entity_update_flying(ENTITY* e)
 #define LADYBUG_STATIONARY (LADYBUG_ANIMATION_START - 2)
 #define LADYBUG_JUMP (LADYBUG_ANIMATION_START - 1)
 #define LADYBUG_ANIMATION_FRAME_SKIP 4
-const uint8_t ladybugAnimation[] PROGMEM = { 0, 1, 2 };
+const uint8_t ladybugAnimation[] PROGMEM = { 0, -2, 1, 2 };
 
 void ladybug_render(ENTITY* e)
 {
@@ -479,11 +479,14 @@ void ladybug_render(ENTITY* e)
       if (!e->left && !e->right) {
         sprites[e->tag].tileIndex = LADYBUG_STATIONARY;
       } else {
-        for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+        for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
           if ((e->animationFrameCounter % LADYBUG_ANIMATION_FRAME_SKIP) == 0)
             sprites[e->tag].tileIndex = LADYBUG_ANIMATION_START + pgm_read_byte(&ladybugAnimation[e->animationFrameCounter / LADYBUG_ANIMATION_FRAME_SKIP]);
-          if (++e->animationFrameCounter == LADYBUG_ANIMATION_FRAME_SKIP * NELEMS(ladybugAnimation))
-            e->animationFrameCounter = 0;
+          // Compile-time assert that we are working with a power of 2
+          BUILD_BUG_ON(isNotPowerOf2(LADYBUG_ANIMATION_FRAME_SKIP * NELEMS(ladybugAnimation)));
+          e->animationFrameCounter = (e->animationFrameCounter + 1) & (LADYBUG_ANIMATION_FRAME_SKIP * NELEMS(ladybugAnimation) - 1);
+          /* if (++e->animationFrameCounter == LADYBUG_ANIMATION_FRAME_SKIP * NELEMS(ladybugAnimation)) */
+          /*   e->animationFrameCounter = 0; */
         }
       }
     }
@@ -503,7 +506,7 @@ void ladybug_render(ENTITY* e)
 #define ANT_STATIONARY (ANT_ANIMATION_START - 2)
 #define ANT_JUMP (ANT_ANIMATION_START - 1)
 #define ANT_ANIMATION_FRAME_SKIP 4
-const uint8_t antAnimation[] PROGMEM = { 0, 1, 2 };
+const uint8_t antAnimation[] PROGMEM = { 0, -2, 1, 2 };
 
 void ant_render(ENTITY* e)
 {
@@ -519,11 +522,14 @@ void ant_render(ENTITY* e)
       if (!e->left && !e->right) {
         sprites[e->tag].tileIndex = ANT_STATIONARY;
       } else {
-        for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+        for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
           if ((e->animationFrameCounter % ANT_ANIMATION_FRAME_SKIP) == 0)
             sprites[e->tag].tileIndex = ANT_ANIMATION_START + pgm_read_byte(&antAnimation[e->animationFrameCounter / ANT_ANIMATION_FRAME_SKIP]);
-          if (++e->animationFrameCounter == ANT_ANIMATION_FRAME_SKIP * NELEMS(antAnimation))
-            e->animationFrameCounter = 0;
+          // Compile-time assert that we are working with a power of 2
+          BUILD_BUG_ON(isNotPowerOf2(ANT_ANIMATION_FRAME_SKIP * NELEMS(antAnimation)));
+          e->animationFrameCounter = (e->animationFrameCounter + 1) & (ANT_ANIMATION_FRAME_SKIP * NELEMS(antAnimation) - 1);
+          /* if (++e->animationFrameCounter == ANT_ANIMATION_FRAME_SKIP * NELEMS(antAnimation)) */
+          /*   e->animationFrameCounter = 0; */
         }
       }
     }
@@ -543,7 +549,7 @@ void ant_render(ENTITY* e)
 #define CRICKET_STATIONARY (CRICKET_ANIMATION_START - 2)
 #define CRICKET_JUMP (CRICKET_ANIMATION_START - 1)
 #define CRICKET_ANIMATION_FRAME_SKIP 4
-const uint8_t cricketAnimation[] PROGMEM = { 0, 1, 2 };
+const uint8_t cricketAnimation[] PROGMEM = { 0, -2, 1, 2 };
 
 void cricket_render(ENTITY* e)
 {
@@ -559,11 +565,14 @@ void cricket_render(ENTITY* e)
       if (!e->left && !e->right) {
         sprites[e->tag].tileIndex = CRICKET_STATIONARY;
       } else {
-        for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+        for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
           if ((e->animationFrameCounter % CRICKET_ANIMATION_FRAME_SKIP) == 0)
             sprites[e->tag].tileIndex = CRICKET_ANIMATION_START + pgm_read_byte(&cricketAnimation[e->animationFrameCounter / CRICKET_ANIMATION_FRAME_SKIP]);
-          if (++e->animationFrameCounter == CRICKET_ANIMATION_FRAME_SKIP * NELEMS(cricketAnimation))
-            e->animationFrameCounter = 0;
+          // Compile-time assert that we are working with a power of 2
+          BUILD_BUG_ON(isNotPowerOf2(CRICKET_ANIMATION_FRAME_SKIP * NELEMS(cricketAnimation)));
+          e->animationFrameCounter = (e->animationFrameCounter + 1) & (CRICKET_ANIMATION_FRAME_SKIP * NELEMS(cricketAnimation) - 1);
+          /* if (++e->animationFrameCounter == CRICKET_ANIMATION_FRAME_SKIP * NELEMS(cricketAnimation)) */
+          /*   e->animationFrameCounter = 0; */
         }
       }
     }
@@ -583,7 +592,7 @@ void cricket_render(ENTITY* e)
 #define GRASSHOPPER_STATIONARY (GRASSHOPPER_ANIMATION_START - 2)
 #define GRASSHOPPER_JUMP (GRASSHOPPER_ANIMATION_START - 1)
 #define GRASSHOPPER_ANIMATION_FRAME_SKIP 4
-const uint8_t grasshopperAnimation[] PROGMEM = { 0, 1, 2 };
+const uint8_t grasshopperAnimation[] PROGMEM = { 0, -2, 1, 2 };
 
 void grasshopper_render(ENTITY* e)
 {
@@ -599,11 +608,14 @@ void grasshopper_render(ENTITY* e)
       if (!e->left && !e->right) {
         sprites[e->tag].tileIndex = GRASSHOPPER_STATIONARY;
       } else {
-        for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+        for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
           if ((e->animationFrameCounter % GRASSHOPPER_ANIMATION_FRAME_SKIP) == 0)
             sprites[e->tag].tileIndex = GRASSHOPPER_ANIMATION_START + pgm_read_byte(&grasshopperAnimation[e->animationFrameCounter / GRASSHOPPER_ANIMATION_FRAME_SKIP]);
-          if (++e->animationFrameCounter == GRASSHOPPER_ANIMATION_FRAME_SKIP * NELEMS(grasshopperAnimation))
-            e->animationFrameCounter = 0;
+          // Compile-time assert that we are working with a power of 2
+          BUILD_BUG_ON(isNotPowerOf2(GRASSHOPPER_ANIMATION_FRAME_SKIP * NELEMS(grasshopperAnimation)));
+          e->animationFrameCounter = (e->animationFrameCounter + 1) & (GRASSHOPPER_ANIMATION_FRAME_SKIP * NELEMS(grasshopperAnimation) - 1);
+          /* if (++e->animationFrameCounter == GRASSHOPPER_ANIMATION_FRAME_SKIP * NELEMS(grasshopperAnimation)) */
+          /*   e->animationFrameCounter = 0; */
         }
       }
     }
@@ -678,11 +690,14 @@ void spider_render(ENTITY* e)
   if (e->dead) {
     sprites[e->tag].tileIndex = SPIDER_DEAD;
   } else {
-    for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+    for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
       if ((e->animationFrameCounter % SPIDER_ANIMATION_FRAME_SKIP) == 0)
         sprites[e->tag].tileIndex = SPIDER_ANIMATION_START + pgm_read_byte(&spiderAnimation[e->animationFrameCounter / SPIDER_ANIMATION_FRAME_SKIP]);
-      if (++e->animationFrameCounter == SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation))
-        e->animationFrameCounter = 0;
+      // Compile-time assert that we are working with a power of 2
+      BUILD_BUG_ON(isNotPowerOf2(SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation)));
+      e->animationFrameCounter = (e->animationFrameCounter + 1) & (SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation) - 1);
+      /* if (++e->animationFrameCounter == SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation)) */
+      /*   e->animationFrameCounter = 0; */
     }
   }
 
@@ -971,11 +986,14 @@ void player_render(ENTITY* e)
     sprites[e->tag].tileIndex = PLAYER_DEAD + e->tag * PLAYER_NUM_SPRITES;
   } else if (e->update == player_update_ladder) {
     if (e->up || e->down || e->left || e->right) {
-      for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+      for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
         if ((e->animationFrameCounter % PLAYER_ANIMATION_FRAME_SKIP) == 0)
           sprites[e->tag].tileIndex = PLAYER_LADDER_ANIMATION_START + pgm_read_byte(&playerLadderAnimation[e->animationFrameCounter / PLAYER_LADDER_ANIMATION_FRAME_SKIP]) + e->tag * PLAYER_NUM_SPRITES;
-        if (++e->animationFrameCounter == PLAYER_LADDER_ANIMATION_FRAME_SKIP * NELEMS(playerLadderAnimation))
-          e->animationFrameCounter = 0;
+        // Compile-time assert that we are working with a power of 2
+        BUILD_BUG_ON(isNotPowerOf2(PLAYER_LADDER_ANIMATION_FRAME_SKIP * NELEMS(playerLadderAnimation)));
+        e->animationFrameCounter = (e->animationFrameCounter + 1) & (PLAYER_LADDER_ANIMATION_FRAME_SKIP * NELEMS(playerLadderAnimation) - 1);
+        /* if (++e->animationFrameCounter == PLAYER_LADDER_ANIMATION_FRAME_SKIP * NELEMS(playerLadderAnimation)) */
+        /*   e->animationFrameCounter = 0; */
 
         if (e->animationFrameCounter < PLAYER_LADDER_ANIMATION_FRAME_SKIP * NELEMS(playerLadderAnimation) / 2)
           sprites[e->tag].flags = 0;
@@ -995,11 +1013,14 @@ void player_render(ENTITY* e)
       if (!e->left && !e->right) {
         sprites[e->tag].tileIndex = PLAYER_STATIONARY + e->tag * PLAYER_NUM_SPRITES;
       } else {
-        for (uint8_t i = 0; i < (e->turbo ? 2 : 1); ++i) { // turbo makes animations faster
+        for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
           if ((e->animationFrameCounter % PLAYER_ANIMATION_FRAME_SKIP) == 0)
             sprites[e->tag].tileIndex = PLAYER_ANIMATION_START + pgm_read_byte(&playerAnimation[e->animationFrameCounter / PLAYER_ANIMATION_FRAME_SKIP]) + e->tag * PLAYER_NUM_SPRITES;
-          if (++e->animationFrameCounter == PLAYER_ANIMATION_FRAME_SKIP * NELEMS(playerAnimation))
-            e->animationFrameCounter = 0;
+          // Compile-time assert that we are working with a power of 2
+          BUILD_BUG_ON(isNotPowerOf2(PLAYER_ANIMATION_FRAME_SKIP * NELEMS(playerAnimation)));
+          e->animationFrameCounter = (e->animationFrameCounter + 1) & (PLAYER_ANIMATION_FRAME_SKIP * NELEMS(playerAnimation) - 1);
+          /* if (++e->animationFrameCounter == PLAYER_ANIMATION_FRAME_SKIP * NELEMS(playerAnimation)) */
+          /*   e->animationFrameCounter = 0; */
         }
       }
     }

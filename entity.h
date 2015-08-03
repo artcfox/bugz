@@ -41,6 +41,10 @@
 
 #define NELEMS(x) (sizeof(x)/sizeof(x[0]))
 
+// Gives a compile-time error if condition is not satisfied, produces no code otherwise
+#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
+#define isNotPowerOf2(x) (((x) & ((x) - 1)) != 0)
+
 #define LO8(x) ((uint8_t)((x) & 0xFF))
 #define HI8(x) ((uint8_t)(((x) >> 8) & 0xFF))
 
@@ -51,7 +55,7 @@
 #define nv(p) ((p) % (TILE_HEIGHT << FP_SHIFT))
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
-#define PLAYERS 1
+#define PLAYERS 2
 #define MONSTERS 6
 
 #define LEVELS 3

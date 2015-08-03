@@ -14,7 +14,7 @@ UZEBIN_DIR=../../../bin
 ## Kernel settings
 KERNEL_DIR = ../../../kernel
 KERNEL_OPTIONS  = -DVIDEO_MODE=3 -DINTRO_LOGO=0 -DSCROLLING=0 -DSOUND_MIXER=1
-KERNEL_OPTIONS += -DMAX_SPRITES=7 -DRAM_TILES_COUNT=28 -DSCREEN_TILES_V=28
+KERNEL_OPTIONS += -DMAX_SPRITES=8 -DRAM_TILES_COUNT=32 -DSCREEN_TILES_V=28
 # -DSOUND_CHANNEL_4_ENABLE=0
 # -DSCREEN_TILES_V=28
 # -DSCREEN_TILES_V=26 -DFIRST_RENDER_LINE=28
@@ -80,13 +80,13 @@ uzeboxVideoEngine.o: $(KERNEL_DIR)/uzeboxVideoEngine.c
 
 ## Compile game sources
 $(GAME).o: ../physics.c
-	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+	$(CC) $(INCLUDES) $(CFLAGS) -O3 -c  $<
 
 entity.o: ../entity.c
-	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+	$(CC) $(INCLUDES) $(CFLAGS) -O3 -c  $<
 
 stackmon.o: ../stackmon.c
-	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+	$(CC) $(INCLUDES) $(CFLAGS) -O3 -c  $<
 
 ##Link
 $(TARGET): $(OBJECTS)

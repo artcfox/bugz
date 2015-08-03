@@ -566,8 +566,11 @@ int main()
       static uint8_t backgroundFrameCounter;
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0)
         SetTileTable(tileset + 64 * ALLTILES_WIDTH * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
-      if (++backgroundFrameCounter == BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation))
-        backgroundFrameCounter = 0;
+      // Compile-time assert that we are working with a power of 2
+      BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
+      backgroundFrameCounter = (backgroundFrameCounter + 1) & (BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation) - 1);
+      /* if (++backgroundFrameCounter == BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)) */
+      /*   backgroundFrameCounter = 0; */
 
       // Display debugging information
       uint16_t sc = StackCount();
