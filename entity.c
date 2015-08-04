@@ -79,7 +79,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->interacts = true;
   sprites[tag].flags = 0; // set the initial direction of the entity
   e->render(e);
-  //e->dx = e->dy = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
+  //e->dx = e->dy = e->framesFalling = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
 }
 
 static inline bool isSolidForEntity(uint8_t tx, uint8_t ty, int16_t prevY, uint8_t entityHeight, bool down)
@@ -196,6 +196,7 @@ void ai_fly_horizontal(ENTITY* e)
   }
 }
 
+#if 0
 void entity_update(ENTITY* e)
 {
   bool wasLeft = (e->dx < 0);
@@ -298,6 +299,163 @@ void entity_update(ENTITY* e)
   }
 
   e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
+}
+#endif
+
+void entity_update(ENTITY* e)
+{
+  bool wasLeft = (e->dx < 0);
+  bool wasRight = (e->dx > 0);
+
+  int16_t ddx = 0;
+  int16_t ddy = WORLD_GRAVITY;
+
+  if (e->left)
+    ddx -= WORLD_ACCEL;    // entity wants to go left
+  else if (wasLeft)
+    ddx += WORLD_FRICTION; // entity was going left, but not anymore
+
+  if (e->right)
+    ddx += WORLD_ACCEL;    // entity wants to go right
+  else if (wasRight)
+    ddx -= WORLD_FRICTION; // entity was going right, but not anymore
+
+  if (e->jump && !e->jumping && !(e->falling ? (e->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
+    if (e->tag < PLAYERS)  // only play the jump sound effect when a human player is jumping
+      TriggerFx(0, 128, true);
+    e->dy = 0;             // reset vertical velocity so jumps during grace period are consistent with jumps from ground
+    ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
+    e->jumping = true;
+    e->jumpReleased = false;
+  }
+
+  // Bounce a bit when you stomp a monster
+  if (e->monsterhop) {
+    e->monsterhop = e->jumping = e->falling = false;
+    e->jumpReleased = true;
+    e->dy = e->framesFalling = 0;
+    ddy -= (WORLD_JUMP_IMPULSE >> 1);
+  }
+
+  // Variable height jumping
+  if (e->jumping && e->jumpReleased && (e->dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
+      e->dy = -WORLD_CUT_JUMP_SPEED_LIMIT;
+
+  // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->x += (e->dx / WORLD_FPS);
+  e->dx += (ddx / WORLD_FPS);
+  if (e->turbo) {
+    if (e->dx < -(e->maxdx + WORLD_METER))
+      e->dx = -(e->maxdx + WORLD_METER);
+    else if (e->dx > (e->maxdx + WORLD_METER))
+      e->dx = (e->maxdx + WORLD_METER);
+  } else {
+    if (e->dx < -e->maxdx)
+      e->dx = -e->maxdx;
+    else if (e->dx > e->maxdx)
+      e->dx = e->maxdx;
+  }
+
+  // Clamp horizontal velocity to zero if we detect that the direction has changed
+  if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0)))
+    e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
+
+  // Collision Detection for X
+  uint8_t tx = p2ht(e->x);
+  uint8_t ty = p2vt(e->y);
+  bool ny = (bool)nv(e->y); // true if entity overlaps below
+  bool cell      = isSolid(GetTile(tx,     ty    ));
+  bool cellright = isSolid(GetTile(tx + 1, ty    ));
+  bool celldown  = isSolid(GetTile(tx,     ty + 1));
+  bool celldiag  = isSolid(GetTile(tx + 1, ty + 1));
+
+  if (e->dx > 0) {
+    if ((cellright && !cell) ||
+        (celldiag  && !celldown && ny)) {
+      e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform just hit
+      e->dx = 0;           // stop horizontal velocity
+    }
+  } else if (e->dx < 0) {
+    if ((cell     && !cellright) ||
+        (celldown && !celldiag && ny && !isLadder(GetTile(tx + 1, ty + 1)))) { // isLadder() check avoids potential glitch
+      e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform just hit
+      e->dx = 0;           // stop horizontal velocity
+    }
+  }
+
+  // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  int16_t prevY = e->y; // cache previous Y value for one-way tiles
+  e->y += (e->dy / WORLD_FPS);
+  e->dy += (ddy / WORLD_FPS);
+  if (e->dy < -WORLD_MAXDY)
+    e->dy = -WORLD_MAXDY;
+  else if (e->dy > WORLD_MAXDY)
+    e->dy = WORLD_MAXDY;
+
+  // Check to see if the entity has fallen down a hole
+  if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
+    e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
+    e->dy = 0;
+    if (!e->invincible)
+      e->dead = true;
+    return;
+  }
+
+  // Collision Detection for Y
+  tx = p2ht(e->x);
+  ty = p2vt(e->y);
+  bool nx = (bool)nh(e->x);  // true if entity overlaps right
+  cell      = isSolidForEntity(tx,     ty,     prevY, WORLD_METER, e->down);
+  cellright = isSolidForEntity(tx + 1, ty,     prevY, WORLD_METER, e->down);
+  celldown  = isSolidForEntity(tx,     ty + 1, prevY, WORLD_METER, e->down);
+  celldiag  = isSolidForEntity(tx + 1, ty + 1, prevY, WORLD_METER, e->down);
+
+  if (e->dy > 0) {
+    if ((celldown && !cell) ||
+        (celldiag && !cellright && nx)) {
+      e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
+      e->dy = 0;           // stop downward velocity
+      e->jumping = false;  // no longer jumping
+      e->framesFalling = 0;
+    }
+  } else if (e->dy < 0) {
+    if ((cell      && !celldown) ||
+        (cellright && !celldiag && nx)) {
+      e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
+      e->dy = 0;           // stop updard velocity
+    }
+  }
+
+  e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
+  if (e->falling && e->framesFalling <= WORLD_FALLING_GRACE_FRAMES)
+    e->framesFalling++;
+
+  // Collision detection with ladders
+  if (e->up || e->down) {
+    if (e->down) {
+      ty = p2vt(e->y + 1);     // the tile one sub-sub-pixel below current position
+      ny = (bool)nv(e->y + 1); // true if player overlaps below
+    } else { // e->up
+      ty = p2vt(e->y - 1);     // the tile one sub-sub-pixel above current position
+      ny = (bool)nv(e->y - 1); // true if entity overlaps above
+    }
+    
+    cell      = isLadder(GetTile(tx,     ty    ));
+    cellright = isLadder(GetTile(tx + 1, ty    ));
+    celldown  = isLadder(GetTile(tx,     ty + 1));
+    celldiag  = isLadder(GetTile(tx + 1, ty + 1));
+
+    if ((cell) || (cellright && nx) || (celldown && ny) || (celldiag && nx && ny)) {
+      if (e->down)
+        e->y++; // allow entity to join a ladder directly below them
+      else // e->up
+        e->y--; // allow entity to join a ladder directly above them
+      e->update = entity_update_ladder;
+      e->animationFrameCounter = 0;
+      e->jumping = false;
+      e->dx = e->dy = 0;
+    }
+  }
 }
 
 void entity_update_dying(ENTITY* e)
@@ -443,6 +601,34 @@ void entity_update_flying(ENTITY* e)
   } else if (e->y < 0) {
     e->y = 0;
     e->dy = 0;
+  }
+}
+
+void entity_update_ladder(ENTITY* e)
+{
+  entity_update_flying(e);
+
+  // Collision detection for ladders
+  uint8_t tx = p2ht(e->x);
+  uint8_t ty = p2vt(e->y);
+  bool nx = (bool)nh(e->x); // true if entity overlaps right
+  bool ny = (bool)nv(e->y); // true if entity overlaps below
+
+  // Check to see if the entity has left the ladder
+  if (!(isLadder(GetTile(tx, ty)) || (nx && isLadder(GetTile(tx + 1, ty))) || (ny && isLadder(GetTile(tx, ty + 1))) || (nx && ny && isLadder(GetTile(tx + 1, ty + 1))))) {
+    e->update = entity_update;
+    e->animationFrameCounter = 0;
+    e->framesFalling = 0;   // reset the counter so a grace jump is allowed if moving off the ladder causes the entity to fall
+    e->jumpReleased = true; // set this flag so attempting to jump off a ladder while moving up or down happens as soon as the entity leaves the ladder
+  }
+
+  // Allow jumping off ladder if the entity is not moving up or down
+  if (e->jump && (!(e->up || e->down))) { // don't allow jumping if up or down is being held, because the entity would immediately rejoin the ladder
+    e->jumping = e->falling = false; // ensure jump happens when calling entity_update
+    e->jump = true;
+    e->update = entity_update;
+    e->animationFrameCounter = 0;
+    entity_update(e); // run this inline, so the jump and proper collision can happen this frame
   }
 }
 
@@ -704,7 +890,6 @@ void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
 {
   entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx, impulse);
   memset(&(p->buttons), 0, sizeof(BUTTON_INFO));
-  p->framesFalling = 0;
 }
 
 void player_input(ENTITY* e)
@@ -755,194 +940,6 @@ void player_input(ENTITY* e)
   }
 }
 
-void player_update_ladder(ENTITY* e)
-{
-  PLAYER* p = (PLAYER*)e; // upcast
-  entity_update_flying(e);
-
-  // Collision detection for ladders
-  uint8_t tx = p2ht(e->x);
-  uint8_t ty = p2vt(e->y);
-  bool nx = (bool)nh(e->x);  // true if player overlaps right
-  bool ny = (bool)nv(e->y); // true if player overlaps below
-
-  // Check to see if we've left the ladder
-  if (!(isLadder(GetTile(tx, ty)) || (nx && isLadder(GetTile(tx + 1, ty))) || (ny && isLadder(GetTile(tx, ty + 1))) || (nx && ny && isLadder(GetTile(tx + 1, ty + 1))))) {
-    e->update = player_update;
-    e->animationFrameCounter = 0;
-    p->framesFalling = 0;   // reset the counter so a jump is allowed if moving off the ladder causes a fall
-    e->jumpReleased = true; // force the release of the jump button so "early jumps" off a ladder happen as soon as you leave the ladder
-  }
-
-  // Allow jumping off the ladder if we are not moving up or down
-  if (e->jump && (!(e->up || e->down))) { // don't allow jumping if up or down is being held, because you would immediately rejoin the ladder
-    e->jumping = e->falling = false; // ensure jump happens when calling player_update
-    e->jump = true;
-    e->update = player_update;
-    e->animationFrameCounter = 0;
-    player_update(e); // run this inline, so the jump and proper collision can happen this frame
-  }
-}
-
-void player_update(ENTITY* e)
-{
-  PLAYER* p = (PLAYER*)e; // upcast
-
-  bool wasLeft = (e->dx < 0);
-  bool wasRight = (e->dx > 0);
-
-  int16_t ddx = 0;
-  int16_t ddy = WORLD_GRAVITY;
-
-  if (e->left)
-    ddx -= WORLD_ACCEL;    // player wants to go left
-  else if (wasLeft)
-    ddx += WORLD_FRICTION; // player was going left, but not anymore
-
-  if (e->right)
-    ddx += WORLD_ACCEL;    // player wants to go right
-  else if (wasRight)
-    ddx -= WORLD_FRICTION; // player was going right, but not anymore
-
-  if (e->jump && !e->jumping && !(e->falling ? (p->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
-    TriggerFx(0, 128, true);
-    e->dy = 0;             // reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
-    e->jumping = true;
-    e->jumpReleased = false;
-  }
-
-  // Bounce a bit when you stomp a monster
-  if (e->monsterhop) {
-    e->monsterhop = e->jumping = e->falling = false;
-    e->jumpReleased = true;
-    e->dy = p->framesFalling = 0;
-    ddy -= (e->impulse >> 1);
-  }
-
-  // Variable height jumping
-  if (e->jumping && e->jumpReleased && (e->dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
-      e->dy = -WORLD_CUT_JUMP_SPEED_LIMIT;
-
-  // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  e->x += (e->dx / WORLD_FPS);
-  e->dx += (ddx / WORLD_FPS);
-  if (e->turbo) {
-    if (e->dx < -(e->maxdx + WORLD_METER))
-      e->dx = -(e->maxdx + WORLD_METER);
-    else if (e->dx > (e->maxdx + WORLD_METER))
-      e->dx = (e->maxdx + WORLD_METER);
-  } else {
-    if (e->dx < -e->maxdx)
-      e->dx = -e->maxdx;
-    else if (e->dx > e->maxdx)
-      e->dx = e->maxdx;
-  }
-
-  // Clamp horizontal velocity to zero if we detect that the players direction has changed
-  if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0)))
-    e->dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
-
-  // Collision Detection for X
-  uint8_t tx = p2ht(e->x);
-  uint8_t ty = p2vt(e->y);
-  bool ny = (bool)nv(e->y); // true if player overlaps below
-  bool cell      = isSolid(GetTile(tx,     ty    ));
-  bool cellright = isSolid(GetTile(tx + 1, ty    ));
-  bool celldown  = isSolid(GetTile(tx,     ty + 1));
-  bool celldiag  = isSolid(GetTile(tx + 1, ty + 1));
-
-  if (e->dx > 0) {
-    if ((cellright && !cell) ||
-        (celldiag  && !celldown && ny)) {
-      e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform we just hit
-      e->dx = 0;           // stop horizontal velocity
-    }
-  } else if (e->dx < 0) {
-    if ((cell     && !cellright) ||
-        (celldown && !celldiag && ny && !isLadder(GetTile(tx + 1, ty + 1)))) { // isLadder() check avoids potential glitch
-      e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform we just hit
-      e->dx = 0;           // stop horizontal velocity
-    }
-  }
-
-  // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  int16_t prevY = e->y; // cache previous Y value for one-way tiles
-  e->y += (e->dy / WORLD_FPS);
-  e->dy += (ddy / WORLD_FPS);
-  if (e->dy < -WORLD_MAXDY)
-    e->dy = -WORLD_MAXDY;
-  else if (e->dy > WORLD_MAXDY)
-    e->dy = WORLD_MAXDY;
-
-  // Has entity fallen down a hole?
-  if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
-    e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
-    e->dy = 0;
-    if (!e->invincible)
-      e->dead = true;
-    return;
-  }
-
-  // Collision Detection for Y
-  tx = p2ht(e->x);
-  ty = p2vt(e->y);
-  bool nx = (bool)nh(e->x);  // true if player overlaps right
-  cell      = isSolidForEntity(tx,     ty,     prevY, WORLD_METER, e->down);
-  cellright = isSolidForEntity(tx + 1, ty,     prevY, WORLD_METER, e->down);
-  celldown  = isSolidForEntity(tx,     ty + 1, prevY, WORLD_METER, e->down);
-  celldiag  = isSolidForEntity(tx + 1, ty + 1, prevY, WORLD_METER, e->down);
-
-  if (e->dy > 0) {
-    if ((celldown && !cell) ||
-        (celldiag && !cellright && nx)) {
-      e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
-      e->dy = 0;           // stop downward velocity
-      e->jumping = false;  // no longer jumping
-      p->framesFalling = 0;
-    }
-  } else if (e->dy < 0) {
-    if ((cell      && !celldown) ||
-        (cellright && !celldiag && nx)) {
-      e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
-      e->dy = 0;           // stop updard velocity
-    }
-  }
-
-  e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
-  if (e->falling && p->framesFalling < 255)
-    p->framesFalling++;
-
-  // Collision detection with ladders
-  if (e->up || e->down) {
-    if (e->down) {
-      ty = p2vt(e->y + 1); // the tile one sub-sub-pixel below our position
-      ny = (bool)nv(e->y + 1); // true if player overlaps below
-    } else { // e->up
-      ty = p2vt(e->y - 1); // the tile one sub-sub-pixel above our position
-      ny = (bool)nv(e->y - 1); // true if player overlaps above
-    }
-    
-    cell      = isLadder(GetTile(tx,     ty    ));
-    cellright = isLadder(GetTile(tx + 1, ty    ));
-    celldown  = isLadder(GetTile(tx,     ty + 1));
-    celldiag  = isLadder(GetTile(tx + 1, ty + 1));
-
-    /* if ( (((cell) || (celldown && ny)) && ((e->x - ht2p(tx)) < (WORLD_METER - (2 << FP_SHIFT) ))) || */
-    /*      (((cellright && nx) || (celldiag && nx && ny)) && ((ht2p(tx + 1) - e->x) < (WORLD_METER - (2 << FP_SHIFT) ))) ) { */
-    if ((cell) || (cellright && nx) || (celldown && ny) || (celldiag && nx && ny)) {
-      if (e->down)
-        e->y++; // allow player to join ladder without jumping if the ladder is the tile immediately below them
-      else // e->up
-        e->y--; // allow player to join ladder without jumping if the ladder is the tile immediately above them
-      e->update = player_update_ladder;
-      e->animationFrameCounter = 0;
-      e->jumping = false;
-      e->dx = e->dy = 0;
-    }
-  }
-}
-
 #define PLAYER_ANIMATION_START 3
 #define PLAYER_LADDER_ANIMATION_START 6
 #define PLAYER_DEAD (PLAYER_ANIMATION_START - 3)
@@ -958,7 +955,7 @@ void player_render(ENTITY* e)
 {
   if (e->dead) {
     sprites[e->tag].tileIndex = PLAYER_DEAD + e->tag * PLAYER_NUM_SPRITES;
-  } else if (e->update == player_update_ladder) {
+  } else if (e->update == entity_update_ladder) {
     if (e->up || e->down || e->left || e->right) {
       for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
         if ((e->animationFrameCounter % PLAYER_ANIMATION_FRAME_SKIP) == 0)
@@ -1000,7 +997,7 @@ void player_render(ENTITY* e)
     }
   }
 
-  if (e->update != player_update_ladder) {
+  if (e->update != entity_update_ladder) {
     if (e->left)
       sprites[e->tag].flags = 0;
     if (e->right)

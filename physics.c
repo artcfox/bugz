@@ -91,17 +91,14 @@ typedef enum UPDATE_FUNCTION UPDATE_FUNCTION;
 
 enum UPDATE_FUNCTION {
   NULL_UPDATE = 0,
-  PLAYER_UPDATE = 1,
-  ENTITY_UPDATE = 2,
-  ENTITY_UPDATE_FLYING = 3,
+  ENTITY_UPDATE = 1,
+  ENTITY_UPDATE_FLYING = 2,
 };
 
 typedef void (*updateFnPtr)(ENTITY*);
 updateFnPtr updateFunc(UPDATE_FUNCTION u)
 {
   switch (u) {
-  case PLAYER_UPDATE:
-    return player_update;
   case ENTITY_UPDATE:
     return entity_update;
   case ENTITY_UPDATE_FLYING:
@@ -183,7 +180,7 @@ const uint8_t levelData[] PROGMEM = {
 /*   LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                  // int16_t playerMaxDX[2] */
 /*   LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2] */
 /*   PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2] */
-/*   PLAYER_UPDATE, PLAYER_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2] */
+/*   ENTITY_UPDATE, ENTITY_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2] */
 /*   PLAYER_RENDER, PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2] */
 /*   LO8HI8(WORLD_METER * 6), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 3), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 1), // int16_t monsterMaxDX[6] */
 /*   3, 25, LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), // int16_t monsterImpulse[6] */
@@ -201,7 +198,7 @@ const uint8_t levelData[] PROGMEM = {
   LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                                // int16_t playerMaxDX[2]
   LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
   PLAYER_INPUT, PLAYER_INPUT,     // INPUT_FUNCTIONS playerInputFuncs[2]
-  PLAYER_UPDATE, PLAYER_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
   PLAYER_RENDER, PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2]
   LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 3), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 2), // int16_t monsterMaxDX[6]
   LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE >> 1),    // int16_t monsterImpulse[6]
@@ -224,7 +221,7 @@ const uint8_t levelData[] PROGMEM = {
   LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                  // int16_t playerMaxDX[2]
   LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
   PLAYER_INPUT, PLAYER_INPUT,     // INPUT_FUNCTIONS playerInputFuncs[2]
-  PLAYER_UPDATE, PLAYER_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
   PLAYER_RENDER, PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2]
   LO8HI8(WORLD_METER * 12), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 3), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 1), // int16_t monsterMaxDX[6]
   16, 23, LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), // int16_t monsterImpulse[6]
@@ -249,7 +246,7 @@ const uint8_t levelData[] PROGMEM = {
   LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                  // int16_t playerMaxDX[2]
   LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
   PLAYER_INPUT, PLAYER_INPUT,     // INPUT_FUNCTIONS playerInputFuncs[2]
-  PLAYER_UPDATE, PLAYER_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
   PLAYER_RENDER, PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2]
   LO8HI8(WORLD_METER * 5), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 3), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 1), // int16_t monsterMaxDX[6]
   16, 23, LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), // int16_t monsterImpulse[6]
@@ -395,9 +392,8 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* theme)
 // Defines the order in which the tileset "rows" are swapped in for animating tiles
 const uint8_t backgroundAnimation[] PROGMEM = { 0, 1, 2, 1 };
 
-static void killPlayer(PLAYER* p)
+static void killPlayer(ENTITY* e)
 {
-  ENTITY* e = (ENTITY*)p;
   if (e->invincible)
     return;
   TriggerFx(1, 128, true);
@@ -415,7 +411,7 @@ static void killMonster(ENTITY* e)
     return;
   TriggerFx(3, 128, true);         // play the monster death sound
   e->dead = true;                  // kill the monster
-  e->interacts = false;              // make sure we don't consider the entity again for collisions
+  e->interacts = false;            // make sure we don't consider the entity again for collisions
   e->input = null_input;           // disable the entity's ai
   e->update = entity_update_dying; // use dying physics
 }
@@ -480,7 +476,7 @@ int main()
   currentLevel = levelOffset = theme = 0;
 
   for (;;) {
-    //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
+    WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
     levelOffset = LoadLevel(currentLevel, &theme);
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
@@ -517,7 +513,7 @@ int main()
 /*     ((ENTITY*)(&player[1]))->invincible = true; */
 /* #endif // (PLAYERS == 2) */
 
-    //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
+    WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
 
     // Initialize monsters
     for (uint8_t i = 0; i < MONSTERS; ++i)
@@ -573,16 +569,16 @@ int main()
       /*   backgroundFrameCounter = 0; */
 
       // Display debugging information
-      /* uint16_t sc = StackCount(); */
-      /* DisplayNumber(SCREEN_TILES_H - 2, 0, sc, 4); */
+      uint16_t sc = StackCount();
+      DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, sc, 4);
       /* DisplayNumber(2, 0, globalFrameCounter, 3); */
       /* DisplayNumber(6, 0, localFrameCounter++, 3); */
-      DisplayNumber(4, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5);
-      DisplayNumber(8, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3);
-      DisplayNumber(12, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3);
-      DisplayNumber(18, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5);
-      DisplayNumber(22, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3);
-      DisplayNumber(26, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3);
+      /* DisplayNumber(4, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
+      /* DisplayNumber(8, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3); */
+      /* DisplayNumber(12, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3); */
+      /* DisplayNumber(18, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5); */
+      /* DisplayNumber(22, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3); */
+      /* DisplayNumber(26, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3); */
       /* DisplayNumber(23, 0, currentLevel, 3); */
       /* //DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, levelOffset, 5); */
 
@@ -624,7 +620,7 @@ int main()
               killMonster(&monster[i]);
               e->monsterhop = true; // player should now do the monster hop
             } else {
-              killPlayer((PLAYER*)e);
+              killPlayer(e);
             }
           }
         }
@@ -645,14 +641,16 @@ int main()
       }
 
       // Check if the dead flag has been set for a player
-      for (uint8_t i = 0; i < PLAYERS; ++i)
-        if (((ENTITY*)(&player[i]))->interacts && ((ENTITY*)(&player[i]))->dead)
-          killPlayer(&player[i]);
+      for (uint8_t i = 0; i < PLAYERS; ++i) {
+        ENTITY* e = (ENTITY*)&player[i];
+        if (e->interacts && e->dead)
+          killPlayer(e);
+      }
 
       // Check for environmental collisions (treasure, fire) by looping over the interacting players, converting
       // their (x, y) coordinates into tile coordinates, and then reading any overlapping tiles.
-      for (uint8_t p = 0; p < PLAYERS; ++p) {
-        ENTITY* e = (ENTITY*)(&player[p]);
+      for (uint8_t i = 0; i < PLAYERS; ++i) {
+        ENTITY* e = (ENTITY*)(&player[i]);
         if (e->interacts && !e->dead) {
           uint8_t tx = p2ht(e->x);
           uint8_t ty = p2vt(e->y);
