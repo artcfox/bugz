@@ -632,33 +632,32 @@ void entity_update_ladder(ENTITY* e)
   }
 }
 
-#define LADYBUG_ANIMATION_START 25
-#define LADYBUG_DEAD (LADYBUG_ANIMATION_START - 3)
-#define LADYBUG_STATIONARY (LADYBUG_ANIMATION_START - 2)
-#define LADYBUG_JUMP (LADYBUG_ANIMATION_START - 1)
-#define LADYBUG_ANIMATION_FRAME_SKIP 4
-const uint8_t ladybugAnimation[] PROGMEM = { 0, -2, 1, 2 };
+#define GENERIC_OFFSET_DEAD (-3)
+#define GENERIC_OFFSET_STATIONARY (-2)
+#define GENERIC_OFFSET_JUMP (-1)
+#define GENERIC_ANIMATION_FRAME_SKIP 4
+const uint8_t genericAnimation[] PROGMEM = { 0, -2, 1, 2 };
 
-void ladybug_render(ENTITY* e)
+static void generic_render(ENTITY* e, const uint8_t animationStart)
 {
   if (e->dead) {
-    sprites[e->tag].tileIndex = LADYBUG_DEAD;
+    sprites[e->tag].tileIndex = animationStart + GENERIC_OFFSET_DEAD;
   } else {
     if (e->jumping || e->falling || e->update == entity_update_flying) {
       if (e->dy >= 0)
-        sprites[e->tag].tileIndex = LADYBUG_STATIONARY;
+        sprites[e->tag].tileIndex = animationStart + GENERIC_OFFSET_STATIONARY;
       else
-        sprites[e->tag].tileIndex = LADYBUG_JUMP;
+        sprites[e->tag].tileIndex = animationStart + GENERIC_OFFSET_JUMP;
     } else {
       if (!e->left && !e->right) {
-        sprites[e->tag].tileIndex = LADYBUG_STATIONARY;
+        sprites[e->tag].tileIndex = animationStart + GENERIC_OFFSET_STATIONARY;
       } else {
         for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
-          if ((e->animationFrameCounter % LADYBUG_ANIMATION_FRAME_SKIP) == 0)
-            sprites[e->tag].tileIndex = LADYBUG_ANIMATION_START + pgm_read_byte(&ladybugAnimation[e->animationFrameCounter / LADYBUG_ANIMATION_FRAME_SKIP]);
+          if ((e->animationFrameCounter % GENERIC_ANIMATION_FRAME_SKIP) == 0)
+            sprites[e->tag].tileIndex = animationStart + pgm_read_byte(&genericAnimation[e->animationFrameCounter / GENERIC_ANIMATION_FRAME_SKIP]);
           // Compile-time assert that we are working with a power of 2
-          BUILD_BUG_ON(isNotPowerOf2(LADYBUG_ANIMATION_FRAME_SKIP * NELEMS(ladybugAnimation)));
-          e->animationFrameCounter = (e->animationFrameCounter + 1) & (LADYBUG_ANIMATION_FRAME_SKIP * NELEMS(ladybugAnimation) - 1);
+          BUILD_BUG_ON(isNotPowerOf2(GENERIC_ANIMATION_FRAME_SKIP * NELEMS(genericAnimation)));
+          e->animationFrameCounter = (e->animationFrameCounter + 1) & (GENERIC_ANIMATION_FRAME_SKIP * NELEMS(genericAnimation) - 1);
           /* if (++e->animationFrameCounter == LADYBUG_ANIMATION_FRAME_SKIP * NELEMS(ladybugAnimation)) */
           /*   e->animationFrameCounter = 0; */
         }
@@ -675,124 +674,47 @@ void ladybug_render(ENTITY* e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
+#define LADYBUG_ANIMATION_START 25
+
+void ladybug_render(ENTITY* e)
+{
+  generic_render(e, LADYBUG_ANIMATION_START);
+}
+
 #define ANT_ANIMATION_START 31
-#define ANT_DEAD (ANT_ANIMATION_START - 3)
-#define ANT_STATIONARY (ANT_ANIMATION_START - 2)
-#define ANT_JUMP (ANT_ANIMATION_START - 1)
-#define ANT_ANIMATION_FRAME_SKIP 4
-const uint8_t antAnimation[] PROGMEM = { 0, -2, 1, 2 };
 
 void ant_render(ENTITY* e)
 {
-  if (e->dead) {
-    sprites[e->tag].tileIndex = ANT_DEAD;
-  } else {
-    if (e->jumping || e->falling || e->update == entity_update_flying) {
-      if (e->dy >= 0)
-        sprites[e->tag].tileIndex = ANT_STATIONARY;
-      else
-        sprites[e->tag].tileIndex = ANT_JUMP;
-    } else {
-      if (!e->left && !e->right) {
-        sprites[e->tag].tileIndex = ANT_STATIONARY;
-      } else {
-        for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
-          if ((e->animationFrameCounter % ANT_ANIMATION_FRAME_SKIP) == 0)
-            sprites[e->tag].tileIndex = ANT_ANIMATION_START + pgm_read_byte(&antAnimation[e->animationFrameCounter / ANT_ANIMATION_FRAME_SKIP]);
-          // Compile-time assert that we are working with a power of 2
-          BUILD_BUG_ON(isNotPowerOf2(ANT_ANIMATION_FRAME_SKIP * NELEMS(antAnimation)));
-          e->animationFrameCounter = (e->animationFrameCounter + 1) & (ANT_ANIMATION_FRAME_SKIP * NELEMS(antAnimation) - 1);
-          /* if (++e->animationFrameCounter == ANT_ANIMATION_FRAME_SKIP * NELEMS(antAnimation)) */
-          /*   e->animationFrameCounter = 0; */
-        }
-      }
-    }
-  }
-
-  if (e->left)
-    sprites[e->tag].flags = 0;
-  if (e->right)
-    sprites[e->tag].flags = SPRITE_FLIP_X;
-
-  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  generic_render(e, ANT_ANIMATION_START);
 }
 
 #define CRICKET_ANIMATION_START 37
-#define CRICKET_DEAD (CRICKET_ANIMATION_START - 3)
-#define CRICKET_STATIONARY (CRICKET_ANIMATION_START - 2)
-#define CRICKET_JUMP (CRICKET_ANIMATION_START - 1)
-#define CRICKET_ANIMATION_FRAME_SKIP 4
-const uint8_t cricketAnimation[] PROGMEM = { 0, -2, 1, 2 };
 
 void cricket_render(ENTITY* e)
 {
-  if (e->dead) {
-    sprites[e->tag].tileIndex = CRICKET_DEAD;
-  } else {
-    if (e->jumping || e->falling || e->update == entity_update_flying) {
-      if (e->dy >= 0)
-        sprites[e->tag].tileIndex = CRICKET_STATIONARY;
-      else
-        sprites[e->tag].tileIndex = CRICKET_JUMP;
-    } else {
-      if (!e->left && !e->right) {
-        sprites[e->tag].tileIndex = CRICKET_STATIONARY;
-      } else {
-        for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
-          if ((e->animationFrameCounter % CRICKET_ANIMATION_FRAME_SKIP) == 0)
-            sprites[e->tag].tileIndex = CRICKET_ANIMATION_START + pgm_read_byte(&cricketAnimation[e->animationFrameCounter / CRICKET_ANIMATION_FRAME_SKIP]);
-          // Compile-time assert that we are working with a power of 2
-          BUILD_BUG_ON(isNotPowerOf2(CRICKET_ANIMATION_FRAME_SKIP * NELEMS(cricketAnimation)));
-          e->animationFrameCounter = (e->animationFrameCounter + 1) & (CRICKET_ANIMATION_FRAME_SKIP * NELEMS(cricketAnimation) - 1);
-          /* if (++e->animationFrameCounter == CRICKET_ANIMATION_FRAME_SKIP * NELEMS(cricketAnimation)) */
-          /*   e->animationFrameCounter = 0; */
-        }
-      }
-    }
-  }
-
-  if (e->left)
-    sprites[e->tag].flags = 0;
-  if (e->right)
-    sprites[e->tag].flags = SPRITE_FLIP_X;
-
-  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  generic_render(e, CRICKET_ANIMATION_START);
 }
 
 #define GRASSHOPPER_ANIMATION_START 43
-#define GRASSHOPPER_DEAD (GRASSHOPPER_ANIMATION_START - 3)
-#define GRASSHOPPER_STATIONARY (GRASSHOPPER_ANIMATION_START - 2)
-#define GRASSHOPPER_JUMP (GRASSHOPPER_ANIMATION_START - 1)
-#define GRASSHOPPER_ANIMATION_FRAME_SKIP 4
-const uint8_t grasshopperAnimation[] PROGMEM = { 0, -2, 1, 2 };
 
 void grasshopper_render(ENTITY* e)
 {
+  generic_render(e, GRASSHOPPER_ANIMATION_START);
+}
+
+#define GENERIC_FLYING_OFFSET_DEAD (-1)
+#define GENERIC_FLYING_ANIMATION_FRAME_SKIP 2
+const uint8_t genericFlyingAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
+
+static void generic_flying_render(ENTITY* e, const uint8_t animationStart)
+{
   if (e->dead) {
-    sprites[e->tag].tileIndex = GRASSHOPPER_DEAD;
+    sprites[e->tag].tileIndex = animationStart + GENERIC_FLYING_OFFSET_DEAD;
   } else {
-    if (e->jumping || e->falling || e->update == entity_update_flying) {
-      if (e->dy >= 0)
-        sprites[e->tag].tileIndex = GRASSHOPPER_STATIONARY;
-      else
-        sprites[e->tag].tileIndex = GRASSHOPPER_JUMP;
-    } else {
-      if (!e->left && !e->right) {
-        sprites[e->tag].tileIndex = GRASSHOPPER_STATIONARY;
-      } else {
-        for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
-          if ((e->animationFrameCounter % GRASSHOPPER_ANIMATION_FRAME_SKIP) == 0)
-            sprites[e->tag].tileIndex = GRASSHOPPER_ANIMATION_START + pgm_read_byte(&grasshopperAnimation[e->animationFrameCounter / GRASSHOPPER_ANIMATION_FRAME_SKIP]);
-          // Compile-time assert that we are working with a power of 2
-          BUILD_BUG_ON(isNotPowerOf2(GRASSHOPPER_ANIMATION_FRAME_SKIP * NELEMS(grasshopperAnimation)));
-          e->animationFrameCounter = (e->animationFrameCounter + 1) & (GRASSHOPPER_ANIMATION_FRAME_SKIP * NELEMS(grasshopperAnimation) - 1);
-          /* if (++e->animationFrameCounter == GRASSHOPPER_ANIMATION_FRAME_SKIP * NELEMS(grasshopperAnimation)) */
-          /*   e->animationFrameCounter = 0; */
-        }
-      }
-    }
+    if ((e->animationFrameCounter % GENERIC_FLYING_ANIMATION_FRAME_SKIP) == 0)
+      sprites[e->tag].tileIndex = animationStart + pgm_read_byte(&genericFlyingAnimation[e->animationFrameCounter / GENERIC_FLYING_ANIMATION_FRAME_SKIP]);
+    if (++e->animationFrameCounter == GENERIC_FLYING_ANIMATION_FRAME_SKIP * NELEMS(genericFlyingAnimation))
+      e->animationFrameCounter = 0;
   }
 
   if (e->left)
@@ -805,53 +727,17 @@ void grasshopper_render(ENTITY* e)
 }
 
 #define FRUITFLY_ANIMATION_START 47
-#define FRUITFLY_DEAD (FRUITFLY_ANIMATION_START - 1)
-#define FRUITFLY_ANIMATION_FRAME_SKIP 2
-const uint8_t fruitflyAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 
 void fruitfly_render(ENTITY* e)
 {
-  if (e->dead) {
-    sprites[e->tag].tileIndex = FRUITFLY_DEAD;
-  } else {
-    if ((e->animationFrameCounter % FRUITFLY_ANIMATION_FRAME_SKIP) == 0)
-      sprites[e->tag].tileIndex = FRUITFLY_ANIMATION_START + pgm_read_byte(&fruitflyAnimation[e->animationFrameCounter / FRUITFLY_ANIMATION_FRAME_SKIP]);
-    if (++e->animationFrameCounter == FRUITFLY_ANIMATION_FRAME_SKIP * NELEMS(fruitflyAnimation))
-      e->animationFrameCounter = 0;
-  }
-
-  if (e->left)
-    sprites[e->tag].flags = 0;
-  if (e->right)
-    sprites[e->tag].flags = SPRITE_FLIP_X;
-
-  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  generic_flying_render(e, FRUITFLY_ANIMATION_START);
 }
 
 #define BEE_ANIMATION_START 52
-#define BEE_DEAD (BEE_ANIMATION_START - 1)
-#define BEE_ANIMATION_FRAME_SKIP 2
-const uint8_t beeAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 
 void bee_render(ENTITY* e)
 {
-  if (e->dead) {
-    sprites[e->tag].tileIndex = BEE_DEAD;
-  } else {
-    if ((e->animationFrameCounter % BEE_ANIMATION_FRAME_SKIP) == 0)
-      sprites[e->tag].tileIndex = BEE_ANIMATION_START + pgm_read_byte(&beeAnimation[e->animationFrameCounter / BEE_ANIMATION_FRAME_SKIP]);
-    if (++e->animationFrameCounter == BEE_ANIMATION_FRAME_SKIP * NELEMS(beeAnimation))
-      e->animationFrameCounter = 0;
-  }
-
-  if (e->left)
-    sprites[e->tag].flags = 0;
-  if (e->right)
-    sprites[e->tag].flags = SPRITE_FLIP_X;
-
-  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  generic_flying_render(e, BEE_ANIMATION_START);
 }
 
 #define SPIDER_ANIMATION_START 57

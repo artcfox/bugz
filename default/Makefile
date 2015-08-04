@@ -80,13 +80,13 @@ uzeboxVideoEngine.o: $(KERNEL_DIR)/uzeboxVideoEngine.c
 
 ## Compile game sources
 $(GAME).o: ../physics.c
-	$(CC) $(INCLUDES) $(CFLAGS) -O3 -c  $<
+	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
 entity.o: ../entity.c
-	$(CC) $(INCLUDES) $(CFLAGS) -O3 -c  $<
+	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
 stackmon.o: ../stackmon.c
-	$(CC) $(INCLUDES) $(CFLAGS) -O3 -c  $<
+	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
 ##Link
 $(TARGET): $(OBJECTS)
