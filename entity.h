@@ -55,7 +55,7 @@
 #define nv(p) ((p) % (TILE_HEIGHT << FP_SHIFT))
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
-#define PLAYERS 1
+#define PLAYERS 2
 #define MONSTERS 6
 
 #define LEVELS 3

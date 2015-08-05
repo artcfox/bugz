@@ -833,7 +833,7 @@ void player_input(ENTITY* e)
 #define PLAYER_JUMP (PLAYER_ANIMATION_START - 1)
 #define PLAYER_ANIMATION_FRAME_SKIP 4
 #define PLAYER_LADDER_ANIMATION_FRAME_SKIP 4
-#define PLAYER_NUM_SPRITES 9
+#define PLAYER_NUM_SPRITES 11
 const uint8_t playerAnimation[] PROGMEM = { 0, 1, 2, 1 };
 const uint8_t playerLadderAnimation[] PROGMEM = { 0, 1, 2, 1, 0, 3, 4, 3 };
 
