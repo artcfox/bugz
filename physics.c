@@ -570,7 +570,7 @@ int main()
     SetTile(22, 26, FIRST_FIRE_TILE + theme);
 
     DrawLadder(22, 9, 14);
-    //DrawLadder(7, 5, 20);
+    DrawLadder(7, 5, 20);
 
     /* if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) { */
     /*   if (currentLevel == 2) */

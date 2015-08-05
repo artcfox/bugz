@@ -123,7 +123,10 @@
 //#define isSolid(t) (((t) >= FIRST_SOLID_TILE) && ((t) <= LAST_SOLID_TILE))
 
 // TODO: Modify isSolid so certain ladder tiles (the ones that have a solid background) are also solid
-#define isSolid(t) (((t) >= FIRST_DIGIT_TILE) && ((t) <= LAST_SOLID_TILE))
+//#define isSolid(t) (((t) >= FIRST_DIGIT_TILE) && ((t) <= LAST_SOLID_TILE))
+
+#define isSolid(t) (((t) >= FIRST_DIGIT_TILE) && ((t) <= LAST_SOLID_TILE) || ((t) >= 65 && (t) <= 70) || ((t) >= 89 && t <= 94))
+
 #define isOneWay(t) (((t) >= FIRST_ONE_WAY_TILE) && ((t) <= LAST_ONE_WAY_TILE))
 #define isLadder(t) (((t) >= FIRST_LADDER_TILE) && ((t) <= LAST_LADDER_TILE))
 #define isFire(t) (((t) >= FIRST_FIRE_TILE) && ((t) <= LAST_FIRE_TILE))
