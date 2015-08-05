@@ -60,6 +60,8 @@
 
 #define LEVELS 3
 
+#define ALLTILES_WIDTH 101
+
 // Fixed point shift
 #define FP_SHIFT 2
 
@@ -95,15 +97,19 @@
 #define FIRST_TREASURE_TILE 0
 #define LAST_TREASURE_TILE ((FIRST_TREASURE_TILE + THEMES_N * TREASURE_TILES_IN_THEME) - 1)
 #define SKY_TILES_IN_THEME 5
-#define SOLID_TILES_IN_THEME 2
-#define FIRST_SOLID_TILE (FIRST_TREASURE_TILE + TREASURE_TILES_IN_THEME * THEMES_N + SKY_TILES_IN_THEME * THEMES_N)
+#define FIRST_SKY_TILE 15
+#define LAST_SKY_TILE ((FIRST_SKY_TILE + THEMES_N * SKY_TILES_IN_THEME) - 1)
 #define DIGIT_TILES 11
-#define FIRST_DIGIT_TILE (FIRST_SOLID_TILE + THEMES_N * SOLID_TILES_IN_THEME)
-#define LAST_SOLID_TILE (FIRST_DIGIT_TILE + DIGIT_TILES - 1)
+#define FIRST_DIGIT_TILE (LAST_SKY_TILE + 1)
+#define LAST_DIGIT_TILE ((FIRST_DIGIT_TILE + DIGIT_TILES) - 1)
+#define SOLID_TILES_IN_THEME 2
+#define FIRST_SOLID_TILE (LAST_DIGIT_TILE + 1)
+//(FIRST_TREASURE_TILE + TREASURE_TILES_IN_THEME * THEMES_N + SKY_TILES_IN_THEME * THEMES_N)
+#define LAST_SOLID_TILE ((FIRST_SOLID_TILE + THEMES_N * SOLID_TILES_IN_THEME) - 1)
 #define FIRST_ONE_WAY_TILE (LAST_SOLID_TILE + 1)
 #define ONE_WAY_TILES_IN_THEME 1
-#define ONE_WAY_LADDER_TILES_IN_THEME 3
-#define LADDER_TILES_IN_THEME 2
+#define ONE_WAY_LADDER_TILES_IN_THEME 8
+#define LADDER_TILES_IN_THEME 8
 #define LAST_ONE_WAY_TILE ((FIRST_ONE_WAY_TILE + THEMES_N * ONE_WAY_TILES_IN_THEME + THEMES_N * ONE_WAY_LADDER_TILES_IN_THEME) - 1)
 #define FIRST_LADDER_TILE (FIRST_ONE_WAY_TILE + THEMES_N * ONE_WAY_TILES_IN_THEME)
 #define LAST_LADDER_TILE ((FIRST_LADDER_TILE + THEMES_N * ONE_WAY_LADDER_TILES_IN_THEME + THEMES_N * LADDER_TILES_IN_THEME) - 1)
@@ -114,7 +120,10 @@
 // Ladder tiles must come immediately after one way tiles, because they partially overlap (the topmost ladder tiles are also one way tiles).
 
 #define isTreasure(t) (((t) >= FIRST_TREASURE_TILE) && ((t) <= LAST_TREASURE_TILE))
-#define isSolid(t) (((t) >= FIRST_SOLID_TILE) && ((t) <= LAST_SOLID_TILE))
+//#define isSolid(t) (((t) >= FIRST_SOLID_TILE) && ((t) <= LAST_SOLID_TILE))
+
+// TODO: Modify isSolid so certain ladder tiles (the ones that have a solid background) are also solid
+#define isSolid(t) (((t) >= FIRST_DIGIT_TILE) && ((t) <= LAST_SOLID_TILE))
 #define isOneWay(t) (((t) >= FIRST_ONE_WAY_TILE) && ((t) <= LAST_ONE_WAY_TILE))
 #define isLadder(t) (((t) >= FIRST_LADDER_TILE) && ((t) <= LAST_LADDER_TILE))
 #define isFire(t) (((t) >= FIRST_FIRE_TILE) && ((t) <= LAST_FIRE_TILE))

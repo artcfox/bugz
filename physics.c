@@ -458,6 +458,35 @@ static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad)
     SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE);  // get next digit
 }
 
+const uint8_t MapTileToLadderTop[] PROGMEM = {
+  0+50, 1+50, 2+50, 3+50, 4+50, 5+50, 6+50, 7+50, 8+50, 9+50, 10+50, 11+50, 12+50, 13+50, 14+50, 15+35,
+  16+35, 17+35, 18+35, 19+35, 20+35, 21+35, 22+35, 23+35, 24+35, 25+35, 26+35, 27+35, 28+35, 29+35, 30, 31,
+  32, 33, 34, 35, 36, 37, 38, 39, 40, 41+24, 42+24, 43+24, 44+24, 45+24, 46+24, 47+24,
+  48+24, 49+24,
+};
+
+const uint8_t MapTileToLadderMiddle[] PROGMEM = {
+  0+74, 1+74, 2+74, 3+74, 4+74, 5+74, 6+74, 7+74, 8+74, 9+74, 10+74, 11+74, 12+74, 13+74, 14+74, 15+59,
+  16+59, 17+59, 18+59, 19+59, 20+59, 21+59, 22+59, 23+59, 24+59, 25+59, 26+59, 27+59, 28+59, 29+59, 30, 31,
+  32, 33, 34, 35, 36, 37, 38, 39, 40, 41+48, 42+48, 43+48, 44+48, 45+48, 46+48, 47+48,
+  48+48, 49+48,
+};
+
+static void DrawLadder(uint8_t x, uint8_t y1, uint8_t y2)
+{
+  // Draw the top of the ladder
+  uint8_t t = GetTile(x, y1);
+  if (t < NELEMS(MapTileToLadderTop))
+    SetTile(x, y1, pgm_read_byte(&MapTileToLadderTop[t]));
+
+  // Draw the rest of the ladder
+  for (uint8_t y = y1; y < y2; ++y) {
+    t = GetTile(x, y + 1);
+    if (t < NELEMS(MapTileToLadderMiddle))
+      SetTile(x, y + 1, pgm_read_byte(&MapTileToLadderMiddle[t]));
+  }
+}
+
 int main()
 {
   PLAYER player[PLAYERS];
@@ -540,18 +569,28 @@ int main()
 
     SetTile(22, 26, FIRST_FIRE_TILE + theme);
 
-    if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) {
-      if (currentLevel == 2)
-        SetTile(22, 9, 2 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * theme);
-      else
-        SetTile(22, 9, FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * theme);
+    DrawLadder(22, 9, 14);
+    //DrawLadder(7, 5, 20);
 
-      SetTile(22, 10, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme);
-      SetTile(22, 11, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme);
-      SetTile(22, 12, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme);
-      SetTile(22, 13, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme);
-      SetTile(22, 14, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme);
-    }
+    /* if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) { */
+    /*   if (currentLevel == 2) */
+    /*     SetTile(22, 9, 2 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * theme); */
+    /*   else */
+    /*     SetTile(22, 9, 16 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * theme); */
+
+    /*   SetTile(22, 10, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme); */
+    /*   SetTile(22, 11, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme); */
+    /*   SetTile(22, 12, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme); */
+    /*   SetTile(22, 13, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme); */
+    /*   SetTile(22, 14, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme); */
+    /* } */
+
+    /* // Test ladder mapping */
+    /* for (uint8_t j = 2; j < 6; ++j) */
+    /*   for (uint8_t i = 0 + 28; i < SCREEN_TILES_H + 28; ++i) */
+    /*     SetTile(i - 28, j, i); */
+    /* for (uint8_t i = 0; i < SCREEN_TILES_H; ++i) */
+    /*   DrawLadder(i, 3, 7); */
 
     // Main game loop
     for (;;) {
