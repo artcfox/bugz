@@ -468,8 +468,8 @@ const uint8_t MapTileToLadderTop[] PROGMEM = {
 const uint8_t MapTileToLadderMiddle[] PROGMEM = {
   0+74, 1+74, 2+74, 3+74, 4+74, 5+74, 6+74, 7+74, 8+74, 9+74, 10+74, 11+74, 12+74, 13+74, 14+74, 15+59,
   16+59, 17+59, 18+59, 19+59, 20+59, 21+59, 22+59, 23+59, 24+59, 25+59, 26+59, 27+59, 28+59, 29+59, 30, 31,
-  32, 33, 34, 35, 36, 37, 38, 39, 40, 41+48, 42+48, 43+48, 44+48, 45+48, 46+48, 47+48,
-  48+48, 49+48,
+  32, 33, 34, 35, 36, 37, 38, 39, 40, 41+48, 42+48, 43+48, 44+48, 45+48, 46+48,
+  47+24, 48+24, 49+24, // these map to ladder top tiles, since they need to be one-way tiles
 };
 
 static void DrawLadder(uint8_t x, uint8_t y1, uint8_t y2)
@@ -570,7 +570,7 @@ int main()
     SetTile(22, 26, FIRST_FIRE_TILE + theme);
 
     DrawLadder(22, 9, 14);
-    DrawLadder(7, 5, 20);
+    DrawLadder(7, 11, 20);
 
     /* if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) { */
     /*   if (currentLevel == 2) */
