@@ -162,14 +162,14 @@ enum MONSTER_FLAGS {
 };
 
 // Parenthesis cannot be placed around this macro expansion
-#define LO8HI8(i) LO8((i)), HI8((i))
+#define LE(i) LO8((i)), HI8((i))
 
 const uint8_t levelData[] PROGMEM = {
-  3,      // uint8_t numLevels
-  LO8HI8(7),   // uint16_t levelOffsets[numLevels] = offsets to each level (little endian)
-  LO8HI8(256),
-  LO8HI8(505),
-  //LO8HI8(756),
+  LEVELS,      // uint8_t numLevels
+  LE(7),   // uint16_t levelOffsets[numLevels] = offsets to each level (little endian)
+  LE(256),
+  LE(505),
+  //LE(756),
 
 /*           // ---------- start of level 0 data */
 /*   1,      // uint8_t theme; */
@@ -177,83 +177,59 @@ const uint8_t levelData[] PROGMEM = {
 /* #include "editor/levels/title_level.png.inc" */
 
 /*   MFLAG_RIGHT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6] */
-/*   LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                  // int16_t playerMaxDX[2] */
-/*   LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2] */
+/*   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2] */
+/*   LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2] */
 /*   PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2] */
-/*   ENTITY_UPDATE, ENTITY_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2] */
-/*   PLAYER_RENDER, PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2] */
-/*   LO8HI8(WORLD_METER * 6), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 3), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 1), // int16_t monsterMaxDX[6] */
-/*   3, 25, LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), // int16_t monsterImpulse[6] */
+/*   ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2] */
+/*   PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2] */
+/*   LE(WORLD_METER * 6), LE(WORLD_METER * 1), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 1), // int16_t monsterMaxDX[6] */
+/*   3, 25, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6] */
 /*   AI_FLY_HORIZONTAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6] */
 /*   ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6] */
 /*   BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6] */
 
 
-          // ---------- start of level 1 data
   0,      // uint8_t theme;
-
 #include "editor/levels/prototype_level.png.inc"
-
   MFLAG_LEFT, MFLAG_LEFT|MFLAG_AUTORESPAWN, MFLAG_RIGHT, MFLAG_RIGHT, MFLAG_RIGHT|MFLAG_AUTORESPAWN, MFLAG_RIGHT,      // uint8_t monsterFlags[6]
-  LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                                // int16_t playerMaxDX[2]
-  LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
-  PLAYER_INPUT, PLAYER_INPUT,     // INPUT_FUNCTIONS playerInputFuncs[2]
-  ENTITY_UPDATE, ENTITY_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
-  PLAYER_RENDER, PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2]
-  LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 3), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 2), // int16_t monsterMaxDX[6]
-  LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE >> 1),    // int16_t monsterImpulse[6]
+  LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
+  LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2]
+  LE(WORLD_METER * 2), LE(WORLD_METER * 2), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 2), // int16_t monsterMaxDX[6]
+  LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP),    // int16_t monsterImpulse[6]
   AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
   ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 
   1,      // uint8_t theme;
 #include "editor/levels/test_level.png.inc"
-
-  /* 255, 255, 255, 254, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 255, 0, 1, 128, 0, 0, 6, 0, 0, 15, 24, 0, 0, 0, 127, 255, 255, 255, // uint8_t map[105]; */
-  /* 1, 2,   // uint8_t playerInitialX[2] */
-  /* 26, 26, // uint8_t playerInitialY[2] */
-  /* 25, 28,  9, 16, 19,  7,      // uint8_t monsterInitialX[6] */
-  /* 12, 22, 19, 17,  8, 25,      // uint8_t monsterInitialY[6] */
-  /* 12, // uint8_t treasureCount */
-  /* 1,  7,  4, 12, 18,  6, 24, 27, 21, 28, 13, 18, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureX[32] */
-  /* 24, 5,  8, 11, 17,  3,  4, 18,  7, 12, 22, 23, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureY[32] */
   MFLAG_DOWN, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
-  LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                  // int16_t playerMaxDX[2]
-  LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
-  PLAYER_INPUT, PLAYER_INPUT,     // INPUT_FUNCTIONS playerInputFuncs[2]
-  ENTITY_UPDATE, ENTITY_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
-  PLAYER_RENDER, PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2]
-  LO8HI8(WORLD_METER * 12), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 3), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 1), // int16_t monsterMaxDX[6]
-  16, 23, LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), // int16_t monsterImpulse[6]
+  LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
+  LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2]
+  LE(WORLD_METER * 12), LE(WORLD_METER * 1), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 1), // int16_t monsterMaxDX[6]
+  16, 23, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6]
   AI_FLY_VERTICAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
   ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   SPIDER_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 
-
-
   2,      // uint8_t theme;
 #include "editor/levels/space_level.png.inc"
-
-  /* 255, 255, 255, 254, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 0, 0, 1, 128, 0, 0, 6, 0, 0, 0, 24, 0, 0, 0, 96, 255, 0, 1, 128, 0, 0, 6, 0, 0, 15, 24, 0, 0, 0, 127, 255, 255, 255, // uint8_t map[105]; */
-  /* 1, 2,   // uint8_t playerInitialX[2] */
-  /* 26, 26, // uint8_t playerInitialY[2] */
-  /* 25, 28,  9, 16, 19,  7,      // uint8_t monsterInitialX[6] */
-  /* 12, 22, 19, 17,  8, 25,      // uint8_t monsterInitialY[6] */
-  /* 12, // uint8_t treasureCount */
-  /* 1,  7,  4, 12, 18,  6, 24, 27, 21, 28, 13, 18, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureX[32] */
-  /* 24, 5,  8, 11, 17,  3,  4, 18,  7, 12, 22, 23, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // uint8_t treasureY[32] */
   MFLAG_DOWN|MFLAG_INVINCIBLE, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
-  LO8HI8(WORLD_MAXDX), LO8HI8(WORLD_MAXDX),                  // int16_t playerMaxDX[2]
-  LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE),    // int16_t playerImpulse[2]
-  PLAYER_INPUT, PLAYER_INPUT,     // INPUT_FUNCTIONS playerInputFuncs[2]
-  ENTITY_UPDATE, ENTITY_UPDATE,   // UPDATE_FUNCTIONS playerUpdateFuncs[2]
-  PLAYER_RENDER, PLAYER_RENDER,   // RENDER_FUNCTIONS playerRenderFuncs[2]
-  LO8HI8(WORLD_METER * 5), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 3), LO8HI8(WORLD_METER * 2), LO8HI8(WORLD_METER * 1), LO8HI8(WORLD_METER * 1), // int16_t monsterMaxDX[6]
-  16, 23, LO8HI8(WORLD_JUMP_IMPULSE >> 1), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), LO8HI8(WORLD_JUMP_IMPULSE), // int16_t monsterImpulse[6]
+  LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
+  LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2]
+  LE(WORLD_METER * 5), LE(WORLD_METER * 1), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 1), // int16_t monsterMaxDX[6]
+  16, 23, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6]
   AI_FLY_VERTICAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
   ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
-
 
  };
 
@@ -324,6 +300,12 @@ const uint8_t levelData[] PROGMEM = {
 
 #define BaseMapIsSolid(x, y, levelOffset) (PgmBitArray_readBit(&levelData[(levelOffset) + LEVEL_MAP_START], (y) * SCREEN_TILES_H + (x)))
 
+static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad, const uint8_t theme)
+{
+  for (uint8_t i = 0; i < pad; ++i, n /= 10)
+    SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME);  // get next digit
+}
+
 // Returns offset into levelData PROGMEM array
 static uint16_t LoadLevel(uint8_t level, uint8_t* theme)
 {
@@ -379,9 +361,7 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* theme)
     }
   }
 
-  // Draw a solid black bar across the top of the screen
-  /* for (uint8_t i = 1; i < SCREEN_TILES_H - 1; ++i) */
-  /*   SetTile(i, 0, LAST_DIGIT_TILE); */
+  DisplayNumber(3, 0, level + 1, 2, *theme);
 
   return levelOffset;
 }
@@ -452,12 +432,6 @@ static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, 
 /*   ++globalFrameCounter; */
 /* } */
 
-static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad)
-{
-  for (uint8_t i = 0; i < pad; ++i, n /= 10)
-    SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE);  // get next digit
-}
-
 const uint8_t MapTileToLadderTop[] PROGMEM = {
   // If a ladder top overlaps a treasure tile, the treasure gets replaced with open sky and gets a ladder top overlaid
   0 + TREASURE_TO_LADDER_TOP_OFFSET, 1 + TREASURE_TO_LADDER_TOP_OFFSET,
@@ -479,20 +453,17 @@ const uint8_t MapTileToLadderTop[] PROGMEM = {
   27 + SKY_TO_LADDER_TOP_OFFSET, 28 + SKY_TO_LADDER_TOP_OFFSET,
   29 + SKY_TO_LADDER_TOP_OFFSET,
 
-  // Digits remain digits
-  30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-
   // Solid tiles get a ladder top overlaid
-  41 + SOLID_TO_LADDER_TOP_OFFSET, 42 + SOLID_TO_LADDER_TOP_OFFSET,
-  43 + SOLID_TO_LADDER_TOP_OFFSET, 44 + SOLID_TO_LADDER_TOP_OFFSET,
-  45 + SOLID_TO_LADDER_TOP_OFFSET, 46 + SOLID_TO_LADDER_TOP_OFFSET,
+  30 + SOLID_TO_LADDER_TOP_OFFSET, 31 + SOLID_TO_LADDER_TOP_OFFSET,
+  32 + SOLID_TO_LADDER_TOP_OFFSET, 33 + SOLID_TO_LADDER_TOP_OFFSET,
+  34 + SOLID_TO_LADDER_TOP_OFFSET, 35 + SOLID_TO_LADDER_TOP_OFFSET,
 
   // Solid ladder tiles remain solid ladder tiles
-  47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
+  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
 
   // One way tiles get a ladder top overlaid
-  59 + ONE_WAY_TO_LADDER_TOP_OFFSET, 60 + ONE_WAY_TO_LADDER_TOP_OFFSET,
-  61 + ONE_WAY_TO_LADDER_TOP_OFFSET,
+  48 + ONE_WAY_TO_LADDER_TOP_OFFSET, 49 + ONE_WAY_TO_LADDER_TOP_OFFSET,
+  50 + ONE_WAY_TO_LADDER_TOP_OFFSET,
 };
 
 const uint8_t MapTileToLadderMiddle[] PROGMEM = {
@@ -516,20 +487,17 @@ const uint8_t MapTileToLadderMiddle[] PROGMEM = {
   27 + SKY_TO_LADDER_MIDDLE_OFFSET, 28 + SKY_TO_LADDER_MIDDLE_OFFSET,
   29 + SKY_TO_LADDER_MIDDLE_OFFSET,
   
-  // Digits remain digits
-  30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-
   // Solid tiles get a ladder middle overlaid
-  41 + SOLID_TO_LADDER_MIDDLE_OFFSET, 42 + SOLID_TO_LADDER_MIDDLE_OFFSET,
-  43 + SOLID_TO_LADDER_MIDDLE_OFFSET, 44 + SOLID_TO_LADDER_MIDDLE_OFFSET,
-  45 + SOLID_TO_LADDER_MIDDLE_OFFSET, 46 + SOLID_TO_LADDER_MIDDLE_OFFSET,
+  30 + SOLID_TO_LADDER_MIDDLE_OFFSET, 31 + SOLID_TO_LADDER_MIDDLE_OFFSET,
+  32 + SOLID_TO_LADDER_MIDDLE_OFFSET, 33 + SOLID_TO_LADDER_MIDDLE_OFFSET,
+  34 + SOLID_TO_LADDER_MIDDLE_OFFSET, 35 + SOLID_TO_LADDER_MIDDLE_OFFSET,
 
   // Solid ladder tiles remain solid ladder tiles
-  47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
+  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
 
   // One way tiles get a ladder top overlaid
-  59 + ONE_WAY_TO_LADDER_TOP_OFFSET, 60 + ONE_WAY_TO_LADDER_TOP_OFFSET,
-  61 + ONE_WAY_TO_LADDER_TOP_OFFSET, // these map to ladder top tiles, since they need to be one-way tiles
+  48 + ONE_WAY_TO_LADDER_TOP_OFFSET, 49 + ONE_WAY_TO_LADDER_TOP_OFFSET,
+  50 + ONE_WAY_TO_LADDER_TOP_OFFSET, // these map to ladder top tiles, since they need to be one-way tiles
 };
 
 static void DrawLadder(const uint8_t x, const uint8_t y1, const uint8_t y2)
@@ -568,6 +536,15 @@ static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
   }
 }
 
+static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2, const uint8_t theme)
+{
+  for (uint8_t x = x1; x <= x2; ++x) {
+    uint8_t t = GetTile(x, y);
+    if (t < FIRST_SOLID_TILE)
+      SetTile(x, y, FIRST_FIRE_TILE + theme * FIRE_TILES_IN_THEME);
+  }    
+}
+
 int main()
 {
   PLAYER player[PLAYERS];
@@ -576,6 +553,8 @@ int main()
   uint8_t currentLevel;
   uint16_t levelOffset;
   uint8_t theme;
+  uint8_t backgroundFrameCounter;
+  uint16_t timer;
 
   SetTileTable(tileset);
   SetSpritesTileBank(0, mysprites);
@@ -594,6 +573,9 @@ int main()
     // Check the return value of LoadLevel
     if (levelOffset == 0xFFFF)
       goto begin;
+
+    backgroundFrameCounter = 0;
+    timer = -1;
 
     // Initialize treasure
     uint8_t tcount = treasureCount(levelOffset);
@@ -635,17 +617,10 @@ int main()
       DrawOneWay(24, 3, 6);
     }
 
-    SetTile(22, 26, FIRST_FIRE_TILE + theme);
-
     DrawLadder(22, 9, 14);
     //DrawLadder(3, 11, 25);
-
-    /* // Test ladder mapping */
-    /* for (uint8_t j = 2; j < 6; ++j) */
-    /*   for (uint8_t i = 0 + 0; i < SCREEN_TILES_H + 0; ++i) */
-    /*     SetTile(i - 0, j, i); */
-    /* for (uint8_t i = 0; i < SCREEN_TILES_H; ++i) */
-    /*   DrawLadder(i, 3, 7); */
+    DrawFire(26, 22, 22, theme);
+    //SetTile(7, 26, FIRST_SWITCH_TILE + theme * SWITCH_TILES_IN_THEME);
 
     // Main game loop
     for (;;) {
@@ -653,18 +628,19 @@ int main()
       WaitVsync(1);
 
       // Animate all background tiles at once by modifying the tileset pointer
-      static uint8_t backgroundFrameCounter;
-      if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0)
+      if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
         SetTileTable(tileset + 64 * ALLTILES_WIDTH * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
+        ++timer; // increment the in-game time display
+      }
       // Compile-time assert that we are working with a power of 2
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
       backgroundFrameCounter = (backgroundFrameCounter + 1) & (BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation) - 1);
-      /* if (++backgroundFrameCounter == BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)) */
-      /*   backgroundFrameCounter = 0; */
+
+      DisplayNumber(8, 0, timer, 4, theme);
 
       // Display debugging information
-      uint16_t sc = StackCount();
-      DisplayNumber(SCREEN_TILES_H - 3, 0, sc, 4);
+      /* uint16_t sc = StackCount(); */
+      /* DisplayNumber(SCREEN_TILES_H - 3, 0, sc, 4, theme); */
       /* DisplayNumber(2, 0, globalFrameCounter, 3); */
       /* DisplayNumber(6, 0, localFrameCounter++, 3); */
       /* DisplayNumber(4, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
@@ -700,14 +676,10 @@ int main()
         for (uint8_t p = 0; p < PLAYERS; ++p) {
           ENTITY* e = (ENTITY*)(&player[p]);
           if (monster[i].interacts && !monster[i].dead && e->interacts && !e->dead &&
-              overlap(e->x,
-                      e->y,
-                      WORLD_METER,
-                      WORLD_METER,
+              overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                       monster[i].x + (1 << FP_SHIFT),
                       monster[i].y + (3 << FP_SHIFT),
-                      WORLD_METER - (2 << FP_SHIFT),
-                      WORLD_METER - (4 << FP_SHIFT))) {
+                      WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (4 << FP_SHIFT))) {
             // If a player and a monster overlap, and the bottom pixel of the player's previous Y is above the top
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
@@ -749,8 +721,8 @@ int main()
         if (e->interacts && !e->dead) {
           uint8_t tx = p2ht(e->x);
           uint8_t ty = p2vt(e->y);
-          if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) // bounds check to prevent writing outside of VRAM
-            continue;
+          /* if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) // bounds check to prevent writing outside of VRAM */
+          /*   continue; */
 
           bool nx = nh(e->x) && (tx + 1 < SCREEN_TILES_H);  // true if entity overlaps right
           bool ny = nv(e->y) && (ty + 1 < SCREEN_TILES_V);  // true if entity overlaps below
@@ -760,72 +732,52 @@ int main()
 
           uint8_t t = GetTile(tx, ty);
           if (isTreasure(t)) {
-            SetTile(tx, ty, t + (FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME)));
+            SetTile(tx, ty, t + TREASURE_TO_SKY_OFFSET);
             collectedTreasure = true;
           } else if (isFire(t)) {
-            if (overlap(e->x,
-                        e->y,
-                        WORLD_METER,
-                        WORLD_METER,
-                        ht2p(tx) + (1 << FP_SHIFT),
-                        vt2p(ty) + (5 << FP_SHIFT),
-                        WORLD_METER - (2 << FP_SHIFT),
-                        WORLD_METER - (3 << FP_SHIFT))) {
+            if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
+                        ht2p(tx    ) + (1 << FP_SHIFT),
+                        vt2p(ty    ) + (5 << FP_SHIFT),
+                        WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (3 << FP_SHIFT)))
               killedByFire = true;
-            }
           }
           t = GetTile(tx + 1, ty);
           if (nx) {
             if (isTreasure(t)) {
-              SetTile(tx + 1, ty, t + (FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME)));
+              SetTile(tx + 1, ty, t + TREASURE_TO_SKY_OFFSET);
               collectedTreasure = true;
             } else if (isFire(t)) {
-              if (overlap(e->x,
-                          e->y,
-                          WORLD_METER,
-                          WORLD_METER,
+              if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                           ht2p(tx + 1) + (1 << FP_SHIFT),
-                          vt2p(ty) + (5 << FP_SHIFT),
-                          WORLD_METER - (2 << FP_SHIFT),
-                          WORLD_METER - (3 << FP_SHIFT))) {
+                          vt2p(ty    ) + (5 << FP_SHIFT),
+                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (3 << FP_SHIFT)))
                 killedByFire = true;
-              }
             }
           }
           t = GetTile(tx, ty + 1);
           if (ny) {
             if (isTreasure(t)) {
-              SetTile(tx, ty + 1, t + (FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME)));
+              SetTile(tx, ty + 1, t + TREASURE_TO_SKY_OFFSET);
               collectedTreasure = true;
             } else if (isFire(t)) {
-              if (overlap(e->x,
-                          e->y,
-                          WORLD_METER,
-                          WORLD_METER,
-                          ht2p(tx) + (1 << FP_SHIFT),
+              if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
+                          ht2p(tx    ) + (1 << FP_SHIFT),
                           vt2p(ty + 1) + (5 << FP_SHIFT),
-                          WORLD_METER - (2 << FP_SHIFT),
-                          WORLD_METER - (3 << FP_SHIFT))) {
+                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (3 << FP_SHIFT)))
                 killedByFire = true;
-              }
             }
           }
           t = GetTile(tx + 1, ty + 1);
           if (nx && ny) {
             if (isTreasure(t)) {
-              SetTile(tx + 1, ty + 1, t + (FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME)));
+              SetTile(tx + 1, ty + 1, t + TREASURE_TO_SKY_OFFSET);
               collectedTreasure = true;
             } else if (isFire(t)) {
-              if (overlap(e->x,
-                          e->y,
-                          WORLD_METER,
-                          WORLD_METER,
+              if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                           ht2p(tx + 1) + (1 << FP_SHIFT),
                           vt2p(ty + 1) + (5 << FP_SHIFT),
-                          WORLD_METER - (2 << FP_SHIFT),
-                          WORLD_METER - (3 << FP_SHIFT))) {
+                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (3 << FP_SHIFT)))
                 killedByFire = true;
-              }
             }
           }
           if (collectedTreasure)

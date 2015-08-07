@@ -334,7 +334,7 @@ void entity_update(ENTITY* e)
     e->monsterhop = e->jumping = e->falling = false;
     e->jumpReleased = true;
     e->dy = e->framesFalling = 0;
-    ddy -= (WORLD_JUMP_IMPULSE >> 1);
+    ddy -= (WORLD_JUMP >> 1);
   }
 
   // Variable height jumping
@@ -671,8 +671,6 @@ static void generic_render(ENTITY* e, const uint8_t animationStart)
           // Compile-time assert that we are working with a power of 2
           BUILD_BUG_ON(isNotPowerOf2(GENERIC_ANIMATION_FRAME_SKIP * NELEMS(genericAnimation)));
           e->animationFrameCounter = (e->animationFrameCounter + 1) & (GENERIC_ANIMATION_FRAME_SKIP * NELEMS(genericAnimation) - 1);
-          /* if (++e->animationFrameCounter == LADYBUG_ANIMATION_FRAME_SKIP * NELEMS(ladybugAnimation)) */
-          /*   e->animationFrameCounter = 0; */
         }
       }
     }
@@ -680,7 +678,7 @@ static void generic_render(ENTITY* e, const uint8_t animationStart)
 
   if (e->left)
     sprites[e->tag].flags = 0;
-  if (e->right)
+  else if (e->right)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
@@ -732,7 +730,7 @@ static void generic_flying_render(ENTITY* e, const uint8_t animationStart)
 
   if (e->left)
     sprites[e->tag].flags = 0;
-  if (e->right)
+  else if (e->right)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
@@ -769,8 +767,6 @@ void spider_render(ENTITY* e)
       // Compile-time assert that we are working with a power of 2
       BUILD_BUG_ON(isNotPowerOf2(SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation)));
       e->animationFrameCounter = (e->animationFrameCounter + 1) & (SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation) - 1);
-      /* if (++e->animationFrameCounter == SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation)) */
-      /*   e->animationFrameCounter = 0; */
     }
   }
 
@@ -827,8 +823,7 @@ void player_input(ENTITY* e)
   e->down = (bool)(p->buttons.held & BTN_DOWN);
   e->turbo = (bool)(p->buttons.held & BTN_B);
   
-  // Improve the user experience, by allowing players to jump by holding the jump
-  // button before landing, but require them to release it before they can jump again
+  // Improve the user experience, by allowing players to jump by holding the jump button before landing, but require them to release it before they can jump again
   if (e->jumpReleased) {                                      // jumping multiple times requires releasing the jump button between jumps
     e->jump = (bool)(p->buttons.held & BTN_A);                // player[i].jump can only be true if BTN_A has been released from the previous jump
   } else {                                                    // otherwise, it means that we just jumped, and BTN_A is still being held down
@@ -862,8 +857,6 @@ void player_render(ENTITY* e)
         // Compile-time assert that we are working with a power of 2
         BUILD_BUG_ON(isNotPowerOf2(PLAYER_LADDER_ANIMATION_FRAME_SKIP * NELEMS(playerLadderAnimation)));
         e->animationFrameCounter = (e->animationFrameCounter + 1) & (PLAYER_LADDER_ANIMATION_FRAME_SKIP * NELEMS(playerLadderAnimation) - 1);
-        /* if (++e->animationFrameCounter == PLAYER_LADDER_ANIMATION_FRAME_SKIP * NELEMS(playerLadderAnimation)) */
-        /*   e->animationFrameCounter = 0; */
       }
     } else {
       sprites[e->tag].tileIndex = PLAYER_LADDER_ANIMATION_START + e->tag * PLAYER_NUM_SPRITES;
@@ -884,8 +877,6 @@ void player_render(ENTITY* e)
           // Compile-time assert that we are working with a power of 2
           BUILD_BUG_ON(isNotPowerOf2(PLAYER_ANIMATION_FRAME_SKIP * NELEMS(playerAnimation)));
           e->animationFrameCounter = (e->animationFrameCounter + 1) & (PLAYER_ANIMATION_FRAME_SKIP * NELEMS(playerAnimation) - 1);
-          /* if (++e->animationFrameCounter == PLAYER_ANIMATION_FRAME_SKIP * NELEMS(playerAnimation)) */
-          /*   e->animationFrameCounter = 0; */
         }
       }
     }
@@ -893,7 +884,7 @@ void player_render(ENTITY* e)
 
   if (e->left)
     sprites[e->tag].flags = 0;
-  if (e->right)
+  else if (e->right)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
