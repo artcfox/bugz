@@ -630,25 +630,12 @@ int main()
     SetTile(22, 26, FIRST_FIRE_TILE + theme);
 
     DrawLadder(22, 9, 14);
-    DrawLadder(7, 11, 20);
-
-    /* if (currentLevel == 0 || currentLevel == 1 || currentLevel == 2) { */
-    /*   if (currentLevel == 2) */
-    /*     SetTile(22, 9, 2 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * theme); */
-    /*   else */
-    /*     SetTile(22, 9, 16 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * theme); */
-
-    /*   SetTile(22, 10, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme); */
-    /*   SetTile(22, 11, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme); */
-    /*   SetTile(22, 12, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme); */
-    /*   SetTile(22, 13, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme); */
-    /*   SetTile(22, 14, 1 + FIRST_LADDER_TILE + ONE_WAY_LADDER_TILES_IN_THEME * THEMES_N + LADDER_TILES_IN_THEME * theme); */
-    /* } */
+    /* DrawLadder(7, 11, 20); */
 
     /* // Test ladder mapping */
     /* for (uint8_t j = 2; j < 6; ++j) */
-    /*   for (uint8_t i = 0 + 28; i < SCREEN_TILES_H + 28; ++i) */
-    /*     SetTile(i - 28, j, i); */
+    /*   for (uint8_t i = 0 + 0; i < SCREEN_TILES_H + 0; ++i) */
+    /*     SetTile(i - 0, j, i); */
     /* for (uint8_t i = 0; i < SCREEN_TILES_H; ++i) */
     /*   DrawLadder(i, 3, 7); */
 
