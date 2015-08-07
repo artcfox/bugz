@@ -101,13 +101,13 @@ void ai_walk_until_blocked(ENTITY* e)
 
   if (e->left) {
     uint8_t cell = isSolid(GetTile(tx, ty));
-    if (cell) {
+    if (cell || (e->x == 0)) {
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
     uint8_t cellright = isSolid(GetTile(tx + 1, ty));
-    if (cellright) {
+    if (cellright || (tx == SCREEN_TILES_H - 1)) {
       e->right = false;
       e->left = true;
     }
@@ -133,14 +133,14 @@ void ai_walk_until_blocked_or_ledge(ENTITY* e)
   if (e->left) {
     uint8_t cell = isSolid(GetTile(tx, ty));
     uint8_t celldown = isSolidForEntity(tx, ty + 1, e->y, WORLD_METER, e->down);
-    if (cell || (!celldown && !e->falling)) {
+    if (cell || (!celldown && !e->falling) || (e->x == 0)) {
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
     uint8_t cellright = isSolid(GetTile(tx + 1, ty));
     uint8_t celldiag  = isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER, e->down);
-    if (cellright || (!celldiag && !e->falling)) {
+    if (cellright || (!celldiag && !e->falling) || (tx == SCREEN_TILES_H - 1)) {
       e->right = false;
       e->left = true;
     }
@@ -356,6 +356,15 @@ void entity_update(ENTITY* e)
       e->dx = e->maxdx;
   }
 
+  // Clamp X to within screen bounds
+  if (e->x > ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT))) {
+    e->x = ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT));
+    e->dx = 0;
+  } else if (e->x < 0) {
+    e->x = 0;
+    e->dx = 0;
+  }
+
   // Clamp horizontal velocity to zero if we detect that the direction has changed
   if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0)))
     e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
@@ -392,13 +401,17 @@ void entity_update(ENTITY* e)
   else if (e->dy > WORLD_MAXDY)
     e->dy = WORLD_MAXDY;
 
-  // Check to see if the entity has fallen down a hole
+  // Clamp Y to within screen bounds
   if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
     e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
     e->dy = 0;
+    // Kill the entity if it would have fallen through the bottom of the screen
     if (!e->invincible)
       e->dead = true;
     return;
+  } else if (e->y < 0) {
+    e->y = 0;
+    e->dy = 0;
   }
 
   // Collision Detection for Y

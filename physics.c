@@ -380,8 +380,8 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* theme)
   }
 
   // Draw a solid black bar across the top of the screen
-  /* for (uint8_t i = 0; i < SCREEN_TILES_H; ++i) */
-  /*   SetTile(i, 0, LAST_SOLID_TILE); */
+  /* for (uint8_t i = 1; i < SCREEN_TILES_H - 1; ++i) */
+  /*   SetTile(i, 0, LAST_DIGIT_TILE); */
 
   return levelOffset;
 }
@@ -532,7 +532,7 @@ const uint8_t MapTileToLadderMiddle[] PROGMEM = {
   61 + ONE_WAY_TO_LADDER_TOP_OFFSET, // these map to ladder top tiles, since they need to be one-way tiles
 };
 
-static void DrawLadder(uint8_t x, uint8_t y1, uint8_t y2)
+static void DrawLadder(const uint8_t x, const uint8_t y1, const uint8_t y2)
 {
   // Draw the top of the ladder
   uint8_t t = GetTile(x, y1);
@@ -544,6 +544,27 @@ static void DrawLadder(uint8_t x, uint8_t y1, uint8_t y2)
     t = GetTile(x, y + 1);
     if (t < NELEMS(MapTileToLadderMiddle))
       SetTile(x, y + 1, pgm_read_byte(&MapTileToLadderMiddle[t]));
+  }
+}
+
+static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
+{
+  for (uint8_t x = x1; x <= x2; ++x) {
+    uint8_t t = GetTile(x, y);
+    switch (t) {
+    case FIRST_SOLID_TILE + 1:
+      t = FIRST_ONE_WAY_TILE;
+      break;
+    case FIRST_SOLID_TILE + 3:
+      t = FIRST_ONE_WAY_TILE + 1;
+      break;
+    case FIRST_SOLID_TILE + 5:
+      t = FIRST_ONE_WAY_TILE + 2;
+      break;
+    default:
+      break;
+    }
+    SetTile(x, y, t);
   }
 }
 
@@ -580,7 +601,7 @@ int main()
       uint8_t x = treasureX(levelOffset, i);
       uint8_t y = treasureY(levelOffset, i);
       if (x < SCREEN_TILES_H && y < SCREEN_TILES_V)
-        SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME)));
+        SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + THEMES_N * TREASURE_TILES_IN_THEME));
     }
 
     // Initialize players
@@ -608,29 +629,16 @@ int main()
     for (uint8_t i = 0; i < MONSTERS; ++i)
       spawnMonster(&monster[i], levelOffset, i);
 
-
     // Since the level compiler doesn't support one-way tiles, ladders, or fire yet, these are hardcoded for now
     if (currentLevel == 0) {
-      SetTile(12, 6, FIRST_ONE_WAY_TILE + theme);
-      SetTile(13, 6, FIRST_ONE_WAY_TILE + theme);
-      SetTile(14, 6, FIRST_ONE_WAY_TILE + theme);
-      SetTile(15, 6, FIRST_ONE_WAY_TILE + theme);
-
-      SetTile(20, 6, FIRST_ONE_WAY_TILE + theme);
-      SetTile(21, 6, FIRST_ONE_WAY_TILE + theme);
-      SetTile(22, 6, FIRST_ONE_WAY_TILE + theme);
-      SetTile(23, 6, FIRST_ONE_WAY_TILE + theme);
-
-      SetTile(3, 24, FIRST_ONE_WAY_TILE + theme);
-      SetTile(4, 24, FIRST_ONE_WAY_TILE + theme);
-      SetTile(5, 24, FIRST_ONE_WAY_TILE + theme);
-      SetTile(6, 24, FIRST_ONE_WAY_TILE + theme);
+      DrawOneWay(6, 12, 23);
+      DrawOneWay(24, 3, 6);
     }
 
     SetTile(22, 26, FIRST_FIRE_TILE + theme);
 
     DrawLadder(22, 9, 14);
-    /* DrawLadder(7, 11, 20); */
+    //DrawLadder(3, 11, 25);
 
     /* // Test ladder mapping */
     /* for (uint8_t j = 2; j < 6; ++j) */
@@ -656,7 +664,7 @@ int main()
 
       // Display debugging information
       uint16_t sc = StackCount();
-      DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, sc, 4);
+      DisplayNumber(SCREEN_TILES_H - 3, 0, sc, 4);
       /* DisplayNumber(2, 0, globalFrameCounter, 3); */
       /* DisplayNumber(6, 0, localFrameCounter++, 3); */
       /* DisplayNumber(4, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
@@ -704,7 +712,8 @@ int main()
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
-              e->monsterhop = true; // player should now do the monster hop
+              if (e->update == entity_update)
+                e->monsterhop = true; // player should now do the monster hop, but only if gravity applies
             } else {
               killPlayer(e);
             }

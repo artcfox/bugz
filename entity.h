@@ -131,8 +131,8 @@
 #define SOLID_TO_LADDER_MIDDLE_OFFSET ((FIRST_SOLID_LADDER_TILE + THEMES_N * SOLID_LADDER_TILES_IN_THEME / 2) - FIRST_SOLID_TILE)
 
 #define isTreasure(t) (((t) >= FIRST_TREASURE_TILE) && ((t) <= LAST_TREASURE_TILE))
-//#define isSolid(t) (((t) >= FIRST_SOLID_TILE) && ((t) <= LAST_SOLID_LADDER_TILE))
-#define isSolid(t) (((t) >= FIRST_DIGIT_TILE) && ((t) <= LAST_SOLID_LADDER_TILE))
+#define isSolid(t) (((t) >= FIRST_SOLID_TILE) && ((t) <= LAST_SOLID_LADDER_TILE))
+//#define isSolid(t) (((t) >= FIRST_DIGIT_TILE) && ((t) <= LAST_SOLID_LADDER_TILE))
 #define isOneWay(t) (((t) >= FIRST_ONE_WAY_TILE) && ((t) <= LAST_ONE_WAY_LADDER_TILE))
 #define isLadder(t) ((((t) >= FIRST_SOLID_LADDER_TILE) && ((t) <= LAST_SOLID_LADDER_TILE)) || (((t) >= FIRST_ONE_WAY_LADDER_TILE) && ((t) <= LAST_SKY_LADDER_TILE)))
 #define isFire(t) (((t) >= FIRST_FIRE_TILE) && ((t) <= LAST_FIRE_TILE))
