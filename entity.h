@@ -60,8 +60,6 @@
 
 #define LEVELS 3
 
-#define ALLTILES_WIDTH (117 + 6)
-
 // Fixed point shift
 #define FP_SHIFT 2
 

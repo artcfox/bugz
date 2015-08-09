@@ -678,7 +678,7 @@ int main()
 
       // Animate all background tiles at once by modifying the tileset pointer
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
-        SetTileTable(tileset + 64 * ALLTILES_WIDTH * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
+        SetTileTable(tileset + 64 * (TILESET_SIZE / 3) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
         ++timer; // increment the in-game time display
       }
       // Compile-time assert that we are working with a power of 2
