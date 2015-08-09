@@ -408,16 +408,28 @@ static void killMonster(ENTITY* e)
 }
 
 static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
+  uint8_t input = monsterInput(levelOffset, i);
+  uint8_t update = monsterUpdate(levelOffset, i);
+  uint8_t render = monsterRender(levelOffset, i);
+  uint8_t tx = monsterInitialX(levelOffset, i);
+  uint8_t ty = monsterInitialY(levelOffset, i);
+  uint8_t monsterFlags = monsterFlags(levelOffset, i);
+  if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) {
+    input = NULL_INPUT;
+    update = NULL_UPDATE;
+    render = NULL_RENDER;
+    tx = ty = 0;
+    monsterFlags |= IFLAG_NOINTERACT;
+  }
   entity_init(e,
-              inputFunc(monsterInput(levelOffset, i)),
-              updateFunc(monsterUpdate(levelOffset, i)),
-              renderFunc(monsterRender(levelOffset, i)),
+              inputFunc(input),
+              updateFunc(update),
+              renderFunc(render),
               PLAYERS + i,
-              (int16_t)(monsterInitialX(levelOffset, i) * (TILE_WIDTH << FP_SHIFT)),
-              (int16_t)(monsterInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
+              (int16_t)(tx * (TILE_WIDTH << FP_SHIFT)),
+              (int16_t)(ty * (TILE_HEIGHT << FP_SHIFT)),
               (int16_t)(monsterMaxDX(levelOffset, i)),
               (int16_t)(monsterImpulse(levelOffset, i)));
-  uint8_t monsterFlags = monsterFlags(levelOffset, i);
   // The cast to bool is necessary to properly set bit flags
   e->left = (bool)(monsterFlags & IFLAG_LEFT);
   e->right = (bool)(monsterFlags & IFLAG_RIGHT);
@@ -601,23 +613,35 @@ int main()
 
     // Initialize players
     for (uint8_t i = 0; i < PLAYERS; ++i) {
+      uint8_t input = playerInput(levelOffset, i);
+      uint8_t update = playerUpdate(levelOffset, i);
+      uint8_t render = playerRender(levelOffset, i);
+      uint8_t tx = playerInitialX(levelOffset, i);
+      uint8_t ty = playerInitialY(levelOffset, i);
+      uint8_t playerFlags = playerFlags(levelOffset, i);
+      if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) {
+        input = NULL_INPUT;
+        update = NULL_UPDATE;
+        render = NULL_RENDER;
+        tx = ty = 0;
+        playerFlags |= IFLAG_NOINTERACT;
+      }
       player_init(&player[i],
-                  inputFunc(playerInput(levelOffset, i)),
-                  updateFunc(playerUpdate(levelOffset, i)),
-                  renderFunc(playerRender(levelOffset, i)), i,
-                  (int16_t)(playerInitialX(levelOffset, i) * (TILE_WIDTH << FP_SHIFT)),
-                  (int16_t)(playerInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
+                  inputFunc(input),
+                  updateFunc(update),
+                  renderFunc(render), i,
+                  (int16_t)(tx * (TILE_WIDTH << FP_SHIFT)),
+                  (int16_t)(ty * (TILE_HEIGHT << FP_SHIFT)),
                   (int16_t)(playerMaxDX(levelOffset, i)),
                   (int16_t)(playerImpulse(levelOffset, i)));
       ENTITY* e = (ENTITY*)&player[i];
-      uint8_t playerFlags = playerFlags(levelOffset, i);
       // The cast to bool is necessary to properly set bit flags
       //e->left = (bool)(playerFlags & IFLAG_LEFT);
       //e->right = (bool)(playerFlags & IFLAG_RIGHT);
       //e->up = (bool)(playerFlags & IFLAG_UP);
       //e->down = (bool)(playerFlags & IFLAG_DOWN);
       //e->autorespawn = (bool)(playerFlags & IFLAG_AUTORESPAWN);
-      //e->interacts = (bool)!(playerFlags & IFLAG_NOINTERACT);
+      e->interacts = (bool)!(playerFlags & IFLAG_NOINTERACT);
       e->invincible = (bool)(playerFlags & IFLAG_INVINCIBLE);
       sprites[e->tag].flags = (playerFlags & IFLAG_SPRITE_FLIP_X) ? SPRITE_FLIP_X : 0;
       e->render(e);

@@ -76,6 +76,8 @@
 // that the files are processed in alphabetical order
 #include "dirent_node.h"
 
+#define NELEMS(x) (sizeof(x)/sizeof(x[0]))
+
 #define BitArray_numBits(bits) (((bits) >> 3) + 1 * (((bits) & 7) ? 1 : 0))
 #define BitArray_setBit(array, index) ((array)[(index) >> 3] |= (1 << ((index) & 7)))
 #define BitArray_clearBit(array, index) ((array)[(index) >> 3] &= ((1 << ((index) & 7)) ^ 0xFF))
@@ -107,6 +109,24 @@ bool isSolid(const PIXEL_DATA* p)
 {
   return ((p->r == 0) &&
           (p->g == 0) &&
+          (p->b == 0));
+}
+bool isTreasure(const PIXEL_DATA* p)
+{
+  return ((p->r == 218) &&
+          (p->g == 182) &&
+          (p->b == 0));
+}
+bool isOneWay(const PIXEL_DATA* p)
+{
+  return ((p->r == 145) &&
+          (p->g == 145) &&
+          (p->b == 145));
+}
+bool isFire(const PIXEL_DATA* p)
+{
+  return ((p->r == 145) &&
+          (p->g == 72) &&
           (p->b == 0));
 }
 bool isPlayer0(const PIXEL_DATA* p)
@@ -154,14 +174,8 @@ bool isMonster4(const PIXEL_DATA* p)
 bool isMonster5(const PIXEL_DATA* p)
 {
   return ((p->r == 145) &&
-          (p->g == 72) &&
-          (p->b == 0));
-}
-bool isTreasure(const PIXEL_DATA* p)
-{
-  return ((p->r == 218) &&
-          (p->g == 182) &&
-          (p->b == 0));
+          (p->g == 0) &&
+          (p->b == 145));
 }
 
 // Given an x and a y in the range of 0-31, packs the coordinate into a byte array at logical index 'position'
@@ -311,6 +325,49 @@ int decode_png(char* pngfile, uint8_t* buffer, size_t bufferlen, uint32_t* w, ui
   return retval;
 }
 
+struct ENTITY_INFO;
+typedef struct ENTITY_INFO ENTITY_INFO;
+
+struct ENTITY_INFO {
+  uint8_t x;
+  uint8_t y;
+};
+
+struct TREASURE_INFO;
+typedef struct TREASURE_INFO TREASURE_INFO;
+
+struct TREASURE_INFO {
+  uint8_t x;
+  uint8_t y;
+};
+
+struct ONE_WAY_INFO;
+typedef struct ONE_WAY_INFO ONE_WAY_INFO;
+
+struct ONE_WAY_INFO {
+  uint8_t y;
+  uint8_t x1;
+  uint8_t x2;
+};
+
+struct LADDER_INFO;
+typedef struct LADDER_INFO LADDER_INFO;
+
+struct LADDER_INFO {
+  uint8_t x;
+  uint8_t y1;
+  uint8_t y2;
+};
+
+struct FIRE_INFO;
+typedef struct FIRE_INFO FIRE_INFO;
+
+struct FIRE_INFO {
+  uint8_t y;
+  uint8_t x1;
+  uint8_t x2;
+};
+
 int addDirectory(char *directory) {
   // Change into the directory specified as an argument
   if (chdir(directory) < 0) {
@@ -384,14 +441,31 @@ int addDirectory(char *directory) {
       }
 
       uint8_t map[BitArray_numBits(30 * 28)] = {0};
+      uint8_t treasures = 0;
+      uint8_t oneways = 0;
+      uint8_t ladders = 0;
+      uint8_t fires = 0;
+
       size_t mapOffset = 0;
-      uint8_t playerInitialX[2] = {0};
-      uint8_t playerInitialY[2] = {0};
-      uint8_t monsterInitialX[6] = {0};
-      uint8_t monsterInitialY[6] = {0};
-      uint8_t treasureX[32] = {0};
-      uint8_t treasureY[32] = {0};
-      uint8_t treasureOffset = 0;
+      ENTITY_INFO player[2];
+      memset(player, 0xFF, sizeof(ENTITY_INFO) * NELEMS(player));
+      ENTITY_INFO monster[6];
+      memset(monster, 0xFF, sizeof(ENTITY_INFO) * NELEMS(monster));
+      TREASURE_INFO treasure[256];
+      memset(treasure, 0, sizeof(TREASURE_INFO) * NELEMS(treasure));
+      ONE_WAY_INFO oneway[256];
+      memset(oneway, 0, sizeof(ONE_WAY_INFO) * NELEMS(oneway));
+      LADDER_INFO ladder[256];
+      memset(ladder, 0, sizeof(LADDER_INFO) * NELEMS(ladder));
+      FIRE_INFO fire[256];
+      memset(fire, 0, sizeof(FIRE_INFO) * NELEMS(fire));
+
+      /* uint8_t playerInitialX[2] = {0}; */
+      /* uint8_t playerInitialY[2] = {0}; */
+      /* uint8_t monsterInitialX[6] = {0}; */
+      /* uint8_t monsterInitialY[6] = {0}; */
+      /* uint8_t treasureX[32] = {0}; */
+      /* uint8_t treasureY[32] = {0}; */
 
       // Scan through the PNG, and build the base map
       for (uint8_t h = 0; h < 28; h++) {
@@ -407,41 +481,41 @@ int addDirectory(char *directory) {
             *(overlay_buffer + h * map_width * 3 + w * 3 + 2),
           };
 
-          if (isSolid(&pixel))
+          if (isSolid(&pixel) || isOneWay(&pixel))
             BitArray_setBit(map, mapOffset);
           else
             BitArray_clearBit(map, mapOffset);
           mapOffset++;
 
           if (isPlayer0(&overlay_pixel)) {
-            playerInitialX[0] = w;
-            playerInitialY[0] = h;
+            player[0].x = w;
+            player[0].y = h;
           } else if (isPlayer1(&overlay_pixel)) {
-            playerInitialX[1] = w;
-            playerInitialY[1] = h;
+            player[1].x = w;
+            player[1].y = h;
           } else if (isMonster0(&overlay_pixel)) {
-            monsterInitialX[0] = w;
-            monsterInitialY[0] = h;        
+            monster[0].x = w;
+            monster[0].y = h;
           } else if (isMonster1(&overlay_pixel)) {
-            monsterInitialX[1] = w;
-            monsterInitialY[1] = h;        
+            monster[1].x = w;
+            monster[1].y = h;
           } else if (isMonster2(&overlay_pixel)) {
-            monsterInitialX[2] = w;
-            monsterInitialY[2] = h;        
+            monster[2].x = w;
+            monster[2].y = h;
           } else if (isMonster3(&overlay_pixel)) {
-            monsterInitialX[3] = w;
-            monsterInitialY[3] = h;        
+            monster[3].x = w;
+            monster[3].y = h;
           } else if (isMonster4(&overlay_pixel)) {
-            monsterInitialX[4] = w;
-            monsterInitialY[4] = h;        
+            monster[4].x = w;
+            monster[4].y = h;
           } else if (isMonster5(&overlay_pixel)) {
-            monsterInitialX[5] = w;
-            monsterInitialY[5] = h;        
+            monster[5].x = w;
+            monster[5].y = h;
           }
-          if (isTreasure(&pixel) && treasureOffset < 32) {
-            treasureX[treasureOffset] = w;
-            treasureY[treasureOffset] = h;
-            treasureOffset++;
+          if (isTreasure(&pixel) && treasures <= 255) {
+            treasure[treasures].x = w;
+            treasure[treasures].y = h;
+            treasures++;
           }
           //printf("(%d,%d,%d), ", pixel.r, pixel.g, pixel.b);
         }
@@ -462,19 +536,19 @@ int addDirectory(char *directory) {
       }
 
       fprintf(fpInc, "  ");
-      for (uint8_t i = 0; i < sizeof(map); ++i)
+      for (uint8_t i = 0; i < NELEMS(map); ++i)
         fprintf(fpInc, "%d,", map[i]);
       fprintf(fpInc, " // input file: %s\n", filename);
 
       fprintf(fpInc, "  ");
-      for (uint8_t i = 0; i < sizeof(playerInitialX); ++i)
-        fprintf(fpInc, "%d,", playerInitialX[i]);
-      fprintf(fpInc, " // playerInitialX[%d]\n", (int)sizeof(playerInitialX));
+      for (uint8_t i = 0; i < NELEMS(player); ++i)
+        fprintf(fpInc, "%d,", player[i].x);
+      fprintf(fpInc, " // playerInitialX[%d]\n", (int)NELEMS(player));
 
       fprintf(fpInc, "  ");
-      for (uint8_t i = 0; i < sizeof(playerInitialY); ++i)
-        fprintf(fpInc, "%d,", playerInitialY[i]);
-      fprintf(fpInc, " // playerInitialY[%d]\n", (int)sizeof(playerInitialY));
+      for (uint8_t i = 0; i < NELEMS(player); ++i)
+        fprintf(fpInc, "%d,", player[i].y);
+      fprintf(fpInc, " // playerInitialY[%d]\n", (int)NELEMS(player));
 
 
       /*
@@ -501,36 +575,32 @@ int addDirectory(char *directory) {
 
 
       fprintf(fpInc, "  ");
-      for (uint8_t i = 0; i < sizeof(monsterInitialX); ++i)
-        fprintf(fpInc, "%d,", monsterInitialX[i]);
-      fprintf(fpInc, " // monsterInitialX[%d]\n", (int)sizeof(monsterInitialX));
+      for (uint8_t i = 0; i < NELEMS(monster); ++i)
+        fprintf(fpInc, "%d,", monster[i].x);
+      fprintf(fpInc, " // monsterInitialX[%d]\n", (int)NELEMS(monster));
 
       fprintf(fpInc, "  ");
-      for (uint8_t i = 0; i < sizeof(monsterInitialY); ++i)
-        fprintf(fpInc, "%d,", monsterInitialY[i]);
-      fprintf(fpInc, " // monsterInitialY[%d]\n", (int)sizeof(monsterInitialY));
+      for (uint8_t i = 0; i < NELEMS(monster); ++i)
+        fprintf(fpInc, "%d,", monster[i].y);
+      fprintf(fpInc, " // monsterInitialY[%d]\n", (int)NELEMS(monster));
 
 
 
 
       fprintf(fpInc, "  ");
-      fprintf(fpInc, "%d, // treasureCount\n", treasureOffset);
+      fprintf(fpInc, "%d, // treasureCount\n", treasures);
 
       fprintf(fpInc, "  ");
-      for (uint8_t i = 0; i < sizeof(treasureX); ++i)
-        fprintf(fpInc, "%d,", treasureX[i]);
-      fprintf(fpInc, " // treasureX[%d]\n", (int)sizeof(treasureX));
+      for (int i = 0; i < 32; ++i)
+        fprintf(fpInc, "%d,", treasure[i].x);
+      fprintf(fpInc, " // treasureX[%d]\n", (int)NELEMS(treasure));
 
       fprintf(fpInc, "  ");
-      for (uint8_t i = 0; i < sizeof(treasureY); ++i)
-        fprintf(fpInc, "%d,", treasureY[i]);
-      fprintf(fpInc, " // treasureY[%d]\n", (int)sizeof(treasureY));
+      for (int i = 0; i < 32; ++i)
+        fprintf(fpInc, "%d,", treasure[i].y);
+      fprintf(fpInc, " // treasureY[%d]\n", (int)NELEMS(treasure));
 
       fclose(fpInc);
-
-
-      
-      //addPNG(filename);
     }
   }
 
