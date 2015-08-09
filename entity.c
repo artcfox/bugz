@@ -77,8 +77,8 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->visible = true;
   e->jumpReleased = true;
   e->interacts = true;
-  sprites[tag].flags = 0; // set the initial direction of the entity
-  e->render(e);
+  /* sprites[tag].flags = 0; // set the initial direction of the entity */
+  /* e->render(e); */
   //e->dx = e->dy = e->framesFalling = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
 }
 
@@ -678,7 +678,7 @@ static void generic_render(ENTITY* e, const uint8_t animationStart)
 
   if (e->left)
     sprites[e->tag].flags = 0;
-  else if (e->right)
+  if (e->right) // no else, because then vertical flying entities would always be flipped
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
@@ -783,8 +783,8 @@ void spider_render(ENTITY* e)
 
 void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
 {
-  entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx, impulse);
   memset(&(p->buttons), 0, sizeof(BUTTON_INFO));
+  entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx, impulse);
 }
 
 void player_input(ENTITY* e)

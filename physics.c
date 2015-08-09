@@ -93,6 +93,7 @@ enum UPDATE_FUNCTION {
   NULL_UPDATE = 0,
   ENTITY_UPDATE = 1,
   ENTITY_UPDATE_FLYING = 2,
+  ENTITY_UPDATE_LADDER = 3,
 };
 
 typedef void (*updateFnPtr)(ENTITY*);
@@ -103,6 +104,8 @@ updateFnPtr updateFunc(UPDATE_FUNCTION u)
     return entity_update;
   case ENTITY_UPDATE_FLYING:
     return entity_update_flying;
+  case ENTITY_UPDATE_LADDER:
+    return entity_update_ladder;
   default: // NULL_UPDATE
     return null_update;
   }
@@ -159,6 +162,7 @@ enum MONSTER_FLAGS {
   MFLAG_AUTORESPAWN = 16,
   MFLAG_NOINTERACT = 32,
   MFLAG_INVINCIBLE = 64,
+  MFLAG_SPRITE_FLIP_X = 128,
 };
 
 // Parenthesis cannot be placed around this macro expansion
@@ -215,11 +219,11 @@ const uint8_t levelData[] PROGMEM = {
   16, 23, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6]
   AI_FLY_VERTICAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
   ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
-  SPIDER_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
+  BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 
   2,      // uint8_t theme;
 #include "editor/levels/space_level.png.inc"
-  MFLAG_DOWN|MFLAG_INVINCIBLE, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
+  MFLAG_DOWN|MFLAG_SPRITE_FLIP_X, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
   LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
   PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
@@ -415,6 +419,8 @@ static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
   e->autorespawn = (bool)(monsterFlags & MFLAG_AUTORESPAWN);
   e->interacts = (bool)!(monsterFlags & MFLAG_NOINTERACT);
   e->invincible = (bool)(monsterFlags & MFLAG_INVINCIBLE);
+  sprites[e->tag].flags = (monsterFlags & MFLAG_SPRITE_FLIP_X) ? SPRITE_FLIP_X : 0;
+  e->render(e);
 }
 
 static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
@@ -565,7 +571,7 @@ int main()
   currentLevel = levelOffset = theme = 0;
 
   for (;;) {
-    WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
+    //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
     levelOffset = LoadLevel(currentLevel, &theme);
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
@@ -587,7 +593,7 @@ int main()
     }
 
     // Initialize players
-    for (uint8_t i = 0; i < PLAYERS; ++i)
+    for (uint8_t i = 0; i < PLAYERS; ++i) {
       player_init(&player[i],
                   inputFunc(playerInput(levelOffset, i)),
                   updateFunc(playerUpdate(levelOffset, i)),
@@ -596,7 +602,8 @@ int main()
                   (int16_t)(playerInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
                   (int16_t)(playerMaxDX(levelOffset, i)),
                   (int16_t)(playerImpulse(levelOffset, i)));
-
+      ((ENTITY*)(&player[i]))->render(((ENTITY*)(&player[i])));
+    }
 /* #if (PLAYERS == 2) */
 /*     // Player 2 starts off hidden and disabled */
 /*     ((ENTITY*)(&player[1]))->render(((ENTITY*)(&player[1]))); // setup sprite */
@@ -605,7 +612,7 @@ int main()
 /*     ((ENTITY*)(&player[1]))->invincible = true; */
 /* #endif // (PLAYERS == 2) */
 
-    WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
+    //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
 
     // Initialize monsters
     for (uint8_t i = 0; i < MONSTERS; ++i)
@@ -639,8 +646,8 @@ int main()
       DisplayNumber(8, 0, timer, 4, theme);
 
       // Display debugging information
-      /* uint16_t sc = StackCount(); */
-      /* DisplayNumber(SCREEN_TILES_H - 3, 0, sc, 4, theme); */
+      uint16_t sc = StackCount();
+      DisplayNumber(SCREEN_TILES_H - 3, 0, sc, 4, theme);
       /* DisplayNumber(2, 0, globalFrameCounter, 3); */
       /* DisplayNumber(6, 0, localFrameCounter++, 3); */
       /* DisplayNumber(4, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */

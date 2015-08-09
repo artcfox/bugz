@@ -1,13 +1,13 @@
 /*
 
-  png2tlc.c
+  png2inc.c
 
-  Converts a directory of PNG files (whose height in pixels matches
-  the number of LEDs on the RGB-POV hardware) into a single output
-  file that contains all of those images packed in an optimized format
-  that the RGB-POV hardware can read off a microSD card.
+  This program is designed to convert a directory of PNG files (with
+  or without an alpha channel) into a format that is suitable to
+  #include directly in the definition of a PROGMEM array for the
+  UZEBOX gaming system.
 
-  Copyright 2011-2012 Matthew T. Pandina. All rights reserved.
+  Copyright 2011-2015 Matthew T. Pandina. All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions
@@ -165,7 +165,7 @@ bool isTreasure(const PIXEL_DATA* p)
 }
 
 // Given an x and a y in the range of 0-31, packs the coordinate into a byte array at logical index 'position'
-void Pack5BitXY(uint8_t *xyData, uint8_t position, uint8_t x, uint8_t y)
+void Pack10BitXY(uint8_t *xyData, uint8_t position, uint8_t x, uint8_t y)
 {
   // Truncate x and y to the range 0-31, then pack them into 10 bits
   uint16_t value = ((x & 31) << 5) | (y & 31);
@@ -194,7 +194,10 @@ void Pack5BitXY(uint8_t *xyData, uint8_t position, uint8_t x, uint8_t y)
   }
 }
 
-int addPNG(char *pngfile) {
+int decode_png(char* pngfile, uint8_t* buffer, size_t bufferlen, uint32_t* w, uint32_t* h)
+{
+  printf("Attempting to open '%s'\n", pngfile);
+
   // decode PNG file
   FILE *fp = fopen(pngfile, "rb");
   if (!fp) {
@@ -288,161 +291,24 @@ int addPNG(char *pngfile) {
   png_read_image(png_ptr, row_pointers);
 
   // data now contains the byte data in the format RGB
+  int retval = 0;
 
-  int errorVal = 0;
-
-  if (width != 30 || height < 28) {
-    fprintf(stderr, "Error: Image size should be 30x28, but if taller, only the top 28 rows will be used\n");
-    errorVal = -1;
-    goto cleanup;
+  if (bufferlen < height * rowbytes) {
+    fprintf(stderr, "The buffer passed to decode_png is not large enough for '%s'.\n", pngfile);
+    retval = -1;
+  } else {
+    memcpy(buffer, data, height * rowbytes);
+    *w = width;
+    *h = height;
   }
 
-  uint8_t map[BitArray_numBits(30 * 28)] = {0};
-  size_t mapOffset = 0;
-  uint8_t playerInitialX[2] = {0};
-  uint8_t playerInitialY[2] = {0};
-  uint8_t monsterInitialX[6] = {0};
-  uint8_t monsterInitialY[6] = {0};
-  uint8_t treasureX[32] = {0};
-  uint8_t treasureY[32] = {0};
-  uint8_t treasureOffset = 0;
-
-  // Scan through the PNG, and build the base map
-  for (uint8_t h = 0; h < 28; h++) {
-    for (uint8_t w = 0; w < width; w++) {
-      PIXEL_DATA pixel = {
-        *(data + h * width * 3 + w * 3 + 0),
-        *(data + h * width * 3 + w * 3 + 1),
-        *(data + h * width * 3 + w * 3 + 2),
-      };
-      if (isSolid(&pixel))
-        BitArray_setBit(map, mapOffset);
-      else
-        BitArray_clearBit(map, mapOffset);
-      mapOffset++;
-
-      if (isPlayer0(&pixel)) {
-        playerInitialX[0] = w;
-        playerInitialY[0] = h;
-      } else if (isPlayer1(&pixel)) {
-        playerInitialX[1] = w;
-        playerInitialY[1] = h;
-      } else if (isMonster0(&pixel)) {
-        monsterInitialX[0] = w;
-        monsterInitialY[0] = h;        
-      } else if (isMonster1(&pixel)) {
-        monsterInitialX[1] = w;
-        monsterInitialY[1] = h;        
-      } else if (isMonster2(&pixel)) {
-        monsterInitialX[2] = w;
-        monsterInitialY[2] = h;        
-      } else if (isMonster3(&pixel)) {
-        monsterInitialX[3] = w;
-        monsterInitialY[3] = h;        
-      } else if (isMonster4(&pixel)) {
-        monsterInitialX[4] = w;
-        monsterInitialY[4] = h;        
-      } else if (isMonster5(&pixel)) {
-        monsterInitialX[5] = w;
-        monsterInitialY[5] = h;        
-      } else if (isTreasure(&pixel) && treasureOffset < 32) {
-        treasureX[treasureOffset] = w;
-        treasureY[treasureOffset] = h;
-        treasureOffset++;
-      }
-      //printf("(%d,%d,%d), ", pixel.r, pixel.g, pixel.b);
-    }
-  }
-
-  char includeFile[FILENAME_LEN] = {0};
-
-#ifdef __MINGW32__
-  sprintf(includeFile, "%s\\%s.inc", inputDirectory, pngfile);
-#else
-  sprintf(includeFile, "%s/%s.inc", inputDirectory, pngfile);
-#endif
-
-  FILE* fpInc = fopen(includeFile, "w");
-  if (!fpInc) {
-    fprintf(stderr, "Unable to open \"%s\" for writing.", includeFile);
-    return -1;
-  }
-
-  fprintf(fpInc, "  ");
-  for (uint8_t i = 0; i < sizeof(map); ++i)
-    fprintf(fpInc, "%d,", map[i]);
-  fprintf(fpInc, " // input file: %s\n", pngfile);
-
-  fprintf(fpInc, "  ");
-  for (uint8_t i = 0; i < sizeof(playerInitialX); ++i)
-    fprintf(fpInc, "%d,", playerInitialX[i]);
-  fprintf(fpInc, " // playerInitialX[%d]\n", (int)sizeof(playerInitialX));
-
-  fprintf(fpInc, "  ");
-  for (uint8_t i = 0; i < sizeof(playerInitialY); ++i)
-    fprintf(fpInc, "%d,", playerInitialY[i]);
-  fprintf(fpInc, " // playerInitialY[%d]\n", (int)sizeof(playerInitialY));
-
-
-  /*
-    So, I have two arrays of length 32, and each value is within the range of 0-31, so I only need 5 bits to store each element.
-
-    Packed into bytes, the data looks like this:
-
-    01234567
-    --------
-    01234012
-    34012340
-    12340123
-    40123401
-    23401234
-
-    01234567
-    89012345
-    67890123
-    45678901
-    23456789
-
-    So I should have a header: uint8_t players, uint8_t monsters, uint8_t treasures
-   */
-
-
-  fprintf(fpInc, "  ");
-  for (uint8_t i = 0; i < sizeof(monsterInitialX); ++i)
-    fprintf(fpInc, "%d,", monsterInitialX[i]);
-  fprintf(fpInc, " // monsterInitialX[%d]\n", (int)sizeof(monsterInitialX));
-
-  fprintf(fpInc, "  ");
-  for (uint8_t i = 0; i < sizeof(monsterInitialY); ++i)
-    fprintf(fpInc, "%d,", monsterInitialY[i]);
-  fprintf(fpInc, " // monsterInitialY[%d]\n", (int)sizeof(monsterInitialY));
-
-
-
-
-  fprintf(fpInc, "  ");
-  fprintf(fpInc, "%d, // treasureCount\n", treasureOffset);
-
-  fprintf(fpInc, "  ");
-  for (uint8_t i = 0; i < sizeof(treasureX); ++i)
-    fprintf(fpInc, "%d,", treasureX[i]);
-  fprintf(fpInc, " // treasureX[%d]\n", (int)sizeof(treasureX));
-
-  fprintf(fpInc, "  ");
-  for (uint8_t i = 0; i < sizeof(treasureY); ++i)
-    fprintf(fpInc, "%d,", treasureY[i]);
-  fprintf(fpInc, " // treasureY[%d]\n", (int)sizeof(treasureY));
-
-  fclose(fpInc);
-
- cleanup:
   png_free(png_ptr, row_pointers);
   png_free(png_ptr, data);
 
   png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
   fclose(fp);
 
-  return errorVal;
+  return retval;
 }
 
 int addDirectory(char *directory) {
@@ -474,44 +340,209 @@ int addDirectory(char *directory) {
 
   closedir(dp);
 
+  int retval = 0;
+
+  size_t bufferlen = 30 * 29 * 3;
+  uint8_t* map_buffer = malloc(bufferlen);
+  uint8_t* overlay_buffer = malloc(bufferlen);
+
+#define OVERLAY_SUFFIX "-overlay.png"
+
   // Iterate through the sorted filenames
   for (rbtree_node_t *itr = rbtree_minimum(&tree);
        itr != myNilRef; itr = rbtree_successor(&tree, itr)) {
-    printf("Adding '%s'...\n", ((dirent_node_t *)itr)->entry.d_name);
-    addPNG(((dirent_node_t *)itr)->entry.d_name);
+
+    char *filename = ((dirent_node_t *)itr)->entry.d_name;
+    size_t filename_len = strlen(filename);
+
+    // Skip files that don't end in ".png"
+    if ((filename_len < 4) || (strncmp(filename + filename_len - 4, ".png", 4) != 0))
+      continue;
+
+    // Overlay files are only opened at the same time as their non-overlay version is, so we
+    if (strstr(filename, OVERLAY_SUFFIX) == NULL) {
+      //      printf("Adding '%s'...\n", filename);
+
+      char overlay_file[256] = {0};
+      strncpy(overlay_file, filename, filename_len - 4);
+      strncpy(overlay_file + strlen(overlay_file), OVERLAY_SUFFIX, sizeof(overlay_file) - strlen(OVERLAY_SUFFIX) - 4);
+
+      uint32_t map_width;
+      uint32_t map_height;
+      uint32_t overlay_width;
+      uint32_t overlay_height;
+
+      if (decode_png(filename, map_buffer, bufferlen, &map_width, &map_height) != 0)
+        continue;
+      if (decode_png(overlay_file, overlay_buffer, bufferlen, &overlay_width, &overlay_height) != 0)
+        continue;
+
+      if (map_width != 30 || map_height < 28 || overlay_width != 30 || overlay_height < 28) {
+        fprintf(stderr, "Error: Image size should be 30x28, but if taller, only the top 28 rows will be used\n");
+        retval = -1;
+        goto cleanup;
+      }
+
+      uint8_t map[BitArray_numBits(30 * 28)] = {0};
+      size_t mapOffset = 0;
+      uint8_t playerInitialX[2] = {0};
+      uint8_t playerInitialY[2] = {0};
+      uint8_t monsterInitialX[6] = {0};
+      uint8_t monsterInitialY[6] = {0};
+      uint8_t treasureX[32] = {0};
+      uint8_t treasureY[32] = {0};
+      uint8_t treasureOffset = 0;
+
+      // Scan through the PNG, and build the base map
+      for (uint8_t h = 0; h < 28; h++) {
+        for (uint8_t w = 0; w < map_width; w++) {
+          PIXEL_DATA pixel = {
+            *(map_buffer + h * map_width * 3 + w * 3 + 0),
+            *(map_buffer + h * map_width * 3 + w * 3 + 1),
+            *(map_buffer + h * map_width * 3 + w * 3 + 2),
+          };
+          PIXEL_DATA overlay_pixel = {
+            *(overlay_buffer + h * map_width * 3 + w * 3 + 0),
+            *(overlay_buffer + h * map_width * 3 + w * 3 + 1),
+            *(overlay_buffer + h * map_width * 3 + w * 3 + 2),
+          };
+
+          if (isSolid(&pixel))
+            BitArray_setBit(map, mapOffset);
+          else
+            BitArray_clearBit(map, mapOffset);
+          mapOffset++;
+
+          if (isPlayer0(&overlay_pixel)) {
+            playerInitialX[0] = w;
+            playerInitialY[0] = h;
+          } else if (isPlayer1(&overlay_pixel)) {
+            playerInitialX[1] = w;
+            playerInitialY[1] = h;
+          } else if (isMonster0(&overlay_pixel)) {
+            monsterInitialX[0] = w;
+            monsterInitialY[0] = h;        
+          } else if (isMonster1(&overlay_pixel)) {
+            monsterInitialX[1] = w;
+            monsterInitialY[1] = h;        
+          } else if (isMonster2(&overlay_pixel)) {
+            monsterInitialX[2] = w;
+            monsterInitialY[2] = h;        
+          } else if (isMonster3(&overlay_pixel)) {
+            monsterInitialX[3] = w;
+            monsterInitialY[3] = h;        
+          } else if (isMonster4(&overlay_pixel)) {
+            monsterInitialX[4] = w;
+            monsterInitialY[4] = h;        
+          } else if (isMonster5(&overlay_pixel)) {
+            monsterInitialX[5] = w;
+            monsterInitialY[5] = h;        
+          }
+          if (isTreasure(&pixel) && treasureOffset < 32) {
+            treasureX[treasureOffset] = w;
+            treasureY[treasureOffset] = h;
+            treasureOffset++;
+          }
+          //printf("(%d,%d,%d), ", pixel.r, pixel.g, pixel.b);
+        }
+      }
+
+      char includeFile[FILENAME_LEN] = {0};
+
+#ifdef __MINGW32__
+      sprintf(includeFile, "%s\\%s.inc", inputDirectory, filename);
+#else
+      sprintf(includeFile, "%s/%s.inc", inputDirectory, filename);
+#endif
+
+      FILE* fpInc = fopen(includeFile, "w");
+      if (!fpInc) {
+        fprintf(stderr, "Unable to open \"%s\" for writing.", includeFile);
+        return -1;
+      }
+
+      fprintf(fpInc, "  ");
+      for (uint8_t i = 0; i < sizeof(map); ++i)
+        fprintf(fpInc, "%d,", map[i]);
+      fprintf(fpInc, " // input file: %s\n", filename);
+
+      fprintf(fpInc, "  ");
+      for (uint8_t i = 0; i < sizeof(playerInitialX); ++i)
+        fprintf(fpInc, "%d,", playerInitialX[i]);
+      fprintf(fpInc, " // playerInitialX[%d]\n", (int)sizeof(playerInitialX));
+
+      fprintf(fpInc, "  ");
+      for (uint8_t i = 0; i < sizeof(playerInitialY); ++i)
+        fprintf(fpInc, "%d,", playerInitialY[i]);
+      fprintf(fpInc, " // playerInitialY[%d]\n", (int)sizeof(playerInitialY));
+
+
+      /*
+        So, I have two arrays of length 32, and each value is within the range of 0-31, so I only need 5 bits to store each element.
+
+        Packed into bytes, the data looks like this:
+
+        01234567
+        --------
+        01234012
+        34012340
+        12340123
+        40123401
+        23401234
+
+        01234567
+        89012345
+        67890123
+        45678901
+        23456789
+
+        So I should have a header: uint8_t players, uint8_t monsters, uint8_t treasures
+      */
+
+
+      fprintf(fpInc, "  ");
+      for (uint8_t i = 0; i < sizeof(monsterInitialX); ++i)
+        fprintf(fpInc, "%d,", monsterInitialX[i]);
+      fprintf(fpInc, " // monsterInitialX[%d]\n", (int)sizeof(monsterInitialX));
+
+      fprintf(fpInc, "  ");
+      for (uint8_t i = 0; i < sizeof(monsterInitialY); ++i)
+        fprintf(fpInc, "%d,", monsterInitialY[i]);
+      fprintf(fpInc, " // monsterInitialY[%d]\n", (int)sizeof(monsterInitialY));
+
+
+
+
+      fprintf(fpInc, "  ");
+      fprintf(fpInc, "%d, // treasureCount\n", treasureOffset);
+
+      fprintf(fpInc, "  ");
+      for (uint8_t i = 0; i < sizeof(treasureX); ++i)
+        fprintf(fpInc, "%d,", treasureX[i]);
+      fprintf(fpInc, " // treasureX[%d]\n", (int)sizeof(treasureX));
+
+      fprintf(fpInc, "  ");
+      for (uint8_t i = 0; i < sizeof(treasureY); ++i)
+        fprintf(fpInc, "%d,", treasureY[i]);
+      fprintf(fpInc, " // treasureY[%d]\n", (int)sizeof(treasureY));
+
+      fclose(fpInc);
+
+
+      
+      //addPNG(filename);
+    }
   }
 
+ cleanup:
+  free(overlay_buffer);
+  free(map_buffer);
+  
   // Cleanup the Red-Black Tree
   rbtree_postorderwalk(&tree, dirent_node_delete, 0);
   rbtree_destroy(&tree);
 
-  /*
-  // Scan the directory in alphabetical order
-  struct dirent **namelist;
-  int numEntries = scandir(".", &namelist, 0, alphasort);
-  if (numEntries < 0) {
-  perror("scandir");
-  return -1;
-  }
-
-  // Loop over all the entries
-  for (int i = 0; i < numEntries; i++) {
-  struct stat sb;
-  // Only interested in regular files
-  if (stat(namelist[i]->d_name, &sb) < 0)
-  perror("stat"); // print error and skip file
-  else {
-  if ((sb.st_mode & S_IFMT) == S_IFREG) {
-  //printf("Adding '%s'...\n", namelist[i]->d_name);
-  addPNG(mfile, namelist[i]->d_name);
-  }
-  }
-  free(namelist[i]);
-  }
-  free(namelist);
-  */
-
-  return 0;
+  return retval;
 }
 
 void printUsage(void) {
@@ -673,10 +704,9 @@ int main(int argc, char *argv[]) {
   // Add all PNG files from the directory
   addDirectory(inputDirectory);
 
- err_init:
-  goto err_mkdir; // remove unused label warning when compiling on MINGW32
+#ifndef __MINGW32__
  err_mkdir:
- err_stat:
+#endif // __MINGW32__
   // close the file
   if (close(fd) < 0) {
     perror("close");
