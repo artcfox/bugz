@@ -151,18 +151,18 @@ renderFnPtr renderFunc(RENDER_FUNCTION r)
   }
 }
 
-enum MONSTER_FLAGS;
-typedef enum MONSTER_FLAGS MONSTER_FLAGS;
+enum INITIAL_FLAGS;
+typedef enum INITIAL_FLAGS INITIAL_FLAGS;
 
-enum MONSTER_FLAGS {
-  MFLAG_LEFT = 1,
-  MFLAG_RIGHT = 2,
-  MFLAG_UP = 4,
-  MFLAG_DOWN = 8,
-  MFLAG_AUTORESPAWN = 16,
-  MFLAG_NOINTERACT = 32,
-  MFLAG_INVINCIBLE = 64,
-  MFLAG_SPRITE_FLIP_X = 128,
+enum INITIAL_FLAGS {
+  IFLAG_LEFT = 1,
+  IFLAG_RIGHT = 2,
+  IFLAG_UP = 4,
+  IFLAG_DOWN = 8,
+  IFLAG_AUTORESPAWN = 16,
+  IFLAG_NOINTERACT = 32,
+  IFLAG_INVINCIBLE = 64,
+  IFLAG_SPRITE_FLIP_X = 128,
 };
 
 // Parenthesis cannot be placed around this macro expansion
@@ -171,8 +171,8 @@ enum MONSTER_FLAGS {
 const uint8_t levelData[] PROGMEM = {
   LEVELS,      // uint8_t numLevels
   LE(7),   // uint16_t levelOffsets[numLevels] = offsets to each level (little endian)
-  LE(256),
-  LE(505),
+  LE(258),
+  LE(509),
   //LE(756),
 
 /*           // ---------- start of level 0 data */
@@ -180,7 +180,8 @@ const uint8_t levelData[] PROGMEM = {
 
 /* #include "editor/levels/title_level.png.inc" */
 
-/*   MFLAG_RIGHT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6] */
+/*   0, 0, // uint8_t playerFlags[2] */
+/*   IFLAG_RIGHT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT,      // uint8_t monsterFlags[6] */
 /*   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2] */
 /*   LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2] */
 /*   PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2] */
@@ -195,7 +196,8 @@ const uint8_t levelData[] PROGMEM = {
 
   0,      // uint8_t theme;
 #include "editor/levels/prototype_level.png.inc"
-  MFLAG_LEFT, MFLAG_LEFT|MFLAG_AUTORESPAWN, MFLAG_RIGHT, MFLAG_RIGHT, MFLAG_RIGHT|MFLAG_AUTORESPAWN, MFLAG_RIGHT,      // uint8_t monsterFlags[6]
+  0, 0, // uint8_t playerFlags[2]
+  IFLAG_LEFT, IFLAG_LEFT|IFLAG_AUTORESPAWN, IFLAG_RIGHT, IFLAG_RIGHT, IFLAG_RIGHT|IFLAG_AUTORESPAWN, IFLAG_RIGHT,      // uint8_t monsterFlags[6]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
   LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
   PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
@@ -209,7 +211,8 @@ const uint8_t levelData[] PROGMEM = {
 
   1,      // uint8_t theme;
 #include "editor/levels/test_level.png.inc"
-  MFLAG_DOWN, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
+  0, 0, // uint8_t playerFlags[2]
+  IFLAG_DOWN, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT,      // uint8_t monsterFlags[6]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
   LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
   PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
@@ -223,7 +226,8 @@ const uint8_t levelData[] PROGMEM = {
 
   2,      // uint8_t theme;
 #include "editor/levels/space_level.png.inc"
-  MFLAG_DOWN|MFLAG_SPRITE_FLIP_X, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT, MFLAG_LEFT,  MFLAG_LEFT,      // uint8_t monsterFlags[6]
+  IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X, // uint8_t playerFlags[2]
+  IFLAG_DOWN|IFLAG_SPRITE_FLIP_X, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT,      // uint8_t monsterFlags[6]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
   LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
   PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
@@ -256,9 +260,11 @@ const uint8_t levelData[] PROGMEM = {
 #define LEVEL_TREASURE_X_SIZE 32
 #define LEVEL_TREASURE_Y_START (LEVEL_TREASURE_X_START + LEVEL_TREASURE_X_SIZE)
 #define LEVEL_TREASURE_Y_SIZE 32
-#define LEVEL_MONSTER_FLAGS_START (LEVEL_TREASURE_Y_START + LEVEL_TREASURE_Y_SIZE)
-#define LEVEL_MONSTER_FLAGS_SIZE 6
-#define LEVEL_PLAYER_MAXDX_START (LEVEL_MONSTER_FLAGS_START + LEVEL_MONSTER_FLAGS_SIZE)
+#define LEVEL_PLAYER_INITIAL_FLAGS_START (LEVEL_TREASURE_Y_START + LEVEL_TREASURE_Y_SIZE)
+#define LEVEL_PLAYER_INITIAL_FLAGS_SIZE 2
+#define LEVEL_MONSTER_INITIAL_FLAGS_START (LEVEL_PLAYER_INITIAL_FLAGS_START + LEVEL_PLAYER_INITIAL_FLAGS_SIZE)
+#define LEVEL_MONSTER_INITIAL_FLAGS_SIZE 6
+#define LEVEL_PLAYER_MAXDX_START (LEVEL_MONSTER_INITIAL_FLAGS_START + LEVEL_MONSTER_INITIAL_FLAGS_SIZE)
 #define LEVEL_PLAYER_MAXDX_SIZE (2 * sizeof(int16_t))
 #define LEVEL_PLAYER_IMPULSE_START (LEVEL_PLAYER_MAXDX_START + LEVEL_PLAYER_MAXDX_SIZE)
 #define LEVEL_PLAYER_IMPULSE_SIZE (2 * sizeof(int16_t))
@@ -287,7 +293,8 @@ const uint8_t levelData[] PROGMEM = {
 #define playerInitialY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INITIAL_Y_START + (i)]))
 #define monsterInitialX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_X_START + (i)]))
 #define monsterInitialY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_Y_START + (i)]))
-#define monsterFlags(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_FLAGS_START + (i)]))
+#define playerFlags(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INITIAL_FLAGS_START + (i)]))
+#define monsterFlags(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INITIAL_FLAGS_START + (i)]))
 #define treasureCount(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_COUNT_START]))
 #define treasureX(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_X_START + (i)]))
 #define treasureY(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_Y_START + (i)]))
@@ -412,14 +419,14 @@ static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
               (int16_t)(monsterImpulse(levelOffset, i)));
   uint8_t monsterFlags = monsterFlags(levelOffset, i);
   // The cast to bool is necessary to properly set bit flags
-  e->left = (bool)(monsterFlags & MFLAG_LEFT);
-  e->right = (bool)(monsterFlags & MFLAG_RIGHT);
-  e->up = (bool)(monsterFlags & MFLAG_UP);
-  e->down = (bool)(monsterFlags & MFLAG_DOWN);
-  e->autorespawn = (bool)(monsterFlags & MFLAG_AUTORESPAWN);
-  e->interacts = (bool)!(monsterFlags & MFLAG_NOINTERACT);
-  e->invincible = (bool)(monsterFlags & MFLAG_INVINCIBLE);
-  sprites[e->tag].flags = (monsterFlags & MFLAG_SPRITE_FLIP_X) ? SPRITE_FLIP_X : 0;
+  e->left = (bool)(monsterFlags & IFLAG_LEFT);
+  e->right = (bool)(monsterFlags & IFLAG_RIGHT);
+  e->up = (bool)(monsterFlags & IFLAG_UP);
+  e->down = (bool)(monsterFlags & IFLAG_DOWN);
+  e->autorespawn = (bool)(monsterFlags & IFLAG_AUTORESPAWN);
+  e->interacts = (bool)!(monsterFlags & IFLAG_NOINTERACT);
+  e->invincible = (bool)(monsterFlags & IFLAG_INVINCIBLE);
+  sprites[e->tag].flags = (monsterFlags & IFLAG_SPRITE_FLIP_X) ? SPRITE_FLIP_X : 0;
   e->render(e);
 }
 
@@ -602,7 +609,18 @@ int main()
                   (int16_t)(playerInitialY(levelOffset, i) * (TILE_HEIGHT << FP_SHIFT)),
                   (int16_t)(playerMaxDX(levelOffset, i)),
                   (int16_t)(playerImpulse(levelOffset, i)));
-      ((ENTITY*)(&player[i]))->render(((ENTITY*)(&player[i])));
+      ENTITY* e = (ENTITY*)&player[i];
+      uint8_t playerFlags = playerFlags(levelOffset, i);
+      // The cast to bool is necessary to properly set bit flags
+      //e->left = (bool)(playerFlags & IFLAG_LEFT);
+      //e->right = (bool)(playerFlags & IFLAG_RIGHT);
+      //e->up = (bool)(playerFlags & IFLAG_UP);
+      //e->down = (bool)(playerFlags & IFLAG_DOWN);
+      //e->autorespawn = (bool)(playerFlags & IFLAG_AUTORESPAWN);
+      //e->interacts = (bool)!(playerFlags & IFLAG_NOINTERACT);
+      e->invincible = (bool)(playerFlags & IFLAG_INVINCIBLE);
+      sprites[e->tag].flags = (playerFlags & IFLAG_SPRITE_FLIP_X) ? SPRITE_FLIP_X : 0;
+      e->render(e);
     }
 /* #if (PLAYERS == 2) */
 /*     // Player 2 starts off hidden and disabled */
@@ -789,7 +807,7 @@ int main()
           }
           if (collectedTreasure)
             TriggerFx(2, 128, true);
-          if (killedByFire)
+          if (killedByFire && !e->invincible)
             e->dead = true;
         }
       }

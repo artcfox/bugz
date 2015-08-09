@@ -884,7 +884,7 @@ void player_render(ENTITY* e)
 
   if (e->left)
     sprites[e->tag].flags = 0;
-  else if (e->right)
+  if (e->right)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
