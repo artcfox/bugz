@@ -58,7 +58,8 @@
 #define PLAYERS 2
 #define MONSTERS 6
 
-#define LEVELS 3
+// Include the auto-generated definition for LEVELS
+#include "editor/levels/num_levels.inc"
 
 // Fixed point shift
 #define FP_SHIFT 2

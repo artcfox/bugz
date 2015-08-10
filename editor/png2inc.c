@@ -78,7 +78,7 @@
 
 #define NELEMS(x) (sizeof(x)/sizeof(x[0]))
 
-#define BitArray_numBits(bits) (((bits) >> 3) + 1 * (((bits) & 7) ? 1 : 0))
+#define BitArray_numBytes(bits) (((bits) >> 3) + 1 * (((bits) & 7) ? 1 : 0))
 #define BitArray_setBit(array, index) ((array)[(index) >> 3] |= (1 << ((index) & 7)))
 #define BitArray_clearBit(array, index) ((array)[(index) >> 3] &= ((1 << ((index) & 7)) ^ 0xFF))
 #define BitArray_readBit(array, index) ((bool)((array)[(index) >> 3] & (1 << ((index) & 7))))
@@ -206,6 +206,101 @@ void Pack10BitXY(uint8_t *xyData, uint8_t position, uint8_t x, uint8_t y)
     xyData[i] = (uint8_t)value;                             // bits: 7 6 5 4 3 2 1 0
     break;
   }
+}
+
+// Returns the number of bytes necessary to store 'len' packed 5-bit values
+uint16_t Packed5Bit_numBytes(uint16_t len)
+{
+  return ((len * 5) >> 3) + 1 * (((len * 5) & 7) ? 1 : 0);
+}
+
+  /*
+    76543210
+    --------
+    43210432
+    10432104
+    32104321
+    04321043
+    21043210
+  */
+
+// Given a value in the range of 0-31, writes it packed into the byte array 'packed' at logical index 'position'
+void Packed5Bit_write(uint8_t *packed, const uint16_t position, const uint8_t value)
+{
+  uint8_t v = (value & 31); // ensure value is in the range 0-31
+  uint16_t i = position * 5 / 8; // 5 bits packed into 8
+  switch (position % 8) {
+  case 0:
+    packed[i] = (packed[i] & 0x07) | (uint8_t)(v << 3); // bits: 4 3 2 1 0 x x x
+    break;
+  case 1:
+    packed[i] = (packed[i] & 0xF8) | (v >> 2);          // bits: x x x x x 4 3 2
+    ++i;
+    packed[i] = (packed[i] & 0x3F) | (uint8_t)(v << 6); // bits: 1 0 x x x x x x
+    break;
+  case 2:
+    packed[i] = (packed[i] & 0xC1) | (uint8_t)(v << 1); // bits: x x 4 3 2 1 0 x
+    break;
+  case 3:
+    packed[i] = (packed[i] & 0xFE) | (v >> 4);          // bits: x x x x x x x 4
+    ++i;
+    packed[i] = (packed[i] & 0x0F) | (uint8_t)(v << 4); // bits: 3 2 1 0 x x x x
+    break;
+  case 4:
+    packed[i] = (packed[i] & 0xF0) | (v >> 1);          // bits: x x x x 4 3 2 1
+    ++i;
+    packed[i] = (packed[i] & 0x7F) | (uint8_t)(v << 7); // bits: 0 x x x x x x x
+    break;
+  case 5:
+    packed[i] = (packed[i] & 0x83) | (uint8_t)(v << 2); // bits: x 4 3 2 1 0 x x
+    break;
+  case 6:
+    packed[i] = (packed[i] & 0xFC) | (v >> 3);          // bits: x x x x x x 4 3
+    ++i;
+    packed[i] = (packed[i] & 0x1F) | (uint8_t)(v << 5); // bits: 2 1 0 x x x x x
+    break;
+  default: // case 7
+    packed[i] = (packed[i] & 0xE0) | (v);               // bits: x x x 4 3 2 1 0
+    break;
+  }
+}
+
+uint8_t Packed5Bit_read(const uint8_t* packed, const uint16_t position)
+{
+  uint8_t value;
+  uint16_t i = position * 5 / 8; // 5 bits packed into 8
+  switch (position % 8) {
+  case 0: // bits: 4 3 2 1 0 x x x
+    value = (packed[i] >> 3) & 0x1F;
+    break;
+  case 1: // bits: x x x x x 4 3 2
+          // bits: 1 0 x x x x x x
+    value = ((packed[i] << 2) | ((packed[i + 1] >> 6) & 0x03)) & 0x1F;
+    break;
+  case 2: // bits: x x 4 3 2 1 0 x
+    value = (packed[i] >> 1) & 0x1F;
+    break;
+  case 3: // bits: x x x x x x x 4
+          // bits: 3 2 1 0 x x x x
+    value = ((packed[i] << 4) | ((packed[i + 1] >> 4) & 0x0F)) & 0x1F;
+    break;
+  case 4: // bits: x x x x 4 3 2 1
+          // bits: 0 x x x x x x x
+    value = ((packed[i] << 1) | ((packed[i + 1] >> 7) & 0x01)) & 0x1F;
+    break;
+  case 5: // bits: x 4 3 2 1 0 x x
+    value = (packed[i] >> 2) & 0x1F;
+    break;
+  case 6: // bits: x x x x x x 4 3
+          // bits: 2 1 0 x x x x x
+    value = ((packed[i] << 3) | ((packed[i + 1] >> 5) & 0x07)) & 0x1F;
+    break;
+  default: // case 7
+           // bits: x x x 4 3 2 1 0
+    value = packed[i] & 0x1F;
+    break;
+  }
+  return value;
 }
 
 int decode_png(char* pngfile, uint8_t* buffer, size_t bufferlen, uint32_t* w, uint32_t* h)
@@ -402,6 +497,12 @@ int addDirectory(char *directory) {
   size_t bufferlen = 30 * 29 * 3;
   uint8_t* map_buffer = malloc(bufferlen);
   uint8_t* overlay_buffer = malloc(bufferlen);
+  uint8_t* packedCoordinates = 0;
+
+  uint16_t levelSize[256] = {0};
+
+  // The total number of levels, which at the end needs to get written to its own .inc file and included in entity.h
+  uint8_t totalLevels = 0; // fprintf(fpTotalLevelsInc, "#define LEVELS %d\n", totalLevels); 
 
 #define OVERLAY_SUFFIX "-overlay.png"
 
@@ -440,7 +541,7 @@ int addDirectory(char *directory) {
         goto cleanup;
       }
 
-      uint8_t map[BitArray_numBits(30 * 28)] = {0};
+      uint8_t map[BitArray_numBytes(30 * 28)] = {0};
       uint8_t treasures = 0;
       uint8_t oneways = 0;
       uint8_t ladders = 0;
@@ -521,6 +622,58 @@ int addDirectory(char *directory) {
         }
       }
 
+      // The level size is 174 + packedCoordinateBytes
+
+      // This is the spot where we should know exactly how many players, monsters, treasures, oneways, ladders, and fires are defined
+      // and we can calculate how many bytes we need to store them as packed 5-bit values. Once we know how many bytes we need, malloc
+      // that many bytes, and go through all the coordinates we need to pack, and write them into the packedCoordinates[] array. Then
+      // we can loop over that array, and write each byte out to includeFile. We also know how many bytes each level takes, so we can
+      // auto-generate the index and offsets to each level.
+
+      uint16_t packedCoordinateBytes = Packed5Bit_numBytes(NELEMS(player) * 2 + NELEMS(monster) * 2 + treasures * 2 + oneways * 3 + ladders * 3 + fires * 3);
+      packedCoordinates = malloc(packedCoordinateBytes);
+      memset(packedCoordinates, 0, packedCoordinateBytes);
+
+      levelSize[totalLevels] = 174 + packedCoordinateBytes;
+
+      // Increment the total number of levels, so at the very end we can write out a separate .inc file that defines the number of levels
+      totalLevels++;
+
+      uint16_t pcOffset = 0;
+
+      for (uint8_t i = 0; i < NELEMS(player); ++i) {
+        Packed5Bit_write(packedCoordinates, pcOffset++, player[i].x);
+        Packed5Bit_write(packedCoordinates, pcOffset++, player[i].y);
+      }
+
+      for (uint8_t i = 0; i < NELEMS(monster); ++i) {
+        Packed5Bit_write(packedCoordinates, pcOffset++, monster[i].x);
+        Packed5Bit_write(packedCoordinates, pcOffset++, monster[i].y);
+      }
+
+      for (int i = 0; i < treasures; ++i) {
+        Packed5Bit_write(packedCoordinates, pcOffset++, treasure[i].x);
+        Packed5Bit_write(packedCoordinates, pcOffset++, treasure[i].y);
+      }
+
+      for (int i = 0; i < oneways; ++i) {
+        Packed5Bit_write(packedCoordinates, pcOffset++, oneway[i].y);
+        Packed5Bit_write(packedCoordinates, pcOffset++, oneway[i].x1);
+        Packed5Bit_write(packedCoordinates, pcOffset++, oneway[i].x2);
+      }
+
+      for (int i = 0; i < ladders; ++i) {
+        Packed5Bit_write(packedCoordinates, pcOffset++, ladder[i].x);
+        Packed5Bit_write(packedCoordinates, pcOffset++, ladder[i].y1);
+        Packed5Bit_write(packedCoordinates, pcOffset++, ladder[i].y2);
+      }
+
+      for (int i = 0; i < fires; ++i) {
+        Packed5Bit_write(packedCoordinates, pcOffset++, fire[i].y);
+        Packed5Bit_write(packedCoordinates, pcOffset++, fire[i].x1);
+        Packed5Bit_write(packedCoordinates, pcOffset++, fire[i].x2);
+      }
+
       char includeFile[FILENAME_LEN] = {0};
 
 #ifdef __MINGW32__
@@ -532,79 +685,67 @@ int addDirectory(char *directory) {
       FILE* fpInc = fopen(includeFile, "w");
       if (!fpInc) {
         fprintf(stderr, "Unable to open \"%s\" for writing.", includeFile);
-        return -1;
+        retval = -1;
+        goto cleanup;
       }
 
       fprintf(fpInc, "  ");
       for (uint8_t i = 0; i < NELEMS(map); ++i)
         fprintf(fpInc, "%d,", map[i]);
-      fprintf(fpInc, " // input file: %s\n", filename);
+      fprintf(fpInc, " // %s\n", filename);
 
       fprintf(fpInc, "  ");
-      for (uint8_t i = 0; i < NELEMS(player); ++i)
-        fprintf(fpInc, "%d,", player[i].x);
-      fprintf(fpInc, " // playerInitialX[%d]\n", (int)NELEMS(player));
+      fprintf(fpInc, "%d, // treasures\n", treasures);
 
       fprintf(fpInc, "  ");
-      for (uint8_t i = 0; i < NELEMS(player); ++i)
-        fprintf(fpInc, "%d,", player[i].y);
-      fprintf(fpInc, " // playerInitialY[%d]\n", (int)NELEMS(player));
-
-
-      /*
-        So, I have two arrays of length 32, and each value is within the range of 0-31, so I only need 5 bits to store each element.
-
-        Packed into bytes, the data looks like this:
-
-        01234567
-        --------
-        01234012
-        34012340
-        12340123
-        40123401
-        23401234
-
-        01234567
-        89012345
-        67890123
-        45678901
-        23456789
-
-        So I should have a header: uint8_t players, uint8_t monsters, uint8_t treasures
-      */
-
+      fprintf(fpInc, "%d, // oneways\n", oneways);
 
       fprintf(fpInc, "  ");
-      for (uint8_t i = 0; i < NELEMS(monster); ++i)
-        fprintf(fpInc, "%d,", monster[i].x);
-      fprintf(fpInc, " // monsterInitialX[%d]\n", (int)NELEMS(monster));
+      fprintf(fpInc, "%d, // ladders\n", ladders);
 
       fprintf(fpInc, "  ");
-      for (uint8_t i = 0; i < NELEMS(monster); ++i)
-        fprintf(fpInc, "%d,", monster[i].y);
-      fprintf(fpInc, " // monsterInitialY[%d]\n", (int)NELEMS(monster));
+      fprintf(fpInc, "%d, // fires\n", fires);
 
 
-
+      // Here is where the packed coordinates start
 
       fprintf(fpInc, "  ");
-      fprintf(fpInc, "%d, // treasureCount\n", treasures);
-
-      fprintf(fpInc, "  ");
-      for (int i = 0; i < 32; ++i)
-        fprintf(fpInc, "%d,", treasure[i].x);
-      fprintf(fpInc, " // treasureX[%d]\n", (int)NELEMS(treasure));
-
-      fprintf(fpInc, "  ");
-      for (int i = 0; i < 32; ++i)
-        fprintf(fpInc, "%d,", treasure[i].y);
-      fprintf(fpInc, " // treasureY[%d]\n", (int)NELEMS(treasure));
+      for (uint8_t i = 0; i < packedCoordinateBytes; ++i)
+        fprintf(fpInc, "%d,", packedCoordinates[i]);
+      fprintf(fpInc, " // 5-bit packed coordinates\n");
 
       fclose(fpInc);
     }
   }
 
+  // At this point, we know how many levels we added, and can build the index
+  FILE* fpNumLevels = fopen("num_levels.inc", "w");
+  if (!fpNumLevels) {
+    fprintf(stderr, "Unable to open \"num_levels.inc\" for writing.");
+    retval = -1;
+    goto cleanup;
+  }
+  fprintf(fpNumLevels, "#define LEVELS %d\n", totalLevels); 
+  fclose(fpNumLevels);
+
+  FILE* fpLevelOffsets = fopen("level_offsets.inc", "w");
+  if (!fpLevelOffsets) {
+    fprintf(stderr, "Unable to open \"level_offsets.inc\" for writing.");
+    retval = -1;
+    goto cleanup;
+  }
+  uint16_t levelOffset = 1 + 2 * totalLevels;
+  printf("totalLevels=%d\n", totalLevels);
+  for (uint8_t i = 0; i < totalLevels; ++i) {
+    fprintf(fpLevelOffsets, "  ");
+    fprintf(fpLevelOffsets, "LE(%d),\t\t// size: %d\n", levelOffset, levelSize[i]);
+    levelOffset += levelSize[i];
+  }
+  fclose(fpLevelOffsets);
+
  cleanup:
+  if (packedCoordinates)
+    free(packedCoordinates);
   free(overlay_buffer);
   free(map_buffer);
   
