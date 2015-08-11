@@ -457,66 +457,56 @@ static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2, const 
   }
 }
 
+#define MAX_PLAYERS 2
+#define MAX_MONSTERS 6
+
 static inline void playerInitialXY(const uint16_t levelOffset, const uint8_t i, uint8_t* x, uint8_t* y)
 {
-  *x = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], i * 2);
-  *y = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], i * 2 + 1);
+  const uint8_t* packedCoordinatesStart = &levelData[levelOffset + LEVEL_PACKED_COORDINATES_START];
+  *x = PgmPacked5Bit_read(packedCoordinatesStart, i * 2);
+  *y = PgmPacked5Bit_read(packedCoordinatesStart, i * 2 + 1);
 }
 
-#define MAX_PLAYERS 2
 static inline void monsterInitialXY(const uint16_t levelOffset, const uint8_t i, uint8_t* x, uint8_t* y)
 {
-  *x = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + i * 2);
-  *y = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + i * 2 + 1);
+  const uint8_t* packedCoordinatesStart = &levelData[levelOffset + LEVEL_PACKED_COORDINATES_START];
+  *x = PgmPacked5Bit_read(packedCoordinatesStart, MAX_PLAYERS * 2 + i * 2);
+  *y = PgmPacked5Bit_read(packedCoordinatesStart, MAX_PLAYERS * 2 + i * 2 + 1);
 }
 
-#define MAX_MONSTERS 6
-static inline void DrawAllTreasures(const uint16_t levelOffset)
+static inline void DrawAllLevelOverlays(const uint16_t levelOffset, const uint8_t theme)
 {
-  uint8_t treasures = treasureCount(levelOffset);
+  const uint8_t* packedCoordinatesStart = &levelData[levelOffset + LEVEL_PACKED_COORDINATES_START];
+  uint16_t packedOffset = MAX_PLAYERS * 2 + MAX_MONSTERS * 2; // 2 coordinates per player, 2 coordinates per monster
+  const uint8_t treasures = treasureCount(levelOffset);
   for (uint8_t i = 0; i < treasures; ++i) {
-    uint8_t x = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + i * 2);
-    uint8_t y = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + i * 2 + 1);
+    const uint8_t x = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 2);
+    const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 2 + 1);
     if (x < SCREEN_TILES_H && y < SCREEN_TILES_V)
       SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + THEMES_N * TREASURE_TILES_IN_THEME));
   }
-}
-
-static inline void DrawAllOneWays(const uint16_t levelOffset)
-{
-  uint8_t treasures = treasureCount(levelOffset);
-  uint8_t oneways = onewayCount(levelOffset);
+  packedOffset += treasures * 2; // 2 coordinates per treasure
+  const uint8_t oneways = onewayCount(levelOffset);
   for (uint8_t i = 0; i < oneways; ++i) {
-    uint8_t y = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + i * 3);
-    uint8_t x1 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + i * 3 + 1);
-    uint8_t x2 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + i * 3 + 2);
+    const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3);
+    const uint8_t x1 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 1);
+    const uint8_t x2 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 2);
     DrawOneWay(y, x1, x2);
   }
-}
-
-static inline void DrawAllLadders(const uint16_t levelOffset)
-{
-  uint8_t treasures = treasureCount(levelOffset);
-  uint8_t oneways = onewayCount(levelOffset);
-  uint8_t ladders = ladderCount(levelOffset);
+  packedOffset += oneways * 3; // 3 coordinates per oneway
+  const uint8_t ladders = ladderCount(levelOffset);
   for (uint8_t i = 0; i < ladders; ++i) {
-    uint8_t x = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + i * 3);
-    uint8_t y1 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + i * 3 + 1);
-    uint8_t y2 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + i * 3 + 2);
+    const uint8_t x = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3);
+    const uint8_t y1 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 1);
+    const uint8_t y2 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 2);
     DrawLadder(x, y1, y2);
   }
-}
-
-static inline void DrawAllFires(const uint16_t levelOffset, const uint8_t theme)
-{
-  uint8_t treasures = treasureCount(levelOffset);
-  uint8_t oneways = onewayCount(levelOffset);
-  uint8_t ladders = ladderCount(levelOffset);
-  uint8_t fires = fireCount(levelOffset);
+  packedOffset += ladders * 3; // 3 coordinates per ladder
+  const uint8_t fires = fireCount(levelOffset);
   for (uint8_t i = 0; i < fires; ++i) {
-    uint8_t y = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + ladders * 3 + i * 3);
-    uint8_t x1 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + ladders * 3 + i * 3 + 1);
-    uint8_t x2 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + ladders * 3 + i * 3 + 2);
+    const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3);
+    const uint8_t x1 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 1);
+    const uint8_t x2 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 2);
     DrawFire(y, x1, x2, theme);
   }
 }
@@ -537,18 +527,9 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* theme)
     return 0xFFFF; // bogus value
 
   // Determine the offset into the PROGMEM array where the level data begins
-  // struct LEVEL_HEADER {
-  //   uint8_t numLevels;
-  //   uint16_t levelOffsets[numLevels];
-  // };
   uint16_t levelOffset = levelOffset(level);
 
-  // Using that offset, read the tile set, and draw the map
-  // struct LEVEL_DATA {
-  //   uint8_t theme;
-  //   uint8_t map[105];
-  //   ...
-  // };
+  // Using that offset, read the theme, and draw the base map
   *theme = theme(levelOffset);
   if (*theme >= THEMES_N) // something major went wrong
     return 0xFFFF; // bogus value
@@ -584,6 +565,10 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* theme)
     }
   }
 
+  // Overlay treasures, oneways, ladders, and fires
+  DrawAllLevelOverlays(levelOffset, *theme);
+
+  // Display the level number
   DisplayNumber(3, 0, level + 1, 2, *theme);
 
   return levelOffset;
@@ -701,12 +686,6 @@ int main()
     backgroundFrameCounter = 0;
     timer = -1;
 
-    // Initialize treasure
-    DrawAllTreasures(levelOffset);
-    DrawAllOneWays(levelOffset);
-    DrawAllLadders(levelOffset);
-    DrawAllFires(levelOffset, theme);
-
     // Initialize players
     for (uint8_t i = 0; i < PLAYERS; ++i) {
       uint8_t input = playerInput(levelOffset, i);
@@ -756,17 +735,6 @@ int main()
     // Initialize monsters
     for (uint8_t i = 0; i < MONSTERS; ++i)
       spawnMonster(&monster[i], levelOffset, i);
-
-    // Since the level compiler doesn't support one-way tiles, ladders, or fire yet, these are hardcoded for now
-    /* if (currentLevel == 0) { */
-    /*   DrawOneWay(6, 12, 23); */
-    /*   DrawOneWay(24, 3, 6); */
-    /* } */
-
-    /* DrawLadder(22, 9, 14); */
-    //DrawLadder(3, 11, 25);
-    //DrawFire(26, 22, 22, theme);
-    //SetTile(7, 26, FIRST_SWITCH_TILE + theme * SWITCH_TILES_IN_THEME);
 
     // Main game loop
     for (;;) {
