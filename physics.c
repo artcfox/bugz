@@ -338,37 +338,187 @@ const uint8_t levelData[] PROGMEM = {
 #define ladderCount(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_LADDER_COUNT_START]))
 #define fireCount(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_FIRE_COUNT_START]))
 
+const uint8_t MapTileToLadderTop[] PROGMEM = {
+  // If a ladder top overlaps a treasure tile, the treasure gets replaced with open sky and gets a ladder top overlaid
+  0 + TREASURE_TO_LADDER_TOP_OFFSET, 1 + TREASURE_TO_LADDER_TOP_OFFSET,
+  2 + TREASURE_TO_LADDER_TOP_OFFSET, 3 + TREASURE_TO_LADDER_TOP_OFFSET,
+  4 + TREASURE_TO_LADDER_TOP_OFFSET, 5 + TREASURE_TO_LADDER_TOP_OFFSET,
+  6 + TREASURE_TO_LADDER_TOP_OFFSET, 7 + TREASURE_TO_LADDER_TOP_OFFSET,
+  8 + TREASURE_TO_LADDER_TOP_OFFSET, 9 + TREASURE_TO_LADDER_TOP_OFFSET,
+  10 + TREASURE_TO_LADDER_TOP_OFFSET, 11 + TREASURE_TO_LADDER_TOP_OFFSET,
+  12 + TREASURE_TO_LADDER_TOP_OFFSET, 13 + TREASURE_TO_LADDER_TOP_OFFSET,
+  14 + TREASURE_TO_LADDER_TOP_OFFSET,
+
+  // Open sky tiles get a ladder top overlaid
+  15 + SKY_TO_LADDER_TOP_OFFSET, 16 + SKY_TO_LADDER_TOP_OFFSET,
+  17 + SKY_TO_LADDER_TOP_OFFSET, 18 + SKY_TO_LADDER_TOP_OFFSET,
+  19 + SKY_TO_LADDER_TOP_OFFSET, 20 + SKY_TO_LADDER_TOP_OFFSET,
+  21 + SKY_TO_LADDER_TOP_OFFSET, 22 + SKY_TO_LADDER_TOP_OFFSET,
+  23 + SKY_TO_LADDER_TOP_OFFSET, 24 + SKY_TO_LADDER_TOP_OFFSET,
+  25 + SKY_TO_LADDER_TOP_OFFSET, 26 + SKY_TO_LADDER_TOP_OFFSET,
+  27 + SKY_TO_LADDER_TOP_OFFSET, 28 + SKY_TO_LADDER_TOP_OFFSET,
+  29 + SKY_TO_LADDER_TOP_OFFSET,
+
+  // Solid tiles get a ladder top overlaid
+  30 + SOLID_TO_LADDER_TOP_OFFSET, 31 + SOLID_TO_LADDER_TOP_OFFSET,
+  32 + SOLID_TO_LADDER_TOP_OFFSET, 33 + SOLID_TO_LADDER_TOP_OFFSET,
+  34 + SOLID_TO_LADDER_TOP_OFFSET, 35 + SOLID_TO_LADDER_TOP_OFFSET,
+
+  // Solid ladder tiles remain solid ladder tiles
+  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+  // One way tiles get a ladder top overlaid
+  48 + ONE_WAY_TO_LADDER_TOP_OFFSET, 49 + ONE_WAY_TO_LADDER_TOP_OFFSET,
+  50 + ONE_WAY_TO_LADDER_TOP_OFFSET,
+};
+
+const uint8_t MapTileToLadderMiddle[] PROGMEM = {
+  // If a ladder middle overlaps a treasure tile, the treasure gets replaced with open sky and gets a ladder middle overlaid
+  0 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 1 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
+  2 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 3 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
+  4 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 5 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
+  6 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 7 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
+  8 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 9 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
+  10 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 11 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
+  12 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 13 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
+  14 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
+
+  // Open sky tiles get a ladder middle overlaid
+  15 + SKY_TO_LADDER_MIDDLE_OFFSET, 16 + SKY_TO_LADDER_MIDDLE_OFFSET,
+  17 + SKY_TO_LADDER_MIDDLE_OFFSET, 18 + SKY_TO_LADDER_MIDDLE_OFFSET,
+  19 + SKY_TO_LADDER_MIDDLE_OFFSET, 20 + SKY_TO_LADDER_MIDDLE_OFFSET,
+  21 + SKY_TO_LADDER_MIDDLE_OFFSET, 22 + SKY_TO_LADDER_MIDDLE_OFFSET,
+  23 + SKY_TO_LADDER_MIDDLE_OFFSET, 24 + SKY_TO_LADDER_MIDDLE_OFFSET,
+  25 + SKY_TO_LADDER_MIDDLE_OFFSET, 26 + SKY_TO_LADDER_MIDDLE_OFFSET,
+  27 + SKY_TO_LADDER_MIDDLE_OFFSET, 28 + SKY_TO_LADDER_MIDDLE_OFFSET,
+  29 + SKY_TO_LADDER_MIDDLE_OFFSET,
+  
+  // Solid tiles get a ladder middle overlaid
+  30 + SOLID_TO_LADDER_MIDDLE_OFFSET, 31 + SOLID_TO_LADDER_MIDDLE_OFFSET,
+  32 + SOLID_TO_LADDER_MIDDLE_OFFSET, 33 + SOLID_TO_LADDER_MIDDLE_OFFSET,
+  34 + SOLID_TO_LADDER_MIDDLE_OFFSET, 35 + SOLID_TO_LADDER_MIDDLE_OFFSET,
+
+  // Solid ladder tiles remain solid ladder tiles
+  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+
+  // One way tiles get a ladder top overlaid
+  48 + ONE_WAY_TO_LADDER_TOP_OFFSET, 49 + ONE_WAY_TO_LADDER_TOP_OFFSET,
+  50 + ONE_WAY_TO_LADDER_TOP_OFFSET, // these map to ladder top tiles, since they need to be one-way tiles
+};
+
+static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
+{
+  if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
+    for (uint8_t x = x1; x <= x2; ++x) {
+      uint8_t t = GetTile(x, y);
+      switch (t) {
+      case FIRST_SOLID_TILE + 1:
+        t = FIRST_ONE_WAY_TILE;
+        break;
+      case FIRST_SOLID_TILE + 3:
+        t = FIRST_ONE_WAY_TILE + 1;
+        break;
+      case FIRST_SOLID_TILE + 5:
+        t = FIRST_ONE_WAY_TILE + 2;
+        break;
+      default:
+        break;
+      }
+      SetTile(x, y, t);
+    }
+  }
+}
+
+static void DrawLadder(const uint8_t x, const uint8_t y1, const uint8_t y2)
+{
+  if ((x < SCREEN_TILES_H) && (y1 < SCREEN_TILES_V) && (y2 < SCREEN_TILES_V)) {
+    // Draw the top of the ladder
+    uint8_t t = GetTile(x, y1);
+    if (t < NELEMS(MapTileToLadderTop))
+      SetTile(x, y1, pgm_read_byte(&MapTileToLadderTop[t]));
+
+    // Draw the rest of the ladder
+    for (uint8_t y = y1; y < y2; ++y) {
+      t = GetTile(x, y + 1);
+      if (t < NELEMS(MapTileToLadderMiddle))
+        SetTile(x, y + 1, pgm_read_byte(&MapTileToLadderMiddle[t]));
+    }
+  }
+}
+
+static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2, const uint8_t theme)
+{  
+  if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
+    for (uint8_t x = x1; x <= x2; ++x) {
+      uint8_t t = GetTile(x, y);
+      if (t < FIRST_SOLID_TILE)
+        SetTile(x, y, FIRST_FIRE_TILE + theme * FIRE_TILES_IN_THEME);
+    }
+  }
+}
+
 static inline void playerInitialXY(const uint16_t levelOffset, const uint8_t i, uint8_t* x, uint8_t* y)
 {
   *x = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], i * 2);
   *y = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], i * 2 + 1);
 }
+
 #define MAX_PLAYERS 2
 static inline void monsterInitialXY(const uint16_t levelOffset, const uint8_t i, uint8_t* x, uint8_t* y)
 {
   *x = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + i * 2);
   *y = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + i * 2 + 1);
 }
+
 #define MAX_MONSTERS 6
-static inline void treasureXY(const uint16_t levelOffset, const uint8_t i, uint8_t* x, uint8_t* y)
+static inline void DrawAllTreasures(const uint16_t levelOffset)
 {
-  *x = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + i * 2);
-  *y = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + i * 2 + 1);
+  uint8_t treasures = treasureCount(levelOffset);
+  for (uint8_t i = 0; i < treasures; ++i) {
+    uint8_t x = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + i * 2);
+    uint8_t y = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + i * 2 + 1);
+    if (x < SCREEN_TILES_H && y < SCREEN_TILES_V)
+      SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + THEMES_N * TREASURE_TILES_IN_THEME));
+  }
 }
 
-static inline void onewayYXX(const uint16_t levelOffset, const uint8_t i, uint8_t* y, uint8_t* x1, uint8_t* x2)
+static inline void DrawAllOneWays(const uint16_t levelOffset)
 {
-  *y = *x1 = *x2 = 0;
+  uint8_t treasures = treasureCount(levelOffset);
+  uint8_t oneways = onewayCount(levelOffset);
+  for (uint8_t i = 0; i < oneways; ++i) {
+    uint8_t y = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + i * 3);
+    uint8_t x1 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + i * 3 + 1);
+    uint8_t x2 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + i * 3 + 2);
+    DrawOneWay(y, x1, x2);
+  }
 }
 
-static inline void ladderXYY(const uint16_t levelOffset, const uint8_t i, uint8_t* x, uint8_t* y1, uint8_t* y2)
+static inline void DrawAllLadders(const uint16_t levelOffset)
 {
-  *x = *y1 = *y2 = 0;
+  uint8_t treasures = treasureCount(levelOffset);
+  uint8_t oneways = onewayCount(levelOffset);
+  uint8_t ladders = ladderCount(levelOffset);
+  for (uint8_t i = 0; i < ladders; ++i) {
+    uint8_t x = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + i * 3);
+    uint8_t y1 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + i * 3 + 1);
+    uint8_t y2 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + i * 3 + 2);
+    DrawLadder(x, y1, y2);
+  }
 }
 
-static inline void fireYXX(const uint16_t levelOffset, const uint8_t i, uint8_t* y, uint8_t* x1, uint8_t* x2)
+static inline void DrawAllFires(const uint16_t levelOffset, const uint8_t theme)
 {
-  *y = *x1 = *x2 = 0;
+  uint8_t treasures = treasureCount(levelOffset);
+  uint8_t oneways = onewayCount(levelOffset);
+  uint8_t ladders = ladderCount(levelOffset);
+  uint8_t fires = fireCount(levelOffset);
+  for (uint8_t i = 0; i < fires; ++i) {
+    uint8_t y = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + ladders * 3 + i * 3);
+    uint8_t x1 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + ladders * 3 + i * 3 + 1);
+    uint8_t x2 = PgmPacked5Bit_read(&levelData[(levelOffset) + LEVEL_PACKED_COORDINATES_START], MAX_PLAYERS * 2 + MAX_MONSTERS * 2 + treasures * 2 + oneways * 3 + ladders * 3 + i * 3 + 2);
+    DrawFire(y, x1, x2, theme);
+  }
 }
 
 #define BaseMapIsSolid(x, y, levelOffset) (PgmBitArray_readBit(&levelData[(levelOffset) + LEVEL_MAP_START], (y) * SCREEN_TILES_H + (x)))
@@ -519,119 +669,6 @@ static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, 
 /*   ++globalFrameCounter; */
 /* } */
 
-const uint8_t MapTileToLadderTop[] PROGMEM = {
-  // If a ladder top overlaps a treasure tile, the treasure gets replaced with open sky and gets a ladder top overlaid
-  0 + TREASURE_TO_LADDER_TOP_OFFSET, 1 + TREASURE_TO_LADDER_TOP_OFFSET,
-  2 + TREASURE_TO_LADDER_TOP_OFFSET, 3 + TREASURE_TO_LADDER_TOP_OFFSET,
-  4 + TREASURE_TO_LADDER_TOP_OFFSET, 5 + TREASURE_TO_LADDER_TOP_OFFSET,
-  6 + TREASURE_TO_LADDER_TOP_OFFSET, 7 + TREASURE_TO_LADDER_TOP_OFFSET,
-  8 + TREASURE_TO_LADDER_TOP_OFFSET, 9 + TREASURE_TO_LADDER_TOP_OFFSET,
-  10 + TREASURE_TO_LADDER_TOP_OFFSET, 11 + TREASURE_TO_LADDER_TOP_OFFSET,
-  12 + TREASURE_TO_LADDER_TOP_OFFSET, 13 + TREASURE_TO_LADDER_TOP_OFFSET,
-  14 + TREASURE_TO_LADDER_TOP_OFFSET,
-
-  // Open sky tiles get a ladder top overlaid
-  15 + SKY_TO_LADDER_TOP_OFFSET, 16 + SKY_TO_LADDER_TOP_OFFSET,
-  17 + SKY_TO_LADDER_TOP_OFFSET, 18 + SKY_TO_LADDER_TOP_OFFSET,
-  19 + SKY_TO_LADDER_TOP_OFFSET, 20 + SKY_TO_LADDER_TOP_OFFSET,
-  21 + SKY_TO_LADDER_TOP_OFFSET, 22 + SKY_TO_LADDER_TOP_OFFSET,
-  23 + SKY_TO_LADDER_TOP_OFFSET, 24 + SKY_TO_LADDER_TOP_OFFSET,
-  25 + SKY_TO_LADDER_TOP_OFFSET, 26 + SKY_TO_LADDER_TOP_OFFSET,
-  27 + SKY_TO_LADDER_TOP_OFFSET, 28 + SKY_TO_LADDER_TOP_OFFSET,
-  29 + SKY_TO_LADDER_TOP_OFFSET,
-
-  // Solid tiles get a ladder top overlaid
-  30 + SOLID_TO_LADDER_TOP_OFFSET, 31 + SOLID_TO_LADDER_TOP_OFFSET,
-  32 + SOLID_TO_LADDER_TOP_OFFSET, 33 + SOLID_TO_LADDER_TOP_OFFSET,
-  34 + SOLID_TO_LADDER_TOP_OFFSET, 35 + SOLID_TO_LADDER_TOP_OFFSET,
-
-  // Solid ladder tiles remain solid ladder tiles
-  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-
-  // One way tiles get a ladder top overlaid
-  48 + ONE_WAY_TO_LADDER_TOP_OFFSET, 49 + ONE_WAY_TO_LADDER_TOP_OFFSET,
-  50 + ONE_WAY_TO_LADDER_TOP_OFFSET,
-};
-
-const uint8_t MapTileToLadderMiddle[] PROGMEM = {
-  // If a ladder middle overlaps a treasure tile, the treasure gets replaced with open sky and gets a ladder middle overlaid
-  0 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 1 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  2 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 3 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  4 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 5 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  6 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 7 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  8 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 9 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  10 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 11 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  12 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 13 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  14 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-
-  // Open sky tiles get a ladder middle overlaid
-  15 + SKY_TO_LADDER_MIDDLE_OFFSET, 16 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  17 + SKY_TO_LADDER_MIDDLE_OFFSET, 18 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  19 + SKY_TO_LADDER_MIDDLE_OFFSET, 20 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  21 + SKY_TO_LADDER_MIDDLE_OFFSET, 22 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  23 + SKY_TO_LADDER_MIDDLE_OFFSET, 24 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  25 + SKY_TO_LADDER_MIDDLE_OFFSET, 26 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  27 + SKY_TO_LADDER_MIDDLE_OFFSET, 28 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  29 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  
-  // Solid tiles get a ladder middle overlaid
-  30 + SOLID_TO_LADDER_MIDDLE_OFFSET, 31 + SOLID_TO_LADDER_MIDDLE_OFFSET,
-  32 + SOLID_TO_LADDER_MIDDLE_OFFSET, 33 + SOLID_TO_LADDER_MIDDLE_OFFSET,
-  34 + SOLID_TO_LADDER_MIDDLE_OFFSET, 35 + SOLID_TO_LADDER_MIDDLE_OFFSET,
-
-  // Solid ladder tiles remain solid ladder tiles
-  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-
-  // One way tiles get a ladder top overlaid
-  48 + ONE_WAY_TO_LADDER_TOP_OFFSET, 49 + ONE_WAY_TO_LADDER_TOP_OFFSET,
-  50 + ONE_WAY_TO_LADDER_TOP_OFFSET, // these map to ladder top tiles, since they need to be one-way tiles
-};
-
-static void DrawLadder(const uint8_t x, const uint8_t y1, const uint8_t y2)
-{
-  // Draw the top of the ladder
-  uint8_t t = GetTile(x, y1);
-  if (t < NELEMS(MapTileToLadderTop))
-    SetTile(x, y1, pgm_read_byte(&MapTileToLadderTop[t]));
-
-  // Draw the rest of the ladder
-  for (uint8_t y = y1; y < y2; ++y) {
-    t = GetTile(x, y + 1);
-    if (t < NELEMS(MapTileToLadderMiddle))
-      SetTile(x, y + 1, pgm_read_byte(&MapTileToLadderMiddle[t]));
-  }
-}
-
-static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
-{
-  for (uint8_t x = x1; x <= x2; ++x) {
-    uint8_t t = GetTile(x, y);
-    switch (t) {
-    case FIRST_SOLID_TILE + 1:
-      t = FIRST_ONE_WAY_TILE;
-      break;
-    case FIRST_SOLID_TILE + 3:
-      t = FIRST_ONE_WAY_TILE + 1;
-      break;
-    case FIRST_SOLID_TILE + 5:
-      t = FIRST_ONE_WAY_TILE + 2;
-      break;
-    default:
-      break;
-    }
-    SetTile(x, y, t);
-  }
-}
-
-static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2, const uint8_t theme)
-{
-  for (uint8_t x = x1; x <= x2; ++x) {
-    uint8_t t = GetTile(x, y);
-    if (t < FIRST_SOLID_TILE)
-      SetTile(x, y, FIRST_FIRE_TILE + theme * FIRE_TILES_IN_THEME);
-  }    
-}
-
 int main()
 {
   PLAYER player[PLAYERS];
@@ -665,14 +702,10 @@ int main()
     timer = -1;
 
     // Initialize treasure
-    uint8_t tcount = treasureCount(levelOffset);
-    for (uint8_t i = 0; i < tcount; ++i) {
-      uint8_t x;
-      uint8_t y;
-      treasureXY(levelOffset, i, &x, &y);
-      if (x < SCREEN_TILES_H && y < SCREEN_TILES_V)
-        SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + THEMES_N * TREASURE_TILES_IN_THEME));
-    }
+    DrawAllTreasures(levelOffset);
+    DrawAllOneWays(levelOffset);
+    DrawAllLadders(levelOffset);
+    DrawAllFires(levelOffset, theme);
 
     // Initialize players
     for (uint8_t i = 0; i < PLAYERS; ++i) {
@@ -725,14 +758,14 @@ int main()
       spawnMonster(&monster[i], levelOffset, i);
 
     // Since the level compiler doesn't support one-way tiles, ladders, or fire yet, these are hardcoded for now
-    if (currentLevel == 0) {
-      DrawOneWay(6, 12, 23);
-      DrawOneWay(24, 3, 6);
-    }
+    /* if (currentLevel == 0) { */
+    /*   DrawOneWay(6, 12, 23); */
+    /*   DrawOneWay(24, 3, 6); */
+    /* } */
 
-    DrawLadder(22, 9, 14);
+    /* DrawLadder(22, 9, 14); */
     //DrawLadder(3, 11, 25);
-    DrawFire(26, 22, 22, theme);
+    //DrawFire(26, 22, 22, theme);
     //SetTile(7, 26, FIRST_SWITCH_TILE + theme * SWITCH_TILES_IN_THEME);
 
     // Main game loop

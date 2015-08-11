@@ -630,6 +630,35 @@ int addDirectory(char *directory) {
       // we can loop over that array, and write each byte out to includeFile. We also know how many bytes each level takes, so we can
       // auto-generate the index and offsets to each level.
 
+      // Hardcode these for now to test the decoders
+      if (totalLevels == 0) {
+        /*
+          DrawOneWay(6, 12, 23);
+          DrawOneWay(24, 3, 6);
+        */
+        oneways = 2;
+        oneway[0].y = 6;
+        oneway[0].x1 = 12;
+        oneway[0].x2 = 23;
+        oneway[1].y = 24;
+        oneway[1].x1 = 3;
+        oneway[1].x2 = 6;
+      }
+      /*
+        DrawLadder(22, 9, 14);
+      */
+      ladders = 1;
+      ladder[0].x = 22;
+      ladder[0].y1 = 9;
+      ladder[0].y2 = 14;
+      /*
+        DrawFire(26, 22, 22, theme);
+      */
+      fires = 1;
+      fire[0].y = 26;
+      fire[0].x1 = 22;
+      fire[0].x2 = 22;
+
       uint16_t packedCoordinateBytes = Packed5Bit_numBytes(NELEMS(player) * 2 + NELEMS(monster) * 2 + treasures * 2 + oneways * 3 + ladders * 3 + fires * 3);
       packedCoordinates = malloc(packedCoordinateBytes);
       memset(packedCoordinates, 0, packedCoordinateBytes);
