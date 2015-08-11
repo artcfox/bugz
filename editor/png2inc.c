@@ -463,6 +463,22 @@ struct FIRE_INFO {
   uint8_t x2;
 };
 
+enum ONE_WAY_STATE;
+typedef enum ONE_WAY_STATE ONE_WAY_STATE;
+
+enum ONE_WAY_STATE {
+  ONE_WAY_LOOKING = 0,
+  ONE_WAY_STARTED = 1,
+};
+
+enum FIRE_STATE;
+typedef enum FIRE_STATE FIRE_STATE;
+
+enum FIRE_STATE {
+  FIRE_LOOKING = 0,
+  FIRE_STARTED = 1,
+};
+
 int addDirectory(char *directory) {
   // Change into the directory specified as an argument
   if (chdir(directory) < 0) {
@@ -561,12 +577,8 @@ int addDirectory(char *directory) {
       FIRE_INFO fire[256];
       memset(fire, 0, sizeof(FIRE_INFO) * NELEMS(fire));
 
-      /* uint8_t playerInitialX[2] = {0}; */
-      /* uint8_t playerInitialY[2] = {0}; */
-      /* uint8_t monsterInitialX[6] = {0}; */
-      /* uint8_t monsterInitialY[6] = {0}; */
-      /* uint8_t treasureX[32] = {0}; */
-      /* uint8_t treasureY[32] = {0}; */
+      ONE_WAY_STATE oneway_state = ONE_WAY_LOOKING;
+      FIRE_STATE fire_state = FIRE_LOOKING;
 
       // Scan through the PNG, and build the base map
       for (uint8_t h = 0; h < 28; h++) {
@@ -618,6 +630,43 @@ int addDirectory(char *directory) {
             treasure[treasures].y = h;
             treasures++;
           }
+
+          // State machine for one-way tiles
+          switch (oneway_state) {
+          case ONE_WAY_LOOKING:
+            if (isOneWay(&pixel)) {
+              oneway_state = ONE_WAY_STARTED;
+              oneway[oneways].y = h;
+              oneway[oneways].x1 = w;
+            }
+            break;
+          default: // ONE_WAY_STARTED
+            if (!isOneWay(&pixel)) {
+              oneway_state = ONE_WAY_LOOKING;
+              oneway[oneways].x2 = w - 1;
+              oneways++;
+            }
+            break;
+          }
+
+          // State machine for fire tiles
+          switch (fire_state) {
+          case FIRE_LOOKING:
+            if (isFire(&pixel)) {
+              fire_state = FIRE_STARTED;
+              fire[fires].y = h;
+              fire[fires].x1 = w;
+            }
+            break;
+          default: // FIRE_STARTED
+            if (!isFire(&pixel)) {
+              fire_state = FIRE_LOOKING;
+              fire[fires].x2 = w - 1;
+              fires++;
+            }
+            break;
+          }
+          
           //printf("(%d,%d,%d), ", pixel.r, pixel.g, pixel.b);
         }
       }
@@ -631,19 +680,9 @@ int addDirectory(char *directory) {
       // auto-generate the index and offsets to each level.
 
       // Hardcode these for now to test the decoders
-      if (totalLevels == 0) {
-        /*
-          DrawOneWay(6, 12, 23);
-          DrawOneWay(24, 3, 6);
-        */
-        oneways = 2;
-        oneway[0].y = 6;
-        oneway[0].x1 = 12;
-        oneway[0].x2 = 23;
-        oneway[1].y = 24;
-        oneway[1].x1 = 3;
-        oneway[1].x2 = 6;
-      }
+      for (uint8_t i = 0; i < oneways; i++)
+        printf("oneway[%d].y = %d, oneway[%d].x1 = %d, oneway[%d].x2 = %d\n",
+               i, oneway[i].y, i, oneway[i].x1, i, oneway[i].x2);
       /*
         DrawLadder(22, 9, 14);
       */
@@ -651,13 +690,10 @@ int addDirectory(char *directory) {
       ladder[0].x = 22;
       ladder[0].y1 = 9;
       ladder[0].y2 = 14;
-      /*
-        DrawFire(26, 22, 22, theme);
-      */
-      fires = 1;
-      fire[0].y = 26;
-      fire[0].x1 = 22;
-      fire[0].x2 = 22;
+
+      for (uint8_t i = 0; i < fires; i++)
+        printf("fire[%d].y = %d, fire[%d].x1 = %d, fire[%d].x2 = %d\n",
+               i, fire[i].y, i, fire[i].x1, i, fire[i].x2);
 
       uint16_t packedCoordinateBytes = Packed5Bit_numBytes(NELEMS(player) * 2 + NELEMS(monster) * 2 + treasures * 2 + oneways * 3 + ladders * 3 + fires * 3);
       packedCoordinates = malloc(packedCoordinateBytes);
