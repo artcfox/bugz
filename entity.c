@@ -678,9 +678,10 @@ static void generic_render(ENTITY* e, const uint8_t animationStart)
 
   if (e->left)
     sprites[e->tag].flags = 0;
-  if (e->right) // no else, because then vertical flying entities would always be flipped
+  else if (e->right)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
+  // Round x and y to the nearest whole pixel for rendering purposes only
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
@@ -733,6 +734,7 @@ static void generic_flying_render(ENTITY* e, const uint8_t animationStart)
   else if (e->right)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
+  // Round x and y to the nearest whole pixel for rendering purposes only
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
@@ -775,6 +777,7 @@ void spider_render(ENTITY* e)
   if (e->right)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
+  // Round x and y to the nearest whole pixel for rendering purposes only
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
@@ -884,9 +887,10 @@ void player_render(ENTITY* e)
 
   if (e->left)
     sprites[e->tag].flags = 0;
-  if (e->right)
+  else if (e->right)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
+  // Round x and y to the nearest whole pixel for rendering purposes only
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }

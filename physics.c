@@ -52,7 +52,7 @@ extern const struct PatchStruct patches[] PROGMEM;
 uint8_t PgmPacked5Bit_read(const uint8_t* packed, const uint16_t position)
 {
   uint8_t value;
-  uint16_t i = position * 5 / 8; // 5 bits packed into 8
+  const uint16_t i = position * 5 / 8; // 5 bits packed into 8
   switch (position % 8) {
   case 0: // bits: 4 3 2 1 0 x x x
     value = ((pgm_read_byte(packed + i)) >> 3) & 0x1F;
@@ -209,7 +209,7 @@ enum INITIAL_FLAGS {
 const uint8_t levelData[] PROGMEM = {
   LEVELS,      // uint8_t numLevels
 
-  // Include the auto-generated table of level offsets (uint16_t levelOffsets[numLevels])
+// Include the auto-generated table of level offsets (uint16_t levelOffsets[numLevels])
 #include "editor/levels/level_offsets.inc"
 
 /*           // ---------- start of level 0 data */
@@ -332,7 +332,6 @@ const uint8_t levelData[] PROGMEM = {
 #define monsterInput(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_INPUT_START + (i)]))
 #define monsterUpdate(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_UPDATE_START + (i)]))
 #define monsterRender(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_MONSTER_RENDER_START + (i)]))
-
 #define treasureCount(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_TREASURE_COUNT_START]))
 #define onewayCount(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_ONE_WAY_COUNT_START]))
 #define ladderCount(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_LADDER_COUNT_START]))
@@ -753,8 +752,8 @@ int main()
       DisplayNumber(8, 0, timer, 4, theme);
 
       // Display debugging information
-      uint16_t sc = StackCount();
-      DisplayNumber(SCREEN_TILES_H - 3, 0, sc, 4, theme);
+      /* uint16_t sc = StackCount(); */
+      /* DisplayNumber(SCREEN_TILES_H - 3, 0, sc, 4, theme); */
       /* DisplayNumber(2, 0, globalFrameCounter, 3); */
       /* DisplayNumber(6, 0, localFrameCounter++, 3); */
       /* DisplayNumber(4, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
