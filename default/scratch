@@ -1,5 +1,14 @@
-#!/bin/sh
-cd ../editor && \
+#!/bin/bash
+mkdir -p ../editor/levels && \
+rm -f ../editor/levels/*.xcf.png && \
+rm -f ../editor/levels/*.xcf-ladders.png && \
+rm -f ../editor/levels/*.xcf-entities.png && \
+rm -f ../editor/levels/*.xcf.png.inc && \
+rm -f ../editor/levels/num_levels.inc && \
+rm -f ../editor/levels/level_offsets.inc && \
+cd ../data/levels && \
+for i in *.xcf; do xcf2png -f $i -o ../../editor/levels/$i.png Background; xcf2png -f $i -o ../../editor/levels/$i-ladders.png Ladders; xcf2png -f $i -o ../../editor/levels/$i-entities.png Entities; done; \
+cd ../../editor && \
 make clean && \
 make && \
 ./png2inc && \

@@ -219,7 +219,7 @@ const uint8_t levelData[] PROGMEM = {
 /*           // ---------- start of level 0 data */
 /*   1,      // uint8_t theme; */
 
-/* #include "editor/levels/title_level.png.inc" */
+/* #include "editor/levels/title_level.xcf.png.inc" */
 
 /*   0, 0, // uint8_t playerFlags[2] */
 /*   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2] */
@@ -248,7 +248,7 @@ const uint8_t levelData[] PROGMEM = {
   AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
   ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
-#include "editor/levels/0010-prototype_level.png.inc"
+#include "editor/levels/0010-prototype_level.xcf.png.inc"
 
   1,      // uint8_t theme;
   0, 0, // uint8_t playerFlags[2]
@@ -263,7 +263,7 @@ const uint8_t levelData[] PROGMEM = {
   AI_FLY_VERTICAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
   ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
-#include "editor/levels/0020-test_level.png.inc"
+#include "editor/levels/0020-test_level.xcf.png.inc"
 
   2,      // uint8_t theme;
   IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X, // uint8_t playerFlags[2]
@@ -278,7 +278,7 @@ const uint8_t levelData[] PROGMEM = {
   AI_FLY_VERTICAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
   ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
-#include "editor/levels/0030-space_level.png.inc"
+#include "editor/levels/0030-space_level.xcf.png.inc"
 
  };
 

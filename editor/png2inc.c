@@ -536,7 +536,7 @@ int addDirectory(char *directory) {
   uint16_t levelSize[256] = {0};
 
   // The total number of levels, which at the end needs to get written to its own .inc file and included in entity.h
-  uint8_t totalLevels = 0; // fprintf(fpTotalLevelsInc, "#define LEVELS %d\n", totalLevels); 
+  uint8_t totalLevels = 0;
 
 #define LADDERS_SUFFIX "-ladders.png"
 #define ENTITIES_SUFFIX "-entities.png"
@@ -593,9 +593,9 @@ int addDirectory(char *directory) {
 
       size_t mapOffset = 0;
       ENTITY_INFO player[2];
-      memset(player, 0xFF, sizeof(ENTITY_INFO) * NELEMS(player));
+      memset(player, 0xFF, sizeof(ENTITY_INFO) * NELEMS(player)); // initialize with "invalid positions" so if a player pixel isn't found, that player is disabled
       ENTITY_INFO monster[6];
-      memset(monster, 0xFF, sizeof(ENTITY_INFO) * NELEMS(monster));
+      memset(monster, 0xFF, sizeof(ENTITY_INFO) * NELEMS(monster)); // initialize with "invalid positions" so if a monster pixel isn't found, that monster is disabled
       TREASURE_INFO treasure[256];
       memset(treasure, 0, sizeof(TREASURE_INFO) * NELEMS(treasure));
       ONE_WAY_INFO oneway[256];
@@ -659,6 +659,7 @@ int addDirectory(char *directory) {
             monster[5].x = w;
             monster[5].y = h;
           }
+
           if (isTreasure(&pixel) && treasures <= 255) {
             if (isLadder(&ladders_pixel)) {
               printf("Warning: \"%s\" - The treasure tile at (%d, %d) has been removed because it overlaps with a ladder tile.\n", filename, w, h);
@@ -712,8 +713,7 @@ int addDirectory(char *directory) {
             }
             break;
           }
-          
-          //printf("(%d,%d,%d), ", pixel.r, pixel.g, pixel.b);
+
         }
       }
 
