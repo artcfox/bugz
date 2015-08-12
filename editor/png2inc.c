@@ -123,6 +123,12 @@ bool isOneWay(const PIXEL_DATA* p)
           (p->g == 145) &&
           (p->b == 145));
 }
+bool isLadder(const PIXEL_DATA* p)
+{
+  return ((p->r == 218) &&
+          (p->g == 145) &&
+          (p->b == 218));
+}
 bool isFire(const PIXEL_DATA* p)
 {
   return ((p->r == 145) &&
@@ -305,12 +311,12 @@ uint8_t Packed5Bit_read(const uint8_t* packed, const uint16_t position)
 
 int decode_png(char* pngfile, uint8_t* buffer, size_t bufferlen, uint32_t* w, uint32_t* h)
 {
-  printf("Attempting to open '%s'\n", pngfile);
+  printf("Opening: \"%s\"\n", pngfile);
 
   // decode PNG file
   FILE *fp = fopen(pngfile, "rb");
   if (!fp) {
-    fprintf(stderr, "Unable to open '%s'\n", pngfile);
+    fprintf(stderr, "Error: Unable to open \"%s\"\n", pngfile);
     return -1;
   }
 
@@ -471,6 +477,14 @@ enum ONE_WAY_STATE {
   ONE_WAY_STARTED = 1,
 };
 
+enum LADDER_STATE;
+typedef enum LADDER_STATE LADDER_STATE;
+
+enum LADDER_STATE {
+  LADDER_LOOKING = 0,
+  LADDER_STARTED = 1,
+};
+
 enum FIRE_STATE;
 typedef enum FIRE_STATE FIRE_STATE;
 
@@ -510,9 +524,13 @@ int addDirectory(char *directory) {
 
   int retval = 0;
 
-  size_t bufferlen = 30 * 29 * 3;
+#define SCREEN_TILES_H 30
+#define SCREEN_TILES_V 28
+
+  size_t bufferlen = SCREEN_TILES_H * (SCREEN_TILES_V + 1) * 3;
   uint8_t* map_buffer = malloc(bufferlen);
-  uint8_t* overlay_buffer = malloc(bufferlen);
+  uint8_t* ladders_buffer = malloc(bufferlen);
+  uint8_t* entities_buffer = malloc(bufferlen);
   uint8_t* packedCoordinates = 0;
 
   uint16_t levelSize[256] = {0};
@@ -520,7 +538,8 @@ int addDirectory(char *directory) {
   // The total number of levels, which at the end needs to get written to its own .inc file and included in entity.h
   uint8_t totalLevels = 0; // fprintf(fpTotalLevelsInc, "#define LEVELS %d\n", totalLevels); 
 
-#define OVERLAY_SUFFIX "-overlay.png"
+#define LADDERS_SUFFIX "-ladders.png"
+#define ENTITIES_SUFFIX "-entities.png"
 
   // Iterate through the sorted filenames
   for (rbtree_node_t *itr = rbtree_minimum(&tree);
@@ -533,31 +552,40 @@ int addDirectory(char *directory) {
     if ((filename_len < 4) || (strncmp(filename + filename_len - 4, ".png", 4) != 0))
       continue;
 
-    // Overlay files are only opened at the same time as their non-overlay version is, so we
-    if (strstr(filename, OVERLAY_SUFFIX) == NULL) {
-      //      printf("Adding '%s'...\n", filename);
+    // Overlay files are only opened at the same time as their non-overlay versions are, so we skip them in the main iteration
+    if ((strstr(filename, LADDERS_SUFFIX) == NULL) && (strstr(filename, ENTITIES_SUFFIX) == NULL)) {
+      char ladders_file[256] = {0};
+      strncpy(ladders_file, filename, filename_len - 4);
+      strncpy(ladders_file + strlen(ladders_file), LADDERS_SUFFIX, sizeof(ladders_file) - strlen(LADDERS_SUFFIX) - 4);
 
-      char overlay_file[256] = {0};
-      strncpy(overlay_file, filename, filename_len - 4);
-      strncpy(overlay_file + strlen(overlay_file), OVERLAY_SUFFIX, sizeof(overlay_file) - strlen(OVERLAY_SUFFIX) - 4);
+      char entities_file[256] = {0};
+      strncpy(entities_file, filename, filename_len - 4);
+      strncpy(entities_file + strlen(entities_file), ENTITIES_SUFFIX, sizeof(entities_file) - strlen(ENTITIES_SUFFIX) - 4);
 
       uint32_t map_width;
       uint32_t map_height;
-      uint32_t overlay_width;
-      uint32_t overlay_height;
+      uint32_t ladders_width;
+      uint32_t ladders_height;
+      uint32_t entities_width;
+      uint32_t entities_height;
 
       if (decode_png(filename, map_buffer, bufferlen, &map_width, &map_height) != 0)
         continue;
-      if (decode_png(overlay_file, overlay_buffer, bufferlen, &overlay_width, &overlay_height) != 0)
+      if (decode_png(ladders_file, ladders_buffer, bufferlen, &ladders_width, &ladders_height) != 0)
+        continue;
+      if (decode_png(entities_file, entities_buffer, bufferlen, &entities_width, &entities_height) != 0)
         continue;
 
-      if (map_width != 30 || map_height < 28 || overlay_width != 30 || overlay_height < 28) {
-        fprintf(stderr, "Error: Image size should be 30x28, but if taller, only the top 28 rows will be used\n");
+      if (map_width != SCREEN_TILES_H || map_height < SCREEN_TILES_V ||
+          ladders_width != SCREEN_TILES_H || ladders_height < SCREEN_TILES_V ||
+          entities_width != SCREEN_TILES_H || entities_height < SCREEN_TILES_V) {
+        fprintf(stderr, "Error: Image size should be %dx%d (or %dx%d, but only the top %d rows will be used)\n",
+                SCREEN_TILES_H, SCREEN_TILES_V, SCREEN_TILES_H, SCREEN_TILES_V + 1, SCREEN_TILES_V);
         retval = -1;
         goto cleanup;
       }
 
-      uint8_t map[BitArray_numBytes(30 * 28)] = {0};
+      uint8_t map[BitArray_numBytes(SCREEN_TILES_H * SCREEN_TILES_V)] = {0};
       uint8_t treasures = 0;
       uint8_t oneways = 0;
       uint8_t ladders = 0;
@@ -578,20 +606,26 @@ int addDirectory(char *directory) {
       memset(fire, 0, sizeof(FIRE_INFO) * NELEMS(fire));
 
       ONE_WAY_STATE oneway_state = ONE_WAY_LOOKING;
+      LADDER_STATE ladder_state = LADDER_LOOKING;
       FIRE_STATE fire_state = FIRE_LOOKING;
 
       // Scan through the PNG, and build the base map
-      for (uint8_t h = 0; h < 28; h++) {
-        for (uint8_t w = 0; w < map_width; w++) {
+      for (uint8_t h = 0; h < SCREEN_TILES_V; h++) {
+        for (uint8_t w = 0; w < SCREEN_TILES_H; w++) {
           PIXEL_DATA pixel = {
-            *(map_buffer + h * map_width * 3 + w * 3 + 0),
-            *(map_buffer + h * map_width * 3 + w * 3 + 1),
-            *(map_buffer + h * map_width * 3 + w * 3 + 2),
+            *(map_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 0),
+            *(map_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 1),
+            *(map_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 2),
           };
-          PIXEL_DATA overlay_pixel = {
-            *(overlay_buffer + h * map_width * 3 + w * 3 + 0),
-            *(overlay_buffer + h * map_width * 3 + w * 3 + 1),
-            *(overlay_buffer + h * map_width * 3 + w * 3 + 2),
+          PIXEL_DATA ladders_pixel = {
+            *(ladders_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 0),
+            *(ladders_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 1),
+            *(ladders_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 2),
+          };
+          PIXEL_DATA entities_pixel = {
+            *(entities_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 0),
+            *(entities_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 1),
+            *(entities_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 2),
           };
 
           if (isSolid(&pixel) || isOneWay(&pixel))
@@ -600,35 +634,39 @@ int addDirectory(char *directory) {
             BitArray_clearBit(map, mapOffset);
           mapOffset++;
 
-          if (isPlayer0(&overlay_pixel)) {
+          if (isPlayer0(&entities_pixel)) {
             player[0].x = w;
             player[0].y = h;
-          } else if (isPlayer1(&overlay_pixel)) {
+          } else if (isPlayer1(&entities_pixel)) {
             player[1].x = w;
             player[1].y = h;
-          } else if (isMonster0(&overlay_pixel)) {
+          } else if (isMonster0(&entities_pixel)) {
             monster[0].x = w;
             monster[0].y = h;
-          } else if (isMonster1(&overlay_pixel)) {
+          } else if (isMonster1(&entities_pixel)) {
             monster[1].x = w;
             monster[1].y = h;
-          } else if (isMonster2(&overlay_pixel)) {
+          } else if (isMonster2(&entities_pixel)) {
             monster[2].x = w;
             monster[2].y = h;
-          } else if (isMonster3(&overlay_pixel)) {
+          } else if (isMonster3(&entities_pixel)) {
             monster[3].x = w;
             monster[3].y = h;
-          } else if (isMonster4(&overlay_pixel)) {
+          } else if (isMonster4(&entities_pixel)) {
             monster[4].x = w;
             monster[4].y = h;
-          } else if (isMonster5(&overlay_pixel)) {
+          } else if (isMonster5(&entities_pixel)) {
             monster[5].x = w;
             monster[5].y = h;
           }
           if (isTreasure(&pixel) && treasures <= 255) {
-            treasure[treasures].x = w;
-            treasure[treasures].y = h;
-            treasures++;
+            if (isLadder(&ladders_pixel)) {
+              printf("Warning: \"%s\" - The treasure tile at (%d, %d) has been removed because it overlaps with a ladder tile.\n", filename, w, h);
+            } else {
+              treasure[treasures].x = w;
+              treasure[treasures].y = h;
+              treasures++;
+            }
           }
 
           // State machine for one-way tiles
@@ -644,6 +682,10 @@ int addDirectory(char *directory) {
             if (!isOneWay(&pixel)) {
               oneway_state = ONE_WAY_LOOKING;
               oneway[oneways].x2 = w - 1;
+              oneways++;
+            } else if (w == (SCREEN_TILES_H - 1)) {
+              oneway_state = ONE_WAY_LOOKING;
+              oneway[oneways].x2 = w;
               oneways++;
             }
             break;
@@ -663,11 +705,49 @@ int addDirectory(char *directory) {
               fire_state = FIRE_LOOKING;
               fire[fires].x2 = w - 1;
               fires++;
+            } else if (w == (SCREEN_TILES_H - 1)) {
+              fire_state = FIRE_LOOKING;
+              fire[fires].x2 = w;
+              fires++;
             }
             break;
           }
           
           //printf("(%d,%d,%d), ", pixel.r, pixel.g, pixel.b);
+        }
+      }
+
+      // Scan through the PNG the other way
+      for (uint8_t w = 0; w < SCREEN_TILES_H; w++) {
+        for (uint8_t h = 0; h < SCREEN_TILES_V; h++) {
+          PIXEL_DATA ladders_pixel = {
+            *(ladders_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 0),
+            *(ladders_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 1),
+            *(ladders_buffer + h * SCREEN_TILES_H * 3 + w * 3 + 2),
+          };
+
+          // State machine for ladder tiles
+          switch (ladder_state) {
+          case LADDER_LOOKING:
+            if (isLadder(&ladders_pixel)) {
+              ladder_state = LADDER_STARTED;
+              ladder[ladders].x = w;
+              ladder[ladders].y1 = h;
+            }
+            break;
+          default: // LADDER_STARTED
+            if (!isLadder(&ladders_pixel)) {
+              ladder_state = LADDER_LOOKING;
+              ladder[ladders].y2 = h - 1;
+              ladders++;
+            } else if (h == (SCREEN_TILES_V - 1)) {
+              ladder_state = LADDER_LOOKING;
+              ladder[ladders].y2 = h;
+              ladders++;
+            }
+            break;
+          }
+
         }
       }
 
@@ -679,21 +759,17 @@ int addDirectory(char *directory) {
       // we can loop over that array, and write each byte out to includeFile. We also know how many bytes each level takes, so we can
       // auto-generate the index and offsets to each level.
 
-      // Hardcode these for now to test the decoders
-      for (uint8_t i = 0; i < oneways; i++)
-        printf("oneway[%d].y = %d, oneway[%d].x1 = %d, oneway[%d].x2 = %d\n",
-               i, oneway[i].y, i, oneway[i].x1, i, oneway[i].x2);
-      /*
-        DrawLadder(22, 9, 14);
-      */
-      ladders = 1;
-      ladder[0].x = 22;
-      ladder[0].y1 = 9;
-      ladder[0].y2 = 14;
+      /* for (uint8_t i = 0; i < oneways; i++) */
+      /*   printf("oneway[%d].y = %d, oneway[%d].x1 = %d, oneway[%d].x2 = %d\n", */
+      /*          i, oneway[i].y, i, oneway[i].x1, i, oneway[i].x2); */
 
-      for (uint8_t i = 0; i < fires; i++)
-        printf("fire[%d].y = %d, fire[%d].x1 = %d, fire[%d].x2 = %d\n",
-               i, fire[i].y, i, fire[i].x1, i, fire[i].x2);
+      /* for (uint8_t i = 0; i < ladders; i++) */
+      /*   printf("ladder[%d].x = %d, ladder[%d].y1 = %d, ladder[%d].y2 = %d\n", */
+      /*          i, ladder[i].x, i, ladder[i].y1, i, ladder[i].y2); */
+
+      /* for (uint8_t i = 0; i < fires; i++) */
+      /*   printf("fire[%d].y = %d, fire[%d].x1 = %d, fire[%d].x2 = %d\n", */
+      /*          i, fire[i].y, i, fire[i].x1, i, fire[i].x2); */
 
       uint16_t packedCoordinateBytes = Packed5Bit_numBytes(NELEMS(player) * 2 + NELEMS(monster) * 2 + treasures * 2 + oneways * 3 + ladders * 3 + fires * 3);
       packedCoordinates = malloc(packedCoordinateBytes);
@@ -786,7 +862,7 @@ int addDirectory(char *directory) {
   // At this point, we know how many levels we added, and can build the index
   FILE* fpNumLevels = fopen("num_levels.inc", "w");
   if (!fpNumLevels) {
-    fprintf(stderr, "Unable to open \"num_levels.inc\" for writing.");
+    fprintf(stderr, "Error: Unable to open \"num_levels.inc\" for writing.");
     retval = -1;
     goto cleanup;
   }
@@ -795,12 +871,12 @@ int addDirectory(char *directory) {
 
   FILE* fpLevelOffsets = fopen("level_offsets.inc", "w");
   if (!fpLevelOffsets) {
-    fprintf(stderr, "Unable to open \"level_offsets.inc\" for writing.");
+    fprintf(stderr, "Error: Unable to open \"level_offsets.inc\" for writing.");
     retval = -1;
     goto cleanup;
   }
   uint16_t levelOffset = 1 + 2 * totalLevels;
-  printf("totalLevels=%d\n", totalLevels);
+  printf("\nTotal Levels: %d\n\n", totalLevels);
   for (uint8_t i = 0; i < totalLevels; ++i) {
     fprintf(fpLevelOffsets, "  ");
     fprintf(fpLevelOffsets, "LE(%d),\t\t// size: %d\n", levelOffset, levelSize[i]);
@@ -811,7 +887,8 @@ int addDirectory(char *directory) {
  cleanup:
   if (packedCoordinates)
     free(packedCoordinates);
-  free(overlay_buffer);
+  free(ladders_buffer);
+  free(entities_buffer);
   free(map_buffer);
   
   // Cleanup the Red-Black Tree
@@ -828,7 +905,7 @@ void printUsage(void) {
 	  "\t          to #include in the definition of a PROGMEM array."
           "\n"
           "SYNOPSIS:\n"
-          "\tpng2inc [-h] [OPTIONS] [-d inputDirectory]\n"
+          "\tpng2inc [-h] [OPTIONS] [-d input_directory]\n"
           "\n"
           "DESCRIPTION:\n"
           "\tThis program is designed to convert a directory of PNG files\n"
@@ -840,7 +917,7 @@ void printUsage(void) {
           "  -h\n"
           "\tDisplay this help and exit.\n"
           "\n"
-          "  -d inputDirectory\n"
+          "  -d input_directory\n"
           "\tThe input directory that contains the PNG files to convert.\n"
           "\n"
           "\tDefault: %s\n"
@@ -975,7 +1052,7 @@ int main(int argc, char *argv[]) {
   }
 #endif // __MINGW32__
 
-  printf("INPUT DIRECTORY \"%s\" \n", inputDirectory);
+  printf("\nUsing input directory: \"%s\"\n", inputDirectory);
 
   // Add all PNG files from the directory
   addDirectory(inputDirectory);
