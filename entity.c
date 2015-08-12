@@ -59,8 +59,8 @@
 #include "data/sprites.inc"
 #include "data/patches.inc"
 
-void null_input(ENTITY* e) { }
-void null_update(ENTITY* e) { }
+void null_input(ENTITY* e) { (void)e; }
+void null_update(ENTITY* e) { (void)e; }
 void null_render(ENTITY* e) { sprites[e->tag].x = OFF_SCREEN; }
 
 void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
@@ -82,6 +82,7 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   //e->dx = e->dy = e->framesFalling = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
 }
 
+__attribute__(( always_inline ))
 static inline bool isSolidForEntity(uint8_t tx, uint8_t ty, int16_t prevY, uint8_t entityHeight, bool down)
 {
   uint8_t t = GetTile(tx, ty);

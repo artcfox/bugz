@@ -23,9 +23,9 @@ KERNEL_OPTIONS += -DMAX_SPRITES=8 -DRAM_TILES_COUNT=32 -DSCREEN_TILES_V=28
 ## Options common to compile, link and assembly rules
 COMMON = -mmcu=$(MCU)
 
-## Compile options common for all C compilation units. (-O3 is necessary to support 6 simultaneous monsters)
+## Compile options common for all C compilation units.
 CFLAGS = $(COMMON)
-CFLAGS += -Wall -gdwarf-2 -std=gnu99 -DF_CPU=28636360UL -Os -fsigned-char -ffunction-sections -mstrict-X -maccumulate-args
+CFLAGS += -Wall -Wextra -Winline -gdwarf-2 -std=gnu99 -DF_CPU=28636360UL -Os -fsigned-char -ffunction-sections -mstrict-X -maccumulate-args
 CFLAGS += -MD -MP -MT $(*F).o -MF dep/$(@F).d
 CFLAGS += $(KERNEL_OPTIONS)
 

@@ -129,11 +129,19 @@
 #define SKY_TO_LADDER_MIDDLE_OFFSET (TREASURE_TO_LADDER_MIDDLE_OFFSET - FIRST_SKY_TILE)
 #define SOLID_TO_LADDER_MIDDLE_OFFSET ((FIRST_SOLID_LADDER_TILE + THEMES_N * SOLID_LADDER_TILES_IN_THEME / 2) - FIRST_SOLID_TILE)
 
+#if (FIRST_TREASURE_TILE == 0)
+#define isTreasure(t) ((t) <= LAST_TREASURE_TILE)
+#else // FIRST_TREASURE_TILE
 #define isTreasure(t) (((t) >= FIRST_TREASURE_TILE) && ((t) <= LAST_TREASURE_TILE))
+#endif // FIRST_TREASURE_TILE
+
 #define isSolid(t) (((t) >= FIRST_SOLID_TILE) && ((t) <= LAST_SOLID_LADDER_TILE))
 #define isOneWay(t) (((t) >= FIRST_ONE_WAY_TILE) && ((t) <= LAST_ONE_WAY_LADDER_TILE))
 #define isLadder(t) ((((t) >= FIRST_SOLID_LADDER_TILE) && ((t) <= LAST_SOLID_LADDER_TILE)) || (((t) >= FIRST_ONE_WAY_LADDER_TILE) && ((t) <= LAST_SKY_LADDER_TILE)))
-#define isFire(t) (((t) >= FIRST_FIRE_TILE) && ((t) <= LAST_FIRE_TILE))
+
+// As long as the last tile is a fire tile, we can skip the '&& ((t) <= LAST_FIRE_TILE)' part of the condition
+#define isFire(t) ((t) >= FIRST_FIRE_TILE)
+//#define isFire(t) (((t) >= FIRST_FIRE_TILE) && ((t) <= LAST_FIRE_TILE))
 
 struct ENTITY;
 typedef struct ENTITY ENTITY;

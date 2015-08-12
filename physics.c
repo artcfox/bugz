@@ -49,6 +49,7 @@ extern const struct PatchStruct patches[] PROGMEM;
 
 #define PgmBitArray_readBit(array, index) ((bool)(pgm_read_byte((array)+((index) >> 3)) & (1 << ((index) & 7))))
 
+__attribute__(( optimize("Os") ))
 uint8_t PgmPacked5Bit_read(const uint8_t* packed, const uint16_t position)
 {
   uint8_t value;
@@ -102,6 +103,7 @@ enum INPUT_FUNCTION {
 };
 
 typedef void (*inputFnPtr)(ENTITY*);
+__attribute__(( optimize("Os") ))
 inputFnPtr inputFunc(INPUT_FUNCTION i)
 {
   switch (i) {
@@ -135,6 +137,7 @@ enum UPDATE_FUNCTION {
 };
 
 typedef void (*updateFnPtr)(ENTITY*);
+__attribute__(( optimize("Os") ))
 updateFnPtr updateFunc(UPDATE_FUNCTION u)
 {
   switch (u) {
@@ -165,6 +168,7 @@ enum RENDER_FUNCTION {
 };
 
 typedef void (*renderFnPtr)(ENTITY*);
+__attribute__(( optimize("Os") ))
 renderFnPtr renderFunc(RENDER_FUNCTION r)
 {
   switch (r) {
@@ -405,6 +409,7 @@ const uint8_t MapTileToLadderMiddle[] PROGMEM = {
   50 + ONE_WAY_TO_LADDER_TOP_OFFSET, // these map to ladder top tiles, since they need to be one-way tiles
 };
 
+__attribute__(( optimize("Os") ))
 static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
 {
   if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
@@ -428,6 +433,7 @@ static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
   }
 }
 
+__attribute__(( optimize("Os") ))
 static void DrawLadder(const uint8_t x, const uint8_t y1, const uint8_t y2)
 {
   if ((x < SCREEN_TILES_H) && (y1 < SCREEN_TILES_V) && (y2 < SCREEN_TILES_V)) {
@@ -445,6 +451,7 @@ static void DrawLadder(const uint8_t x, const uint8_t y1, const uint8_t y2)
   }
 }
 
+__attribute__(( optimize("Os") ))
 static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2, const uint8_t theme)
 {  
   if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
@@ -473,7 +480,8 @@ static inline void monsterInitialXY(const uint16_t levelOffset, const uint8_t i,
   *y = PgmPacked5Bit_read(packedCoordinatesStart, MAX_PLAYERS * 2 + i * 2 + 1);
 }
 
-static inline void DrawAllLevelOverlays(const uint16_t levelOffset, const uint8_t theme)
+__attribute__(( optimize("Os") ))
+static void DrawAllLevelOverlays(const uint16_t levelOffset, const uint8_t theme)
 {
   const uint8_t* packedCoordinatesStart = &levelData[levelOffset + LEVEL_PACKED_COORDINATES_START];
   uint16_t packedOffset = MAX_PLAYERS * 2 + MAX_MONSTERS * 2; // 2 coordinates per player, 2 coordinates per monster
@@ -519,6 +527,7 @@ static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad, c
 }
 
 // Returns offset into levelData PROGMEM array
+__attribute__(( optimize("Os") ))
 static uint16_t LoadLevel(uint8_t level, uint8_t* theme)
 {
   // Bounds check level
@@ -638,7 +647,8 @@ static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
   e->render(e);
 }
 
-static bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
+__attribute__(( always_inline ))
+static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
 {
   return !(((x1 + w1 - 1) < x2) ||
            ((x2 + w2 - 1) < x1) ||
