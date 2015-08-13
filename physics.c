@@ -217,22 +217,21 @@ const uint8_t levelData[] PROGMEM = {
 #include "editor/levels/level_offsets.inc"
 
 /*           // ---------- start of level 0 data */
-/*   1,      // uint8_t theme; */
+  1,      // uint8_t theme;
 
-/* #include "editor/levels/title_level.xcf.png.inc" */
-
-/*   0, 0, // uint8_t playerFlags[2] */
-/*   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2] */
-/*   LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2] */
-/*   PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2] */
-/*   ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2] */
-/*   PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2] */
-/*   IFLAG_RIGHT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT,      // uint8_t monsterFlags[6] */
-/*   LE(WORLD_METER * 6), LE(WORLD_METER * 1), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 1), // int16_t monsterMaxDX[6] */
-/*   3, 25, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6] */
-/*   AI_FLY_HORIZONTAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6] */
-/*   ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6] */
-/*   BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6] */
+  IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X, // uint8_t playerFlags[2]
+  LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
+  LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2]
+  IFLAG_RIGHT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT,      // uint8_t monsterFlags[6]
+  LE(WORLD_METER * 6), LE(WORLD_METER * 1), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 1), // int16_t monsterMaxDX[6]
+  3, 25, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6]
+  AI_FLY_HORIZONTAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
+  ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
+  BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
+#include "editor/levels/0000-title_level.xcf.png.inc"
 
 
   0,      // uint8_t theme;
@@ -576,9 +575,6 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* theme)
   // Overlay treasures, oneways, ladders, and fires
   DrawAllLevelOverlays(levelOffset, *theme);
 
-  // Display the level number
-  DisplayNumber(3, 0, level + 1, 2, *theme);
-
   return levelOffset;
 }
 
@@ -663,6 +659,96 @@ static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16
 /*   ++globalFrameCounter; */
 /* } */
 
+enum TITLE_SCREEN_FLAGS;
+typedef enum TITLE_SCREEN_FLAGS TITLE_SCREEN_FLAGS;
+
+enum TITLE_SCREEN_FLAGS {
+  TSFLAG_1P = 1,
+  TSFLAG_2P = 2,
+  TSFLAG_P1_VS_P2 = 4,
+};
+
+__attribute__(( optimize("Os") ))
+TITLE_SCREEN_FLAGS doTitleScreen(ENTITY* monster)
+{
+  for (uint8_t i = 0; i < 11; ++i)
+    SetTile(15 + i, 13, LAST_FIRE_TILE + 4 + i);
+
+  SetTile(11, 17, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1);
+  SetTile(11, 19, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2);
+
+  for (uint8_t i = 0; i < 4; i += 2)
+    SetTile(12, 17 + i, LAST_FIRE_TILE + 1);
+
+  SetTile(11, 21, LAST_FIRE_TILE + 1);
+  SetTile(17, 21, LAST_FIRE_TILE + 1);
+  SetTile(12, 21, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1);
+
+  for (uint8_t i = 0; i < 2; ++i)
+    SetTile(14 + i, 21, LAST_FIRE_TILE + 2 + i);
+
+  SetTile(18, 21, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2);
+
+  // Set pointer to 1P
+  uint8_t selection = 0;
+
+  uint16_t prev = 0;
+  uint16_t held = 0;
+
+  for (;;) {
+    WaitVsync(1);
+
+    for (uint8_t i = 0; i < 3; ++i) {
+      if (i == selection)
+        SetTile(10, 17 + selection * 2, LAST_FIRE_TILE + 15);
+      else
+        SetTile(10, 17 + i * 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME);
+    }
+
+    for (uint8_t i = 0; i < MONSTERS; ++i)
+      monster[i].input(&monster[i]);
+    for (uint8_t i = 0; i < MONSTERS; ++i)
+      monster[i].update(&monster[i]);
+    for (uint8_t i = 0; i < MONSTERS; ++i)
+      monster[i].render(&monster[i]);
+
+    prev = held;
+    held = ReadJoypad(0);
+    uint16_t pressed = held & (held ^ prev);
+    uint16_t released = prev & (held ^ prev);
+
+    // Check for level select buttons (hold select, and press a left or right shoulder button)
+    if (pressed & BTN_DOWN) {
+      TriggerFx(3, 128, true);
+      if (++selection == 3)
+        selection = 0;
+    }
+    if (pressed & BTN_UP) {
+      TriggerFx(3, 128, true);
+      if (--selection == 255)
+        selection = 2;
+    }
+    if (released & BTN_START) {
+      TriggerFx(2, 128, true);
+      for (uint8_t j = 0; j < 3; ++j)
+        if (j != selection)
+          for (uint8_t i = 11; i < 19; ++i)
+            SetTile(i, 17 + j * 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME);
+
+      WaitVsync(32);
+      switch (selection) {
+      case 0:
+        return TSFLAG_1P;
+      case 1:
+        return TSFLAG_2P;
+      default: // case 2
+        return TSFLAG_P1_VS_P2;
+      }
+    }
+
+  }
+}
+
 int main()
 {
   PLAYER player[PLAYERS];
@@ -673,16 +759,18 @@ int main()
   uint8_t theme;
   uint8_t backgroundFrameCounter;
   uint16_t timer;
+  uint8_t gameType;
 
-  SetTileTable(tileset);
   SetSpritesTileBank(0, mysprites);
   InitMusicPlayer(patches);
 
  begin:
-
   currentLevel = levelOffset = theme = 0;
+  gameType = TSFLAG_1P;
 
   for (;;) {
+    SetTileTable(tileset);
+
     //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
     levelOffset = LoadLevel(currentLevel, &theme);
 
@@ -704,7 +792,7 @@ int main()
       uint8_t ty;
       playerInitialXY(levelOffset, i, &tx, &ty);
       uint8_t playerFlags = playerFlags(levelOffset, i);
-      if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) {
+      if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V || ((i == 1) && (gameType & TSFLAG_1P))) {
         input = NULL_INPUT;
         update = NULL_UPDATE;
         render = NULL_RENDER;
@@ -744,6 +832,15 @@ int main()
     // Initialize monsters
     for (uint8_t i = 0; i < MONSTERS; ++i)
       spawnMonster(&monster[i], levelOffset, i);
+
+    if (currentLevel == 0) {
+      gameType = doTitleScreen(monster);
+      currentLevel = 1;
+      continue;
+    }
+
+    // Display the level number
+    DisplayNumber(3, 0, currentLevel, 2, theme);
 
     // Main game loop
     for (;;) {
@@ -925,12 +1022,12 @@ int main()
       // Check for level select buttons (hold select, and press a left or right shoulder button)
       if (held & BTN_SELECT) {
         if (pressed & BTN_SL) {
-          if (--currentLevel == 255)
+          if (--currentLevel == 0)
             currentLevel = LEVELS - 1;
           break; // load previous level
         } else if (pressed & BTN_SR) {
           if (++currentLevel == LEVELS)
-            currentLevel = 0;
+            currentLevel = 1;
           break; // load next level
         }
       }
