@@ -207,6 +207,15 @@ enum INITIAL_FLAGS {
   IFLAG_SPRITE_FLIP_X = 128,
 };
 
+enum GAME_FLAGS;
+typedef enum GAME_FLAGS GAME_FLAGS;
+
+enum GAME_FLAGS {
+  GFLAG_1P = 1,
+  GFLAG_2P = 2,
+  GFLAG_P1_VS_P2 = 4,
+};
+
 // Parenthesis cannot be placed around this macro expansion
 #define LE(i) LO8((i)), HI8((i))
 
@@ -607,7 +616,8 @@ static void killMonster(ENTITY* e)
   e->update = entity_update_dying; // use dying physics
 }
 
-static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
+static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i)
+{
   uint8_t input = monsterInput(levelOffset, i);
   uint8_t update = monsterUpdate(levelOffset, i);
   uint8_t render = monsterRender(levelOffset, i);
@@ -643,6 +653,45 @@ static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i) {
   e->render(e);
 }
 
+static void spawnPlayer(PLAYER* p, uint16_t levelOffset, uint8_t i, const uint8_t gameType)
+{
+      uint8_t input = playerInput(levelOffset, i);
+      uint8_t update = playerUpdate(levelOffset, i);
+      uint8_t render = playerRender(levelOffset, i);
+      uint8_t tx;
+      uint8_t ty;
+      playerInitialXY(levelOffset, i, &tx, &ty);
+      uint8_t playerFlags = playerFlags(levelOffset, i);
+      if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V || ((i == 1) && (gameType & GFLAG_1P))) {
+        input = NULL_INPUT;
+        update = NULL_UPDATE;
+        render = NULL_RENDER;
+        tx = ty = 0;
+        playerFlags |= IFLAG_NOINTERACT;
+      } else if (gameType & GFLAG_P1_VS_P2) {
+        playerFlags |= IFLAG_AUTORESPAWN;
+      }
+      player_init(p,
+                  inputFunc(input),
+                  updateFunc(update),
+                  renderFunc(render), i,
+                  (int16_t)(tx * (TILE_WIDTH << FP_SHIFT)),
+                  (int16_t)(ty * (TILE_HEIGHT << FP_SHIFT)),
+                  (int16_t)(playerMaxDX(levelOffset, i)),
+                  (int16_t)(playerImpulse(levelOffset, i)));
+      ENTITY* e = (ENTITY*)p;
+      // The cast to bool is necessary to properly set bit flags
+      //e->left = (bool)(playerFlags & IFLAG_LEFT);
+      //e->right = (bool)(playerFlags & IFLAG_RIGHT);
+      //e->up = (bool)(playerFlags & IFLAG_UP);
+      //e->down = (bool)(playerFlags & IFLAG_DOWN);
+      e->autorespawn = (bool)(playerFlags & IFLAG_AUTORESPAWN);
+      e->interacts = (bool)!(playerFlags & IFLAG_NOINTERACT);
+      e->invincible = (bool)(playerFlags & IFLAG_INVINCIBLE);
+      sprites[e->tag].flags = (playerFlags & IFLAG_SPRITE_FLIP_X) ? SPRITE_FLIP_X : 0;
+      e->render(e);
+}
+
 __attribute__(( always_inline ))
 static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
 {
@@ -659,17 +708,8 @@ static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16
 /*   ++globalFrameCounter; */
 /* } */
 
-enum TITLE_SCREEN_FLAGS;
-typedef enum TITLE_SCREEN_FLAGS TITLE_SCREEN_FLAGS;
-
-enum TITLE_SCREEN_FLAGS {
-  TSFLAG_1P = 1,
-  TSFLAG_2P = 2,
-  TSFLAG_P1_VS_P2 = 4,
-};
-
 __attribute__(( optimize("Os") ))
-TITLE_SCREEN_FLAGS doTitleScreen(ENTITY* monster)
+GAME_FLAGS doTitleScreen(ENTITY* monster)
 {
   for (uint8_t i = 0; i < 11; ++i)
     SetTile(15 + i, 13, LAST_FIRE_TILE + 4 + i);
@@ -738,11 +778,11 @@ TITLE_SCREEN_FLAGS doTitleScreen(ENTITY* monster)
       WaitVsync(32);
       switch (selection) {
       case 0:
-        return TSFLAG_1P;
+        return GFLAG_1P;
       case 1:
-        return TSFLAG_2P;
+        return GFLAG_2P;
       default: // case 2
-        return TSFLAG_P1_VS_P2;
+        return GFLAG_P1_VS_P2;
       }
     }
 
@@ -766,7 +806,7 @@ int main()
 
  begin:
   currentLevel = levelOffset = theme = 0;
-  gameType = TSFLAG_1P;
+  gameType = GFLAG_1P;
 
   for (;;) {
     SetTileTable(tileset);
@@ -784,41 +824,9 @@ int main()
     timer = -1;
 
     // Initialize players
-    for (uint8_t i = 0; i < PLAYERS; ++i) {
-      uint8_t input = playerInput(levelOffset, i);
-      uint8_t update = playerUpdate(levelOffset, i);
-      uint8_t render = playerRender(levelOffset, i);
-      uint8_t tx;
-      uint8_t ty;
-      playerInitialXY(levelOffset, i, &tx, &ty);
-      uint8_t playerFlags = playerFlags(levelOffset, i);
-      if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V || ((i == 1) && (gameType & TSFLAG_1P))) {
-        input = NULL_INPUT;
-        update = NULL_UPDATE;
-        render = NULL_RENDER;
-        tx = ty = 0;
-        playerFlags |= IFLAG_NOINTERACT;
-      }
-      player_init(&player[i],
-                  inputFunc(input),
-                  updateFunc(update),
-                  renderFunc(render), i,
-                  (int16_t)(tx * (TILE_WIDTH << FP_SHIFT)),
-                  (int16_t)(ty * (TILE_HEIGHT << FP_SHIFT)),
-                  (int16_t)(playerMaxDX(levelOffset, i)),
-                  (int16_t)(playerImpulse(levelOffset, i)));
-      ENTITY* e = (ENTITY*)&player[i];
-      // The cast to bool is necessary to properly set bit flags
-      //e->left = (bool)(playerFlags & IFLAG_LEFT);
-      //e->right = (bool)(playerFlags & IFLAG_RIGHT);
-      //e->up = (bool)(playerFlags & IFLAG_UP);
-      //e->down = (bool)(playerFlags & IFLAG_DOWN);
-      //e->autorespawn = (bool)(playerFlags & IFLAG_AUTORESPAWN);
-      e->interacts = (bool)!(playerFlags & IFLAG_NOINTERACT);
-      e->invincible = (bool)(playerFlags & IFLAG_INVINCIBLE);
-      sprites[e->tag].flags = (playerFlags & IFLAG_SPRITE_FLIP_X) ? SPRITE_FLIP_X : 0;
-      e->render(e);
-    }
+    for (uint8_t i = 0; i < PLAYERS; ++i)
+      spawnPlayer(&player[i], levelOffset, i, gameType);
+
 /* #if (PLAYERS == 2) */
 /*     // Player 2 starts off hidden and disabled */
 /*     ((ENTITY*)(&player[1]))->render(((ENTITY*)(&player[1]))); // setup sprite */
@@ -887,6 +895,26 @@ int main()
         ((ENTITY*)(&player[i]))->update((ENTITY*)(&player[i]));
       }
 
+#if (PLAYERS == 2)
+      // Collision check between players (only in versus mode)
+      if (gameType & GFLAG_P1_VS_P2) {
+        ENTITY* p1 = (ENTITY*)(&player[0]);
+        ENTITY* p2 = (ENTITY*)(&player[1]);
+        if (p1->interacts && !p1->dead && p2->interacts && !p2->dead &&
+            overlap(p1->x, p1->y, WORLD_METER, WORLD_METER, p2->x, p2->y, WORLD_METER, WORLD_METER)) {
+          if (((playerPrevY[0] + WORLD_METER - (1 << FP_SHIFT)) < (playerPrevY[1])) && !p2->invincible) {
+            killPlayer(p2);
+            if (p1->update == entity_update)
+              p1->monsterhop = true;
+          } else if (((playerPrevY[1] + WORLD_METER - (1 << FP_SHIFT)) < (playerPrevY[0])) && !p1->invincible) {
+            killPlayer(p1);
+            if (p2->update == entity_update)
+              p2->monsterhop = true;
+          }
+        }
+      }
+#endif
+
       // Update the state of the monsters, and perform collision detection with each player
       for (uint8_t i = 0; i < MONSTERS; ++i) {
         int16_t monsterPrevY = monster[i].y; // cache the previous Y value to use for kill detection below
@@ -932,6 +960,8 @@ int main()
         ENTITY* e = (ENTITY*)&player[i];
         if (e->interacts && e->dead)
           killPlayer(e);
+        if (e->dead && e->autorespawn && e->render == null_render)
+          spawnPlayer(&player[i], levelOffset, i, gameType);
       }
 
       // Check for environmental collisions (treasure, fire) by looping over the interacting players, converting
