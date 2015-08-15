@@ -59,11 +59,11 @@
 #include "data/sprites.inc"
 #include "data/patches.inc"
 
-void null_input(ENTITY* e) { (void)e; }
-void null_update(ENTITY* e) { (void)e; }
-void null_render(ENTITY* e) { sprites[e->tag].x = OFF_SCREEN; }
+void null_input(ENTITY* const e) { (void)e; }
+void null_update(ENTITY* const e) { (void)e; }
+void null_render(ENTITY* const e) { sprites[e->tag].x = OFF_SCREEN; }
 
-void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
+void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse)
 {
   memset(e, 0, sizeof(ENTITY));
   e->input = input;
@@ -77,20 +77,18 @@ void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), voi
   e->visible = true;
   e->jumpReleased = true;
   e->interacts = true;
-  /* sprites[tag].flags = 0; // set the initial direction of the entity */
-  /* e->render(e); */
   //e->dx = e->dy = e->framesFalling = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
 }
 
 __attribute__(( always_inline ))
-static inline bool isSolidForEntity(uint8_t tx, uint8_t ty, int16_t prevY, uint8_t entityHeight, bool down)
+static inline bool isSolidForEntity(const uint8_t tx, const uint8_t ty, const int16_t prevY, const uint8_t entityHeight, const bool down)
 {
   uint8_t t = GetTile(tx, ty);
   // One-way tiles are only solid for Y collisions where your previous Y puts your feet above the tile, and you're not currently pressing down
   return (isSolid(t) || (isOneWay(t) && ((prevY + entityHeight - 1) < vt2p(ty)) && !down));
 }
 
-void ai_walk_until_blocked(ENTITY* e)
+void ai_walk_until_blocked(ENTITY* const e)
 {
   // Collision Detection for X
   uint8_t tx;
@@ -115,13 +113,13 @@ void ai_walk_until_blocked(ENTITY* e)
   }
 }
 
-void ai_hop_until_blocked(ENTITY* e)
+void ai_hop_until_blocked(ENTITY* const e)
 {
   ai_walk_until_blocked(e);
   e->jump = true;
 }
 
-void ai_walk_until_blocked_or_ledge(ENTITY* e)
+void ai_walk_until_blocked_or_ledge(ENTITY* const e)
 {
   // Collision Detection for X and Y
   uint8_t tx;
@@ -148,7 +146,7 @@ void ai_walk_until_blocked_or_ledge(ENTITY* e)
   }
 }
 
-void ai_hop_until_blocked_or_ledge(ENTITY* e)
+void ai_hop_until_blocked_or_ledge(ENTITY* const e)
 {
   if (!e->jumping)
     ai_walk_until_blocked_or_ledge(e);
@@ -157,7 +155,7 @@ void ai_hop_until_blocked_or_ledge(ENTITY* e)
   e->jump = true;
 }
 
-void ai_fly_vertical(ENTITY* e)
+void ai_fly_vertical(ENTITY* const e)
 {
   // The high/low bytes of e->impulse are used to store the bounds for changing direction
   if (e->up) {
@@ -177,7 +175,7 @@ void ai_fly_vertical(ENTITY* e)
   }
 }
 
-void ai_fly_horizontal(ENTITY* e)
+void ai_fly_horizontal(ENTITY* const e)
 {
   // The high/low bytes of e->impulse are used to store the bounds for changing direction
   if (e->left) {
@@ -198,7 +196,7 @@ void ai_fly_horizontal(ENTITY* e)
 }
 
 #if 0
-void entity_update(ENTITY* e)
+void entity_update(ENTITY* const e)
 {
   bool wasLeft = (e->dx < 0);
   bool wasRight = (e->dx > 0);
@@ -303,7 +301,7 @@ void entity_update(ENTITY* e)
 }
 #endif
 
-void entity_update(ENTITY* e)
+void entity_update(ENTITY* const e)
 {
   bool wasLeft = (e->dx < 0);
   bool wasRight = (e->dx > 0);
@@ -472,7 +470,7 @@ void entity_update(ENTITY* e)
   }
 }
 
-void entity_update_dying(ENTITY* e)
+void entity_update_dying(ENTITY* const e)
 {
   // Check to see if we should hide the entity now
   if (!e->visible) {
@@ -531,7 +529,7 @@ void entity_update_dying(ENTITY* e)
   }
 }
 
-void entity_update_flying(ENTITY* e)
+void entity_update_flying(ENTITY* const e)
 {
   bool wasLeft = (e->dx < 0);
   bool wasRight = (e->dx > 0);
@@ -618,7 +616,7 @@ void entity_update_flying(ENTITY* e)
   }
 }
 
-void entity_update_ladder(ENTITY* e)
+void entity_update_ladder(ENTITY* const e)
 {
   entity_update_flying(e);
 
@@ -652,7 +650,7 @@ void entity_update_ladder(ENTITY* e)
 #define GENERIC_ANIMATION_FRAME_SKIP 4
 const uint8_t genericAnimation[] PROGMEM = { 0, -2, 1, 2 };
 
-static void generic_render(ENTITY* e, const uint8_t animationStart)
+static void generic_render(ENTITY* const e, const uint8_t animationStart)
 {
   if (e->dead) {
     sprites[e->tag].tileIndex = animationStart + GENERIC_OFFSET_DEAD;
@@ -689,28 +687,28 @@ static void generic_render(ENTITY* e, const uint8_t animationStart)
 
 #define LADYBUG_ANIMATION_START 25
 
-void ladybug_render(ENTITY* e)
+void ladybug_render(ENTITY* const e)
 {
   generic_render(e, LADYBUG_ANIMATION_START);
 }
 
 #define ANT_ANIMATION_START 31
 
-void ant_render(ENTITY* e)
+void ant_render(ENTITY* const e)
 {
   generic_render(e, ANT_ANIMATION_START);
 }
 
 #define CRICKET_ANIMATION_START 37
 
-void cricket_render(ENTITY* e)
+void cricket_render(ENTITY* const e)
 {
   generic_render(e, CRICKET_ANIMATION_START);
 }
 
 #define GRASSHOPPER_ANIMATION_START 43
 
-void grasshopper_render(ENTITY* e)
+void grasshopper_render(ENTITY* const e)
 {
   generic_render(e, GRASSHOPPER_ANIMATION_START);
 }
@@ -719,7 +717,7 @@ void grasshopper_render(ENTITY* e)
 #define GENERIC_FLYING_ANIMATION_FRAME_SKIP 2
 const uint8_t genericFlyingAnimation[] PROGMEM = { 0, 1, 2, 3, 2, 1 };
 
-static void generic_flying_render(ENTITY* e, const uint8_t animationStart)
+static void generic_flying_render(ENTITY* const e, const uint8_t animationStart)
 {
   if (e->dead) {
     sprites[e->tag].tileIndex = animationStart + GENERIC_FLYING_OFFSET_DEAD;
@@ -742,14 +740,14 @@ static void generic_flying_render(ENTITY* e, const uint8_t animationStart)
 
 #define FRUITFLY_ANIMATION_START 47
 
-void fruitfly_render(ENTITY* e)
+void fruitfly_render(ENTITY* const e)
 {
   generic_flying_render(e, FRUITFLY_ANIMATION_START);
 }
 
 #define BEE_ANIMATION_START 52
 
-void bee_render(ENTITY* e)
+void bee_render(ENTITY* const e)
 {
   generic_flying_render(e, BEE_ANIMATION_START);
 }
@@ -759,7 +757,7 @@ void bee_render(ENTITY* e)
 #define SPIDER_ANIMATION_FRAME_SKIP 8
 const uint8_t spiderAnimation[] PROGMEM = { 0, 1 };
 
-void spider_render(ENTITY* e)
+void spider_render(ENTITY* const e)
 {
   if (e->dead) {
     sprites[e->tag].tileIndex = SPIDER_DEAD;
@@ -785,15 +783,15 @@ void spider_render(ENTITY* e)
 
 // ---------- PLAYER
 
-void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse)
+void player_init(PLAYER* const p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse)
 {
   memset(&(p->buttons), 0, sizeof(BUTTON_INFO));
   entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx, impulse);
 }
 
-void player_input(ENTITY* e)
+void player_input(ENTITY* const e)
 {
-  PLAYER* p = (PLAYER*)e; // upcast
+  PLAYER* const p = (PLAYER*)e; // upcast
 
   // Read the current state of the player's controller
   p->buttons.prev = p->buttons.held;
@@ -849,7 +847,7 @@ void player_input(ENTITY* e)
 const uint8_t playerAnimation[] PROGMEM = { 0, 1, 2, 1 };
 const uint8_t playerLadderAnimation[] PROGMEM = { 0, 1, 2, 1, 0, 3, 4, 3 };
 
-void player_render(ENTITY* e)
+void player_render(ENTITY* const e)
 {
   if (e->dead) {
     sprites[e->tag].tileIndex = PLAYER_DEAD + e->tag * PLAYER_NUM_SPRITES;

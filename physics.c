@@ -43,13 +43,13 @@ extern const char mysprites[] PROGMEM;
 extern const struct PatchStruct patches[] PROGMEM;
 
 __attribute__(( optimize("Os") ))
-static bool PgmBitArray_readBit(const uint8_t* array, const uint16_t index)
+static bool PgmBitArray_readBit(const uint8_t* const array, const uint16_t index)
 {
   return (bool)(pgm_read_byte(array + (index >> 3)) & (1 << (index & 7)));
 }
 
 __attribute__(( optimize("Os") ))
-uint8_t PgmPacked5Bit_read(const uint8_t* packed, const uint16_t position)
+static uint8_t PgmPacked5Bit_read(const uint8_t* const packed, const uint16_t position) // having 'const uint8_t* const packed' really helps optimization here!
 {
   uint8_t value;
   const uint16_t i = position * 5 / 8; // 5 bits packed into 8
@@ -103,7 +103,7 @@ enum INPUT_FUNCTION {
 
 typedef void (*inputFnPtr)(ENTITY*);
 __attribute__(( optimize("Os") ))
-inputFnPtr inputFunc(INPUT_FUNCTION i)
+static inputFnPtr inputFunc(const INPUT_FUNCTION i)
 {
   switch (i) {
   case PLAYER_INPUT:
@@ -137,7 +137,7 @@ enum UPDATE_FUNCTION {
 
 typedef void (*updateFnPtr)(ENTITY*);
 __attribute__(( optimize("Os") ))
-updateFnPtr updateFunc(UPDATE_FUNCTION u)
+static updateFnPtr updateFunc(const UPDATE_FUNCTION u)
 {
   switch (u) {
   case ENTITY_UPDATE:
@@ -168,7 +168,7 @@ enum RENDER_FUNCTION {
 
 typedef void (*renderFnPtr)(ENTITY*);
 __attribute__(( optimize("Os") ))
-renderFnPtr renderFunc(RENDER_FUNCTION r)
+static renderFnPtr renderFunc(const RENDER_FUNCTION r)
 {
   switch (r) {
   case PLAYER_RENDER:
@@ -417,6 +417,13 @@ const uint8_t MapTileToLadderMiddle[] PROGMEM = {
 };
 
 __attribute__(( optimize("Os") ))
+static void DrawTreasure(const uint8_t x, const uint8_t y)
+{
+  if (x < SCREEN_TILES_H && y < SCREEN_TILES_V)
+    SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + THEMES_N * TREASURE_TILES_IN_THEME));
+}
+
+__attribute__(( optimize("Os") ))
 static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
 {
   if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
@@ -433,7 +440,7 @@ static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
         t = FIRST_ONE_WAY_TILE + 2;
         break;
       default:
-        break;
+        return;
       }
       SetTile(x, y, t);
     }
@@ -473,18 +480,11 @@ static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2, const 
 #define MAX_PLAYERS 2
 #define MAX_MONSTERS 6
 
-static inline void playerInitialXY(const uint16_t levelOffset, const uint8_t i, uint8_t* x, uint8_t* y)
+static inline void entityInitialXY(const uint16_t levelOffset, const uint8_t i, uint8_t* const x, uint8_t* const y)
 {
   const uint8_t* packedCoordinatesStart = &levelData[levelOffset + LEVEL_PACKED_COORDINATES_START];
   *x = PgmPacked5Bit_read(packedCoordinatesStart, i * 2);
   *y = PgmPacked5Bit_read(packedCoordinatesStart, i * 2 + 1);
-}
-
-static inline void monsterInitialXY(const uint16_t levelOffset, const uint8_t i, uint8_t* x, uint8_t* y)
-{
-  const uint8_t* packedCoordinatesStart = &levelData[levelOffset + LEVEL_PACKED_COORDINATES_START];
-  *x = PgmPacked5Bit_read(packedCoordinatesStart, MAX_PLAYERS * 2 + i * 2);
-  *y = PgmPacked5Bit_read(packedCoordinatesStart, MAX_PLAYERS * 2 + i * 2 + 1);
 }
 
 __attribute__(( optimize("Os") ))
@@ -496,8 +496,7 @@ static void DrawAllLevelOverlays(const uint16_t levelOffset, const uint8_t theme
   for (uint8_t i = 0; i < treasures; ++i) {
     const uint8_t x = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 2);
     const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 2 + 1);
-    if (x < SCREEN_TILES_H && y < SCREEN_TILES_V)
-      SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + THEMES_N * TREASURE_TILES_IN_THEME));
+    DrawTreasure(x, y);
   }
   packedOffset += treasures * 2; // 2 coordinates per treasure
   const uint8_t oneways = onewayCount(levelOffset);
@@ -525,17 +524,17 @@ static void DrawAllLevelOverlays(const uint16_t levelOffset, const uint8_t theme
   }
 }
 
-#define BaseMapIsSolid(x, y, levelOffset) (PgmBitArray_readBit(&levelData[(levelOffset) + LEVEL_MAP_START], (y) * SCREEN_TILES_H + (x)))
-
-static void DisplayNumber(uint8_t x, uint8_t y, uint16_t n, const uint8_t pad, const uint8_t theme)
+static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t pad, const uint8_t theme)
 {
-  for (uint8_t i = 0; i < pad; ++i, n /= 10)
+  for (uint8_t i = 0; x != 255 && i < pad; ++i, n /= 10)
     SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME);  // get next digit
 }
 
+#define BaseMapIsSolid(x, y, levelOffset) (PgmBitArray_readBit(&levelData[(levelOffset) + LEVEL_MAP_START], (y) * SCREEN_TILES_H + (x)))
+
 // Returns offset into levelData PROGMEM array
 __attribute__(( optimize("Os") ))
-static uint16_t LoadLevel(uint8_t level, uint8_t* theme)
+static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme)
 {
   // Bounds check level
   if (level >= LEVELS)
@@ -591,7 +590,7 @@ static uint16_t LoadLevel(uint8_t level, uint8_t* theme)
 // Defines the order in which the tileset "rows" are swapped in for animating tiles
 const uint8_t backgroundAnimation[] PROGMEM = { 0, 1, 2, 1 };
 
-static void killPlayer(ENTITY* e)
+static void killPlayer(ENTITY* const e)
 {
   if (e->invincible)
     return;
@@ -604,7 +603,7 @@ static void killPlayer(ENTITY* e)
   e->update = entity_update_dying;
 }
 
-static void killMonster(ENTITY* e)
+static void killMonster(ENTITY* const e)
 {
   if (e->invincible)
     return;
@@ -615,14 +614,14 @@ static void killMonster(ENTITY* e)
   e->update = entity_update_dying; // use dying physics
 }
 
-static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i)
+static void spawnMonster(ENTITY* const e, const uint16_t levelOffset, const uint8_t i)
 {
   uint8_t input = monsterInput(levelOffset, i);
   uint8_t update = monsterUpdate(levelOffset, i);
   uint8_t render = monsterRender(levelOffset, i);
   uint8_t tx;
   uint8_t ty;
-  monsterInitialXY(levelOffset, i, &tx, &ty);
+  entityInitialXY(levelOffset, MAX_PLAYERS + i, &tx, &ty);
   uint8_t monsterFlags = monsterFlags(levelOffset, i);
   if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) {
     input = NULL_INPUT;
@@ -652,14 +651,14 @@ static void spawnMonster(ENTITY* e, uint16_t levelOffset, uint8_t i)
   e->render(e);
 }
 
-static void spawnPlayer(PLAYER* p, uint16_t levelOffset, uint8_t i, const uint8_t gameType)
+static void spawnPlayer(PLAYER* const p, const uint16_t levelOffset, const uint8_t i, const uint8_t gameType)
 {
       uint8_t input = playerInput(levelOffset, i);
       uint8_t update = playerUpdate(levelOffset, i);
       uint8_t render = playerRender(levelOffset, i);
       uint8_t tx;
       uint8_t ty;
-      playerInitialXY(levelOffset, i, &tx, &ty);
+      entityInitialXY(levelOffset, i, &tx, &ty);
       uint8_t playerFlags = playerFlags(levelOffset, i);
       if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V || ((i == 1) && (gameType & GFLAG_1P))) {
         input = NULL_INPUT;
@@ -678,7 +677,7 @@ static void spawnPlayer(PLAYER* p, uint16_t levelOffset, uint8_t i, const uint8_
                   (int16_t)(ty * (TILE_HEIGHT << FP_SHIFT)),
                   (int16_t)(playerMaxDX(levelOffset, i)),
                   (int16_t)(playerImpulse(levelOffset, i)));
-      ENTITY* e = (ENTITY*)p;
+      ENTITY* const e = (ENTITY*)p;
       // The cast to bool is necessary to properly set bit flags
       //e->left = (bool)(playerFlags & IFLAG_LEFT);
       //e->right = (bool)(playerFlags & IFLAG_RIGHT);
@@ -692,7 +691,7 @@ static void spawnPlayer(PLAYER* p, uint16_t levelOffset, uint8_t i, const uint8_
 }
 
 __attribute__(( always_inline ))
-static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16_t x2, int16_t y2, uint8_t w2, uint8_t h2)
+static inline bool overlap(const int16_t x1, const int16_t y1, const uint8_t w1, const uint8_t h1, const int16_t x2, const int16_t y2, const uint8_t w2, const uint8_t h2)
 {
   return !(((x1 + w1 - 1) < x2) ||
            ((x2 + w2 - 1) < x1) ||
@@ -708,7 +707,7 @@ static inline bool overlap(int16_t x1, int16_t y1, uint8_t w1, uint8_t h1, int16
 /* } */
 
 __attribute__(( optimize("Os") ))
-GAME_FLAGS doTitleScreen(ENTITY* monster)
+static GAME_FLAGS doTitleScreen(ENTITY* const monster)
 {
   for (uint8_t i = 0; i < 11; ++i)
     SetTile(15 + i, 13, LAST_FIRE_TILE + 4 + i);
@@ -921,7 +920,7 @@ int main()
 
         // Collision detection (calculation assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster)
         for (uint8_t p = 0; p < PLAYERS; ++p) {
-          ENTITY* e = (ENTITY*)(&player[p]);
+          ENTITY* const e = (ENTITY*)(&player[p]);
           if (monster[i].interacts && !monster[i].dead && e->interacts && !e->dead &&
               overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                       monster[i].x + (1 << FP_SHIFT),
@@ -954,19 +953,19 @@ int main()
           spawnMonster(&monster[i], levelOffset, i);
       }
 
-      // Check if the dead flag has been set for a player
+      // Check if the dead flag has been set for a player and/or if we need to respawn a player
       for (uint8_t i = 0; i < PLAYERS; ++i) {
-        ENTITY* e = (ENTITY*)&player[i];
+        ENTITY* const e = (ENTITY*)&player[i];
         if (e->interacts && e->dead)
           killPlayer(e);
-        if (e->dead && e->autorespawn && e->render == null_render)
+        if (e->dead && e->autorespawn && e->render == null_render) // player is dead, and its dying animation has finished
           spawnPlayer(&player[i], levelOffset, i, gameType);
       }
 
       // Check for environmental collisions (treasure, fire) by looping over the interacting players, converting
-      // their (x, y) coordinates into tile coordinates, and then reading any overlapping tiles.
+      // their (x, y) coordinates into tile coordinates, and checking any overlapping tiles.
       for (uint8_t i = 0; i < PLAYERS; ++i) {
-        ENTITY* e = (ENTITY*)(&player[i]);
+        ENTITY* const e = (ENTITY*)(&player[i]);
         if (e->interacts && !e->dead) {
           uint8_t tx = p2ht(e->x);
           uint8_t ty = p2vt(e->y);

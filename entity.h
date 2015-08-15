@@ -194,33 +194,33 @@ struct PLAYER { ENTITY entity;
 } __attribute__ ((packed));
 
 // Default functions that do nothing
-void null_input(ENTITY* e);
-void null_update(ENTITY* e);
-void null_render(ENTITY* e);
+void null_input(ENTITY* const e);
+void null_update(ENTITY* const e);
+void null_render(ENTITY* const e);
 
-void entity_init(ENTITY* e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse);
-void player_init(PLAYER* p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), uint8_t tag, uint16_t x, uint16_t y, int16_t maxdx, int16_t impulse);
+void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse);
+void player_init(PLAYER* const p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse);
 
-void player_input(ENTITY* e);
-void ai_walk_until_blocked(ENTITY* e);
-void ai_hop_until_blocked(ENTITY* e);
-void ai_walk_until_blocked_or_ledge(ENTITY* e);
-void ai_hop_until_blocked_or_ledge(ENTITY* e); // impulse and maxdx should be small enough so ledge detection doesn't trigger while jumping, and it doesn't jump off the ledge
-void ai_fly_vertical(ENTITY* e);
-void ai_fly_horizontal(ENTITY* e);
+void player_input(ENTITY* const e);
+void ai_walk_until_blocked(ENTITY* const e);
+void ai_hop_until_blocked(ENTITY* const e);
+void ai_walk_until_blocked_or_ledge(ENTITY* const e);
+void ai_hop_until_blocked_or_ledge(ENTITY* const e); // impulse and maxdx should be small enough so ledge detection doesn't trigger while jumping, and it doesn't jump off the ledge
+void ai_fly_vertical(ENTITY* const e);
+void ai_fly_horizontal(ENTITY* const e);
 
-void entity_update(ENTITY* e);
-void entity_update_dying(ENTITY* e);
-void entity_update_flying(ENTITY* e);
-void entity_update_ladder(ENTITY* e);
+void entity_update(ENTITY* const e);
+void entity_update_dying(ENTITY* const e);
+void entity_update_flying(ENTITY* const e);
+void entity_update_ladder(ENTITY* const e);
 
-void player_render(ENTITY* e);
-void ladybug_render(ENTITY* e);
-void ant_render(ENTITY* e);
-void cricket_render(ENTITY* e);
-void grasshopper_render(ENTITY* e);
-void fruitfly_render(ENTITY* e);
-void bee_render(ENTITY* e);
-void spider_render(ENTITY* e);
+void player_render(ENTITY* const e);
+void ladybug_render(ENTITY* const e);
+void ant_render(ENTITY* const e);
+void cricket_render(ENTITY* const e);
+void grasshopper_render(ENTITY* const e);
+void fruitfly_render(ENTITY* const e);
+void bee_render(ENTITY* const e);
+void spider_render(ENTITY* const e);
 
 #endif // __ENTITY_H__
