@@ -42,12 +42,11 @@
 extern const char mysprites[] PROGMEM;
 extern const struct PatchStruct patches[] PROGMEM;
 
-#define BitArray_numBytes(bits) (((bits) >> 3) + 1 * (((bits) & 7) ? 1 : 0))
-#define BitArray_setBit(array, index) ((array)[(index) >> 3] |= (1 << ((index) & 7)))
-#define BitArray_clearBit(array, index) ((array)[(index) >> 3] &= ((1 << ((index) & 7)) ^ 0xFF))
-#define BitArray_readBit(array, index) ((bool)((array)[(index) >> 3] & (1 << ((index) & 7))))
-
-#define PgmBitArray_readBit(array, index) ((bool)(pgm_read_byte((array)+((index) >> 3)) & (1 << ((index) & 7))))
+__attribute__(( optimize("Os") ))
+static bool PgmBitArray_readBit(const uint8_t* array, const uint16_t index)
+{
+  return (bool)(pgm_read_byte(array + (index >> 3)) & (1 << (index & 7)));
+}
 
 __attribute__(( optimize("Os") ))
 uint8_t PgmPacked5Bit_read(const uint8_t* packed, const uint16_t position)
@@ -812,7 +811,9 @@ int main()
     SetTileTable(tileset);
 
     //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
+    //FadeOut(0, true);
     levelOffset = LoadLevel(currentLevel, &theme);
+    //FadeIn(0, true);
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
 
@@ -858,13 +859,11 @@ int main()
       // Animate all background tiles at once by modifying the tileset pointer
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
         SetTileTable(tileset + 64 * (TILESET_SIZE / 3) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
-        ++timer; // increment the in-game time display
+        DisplayNumber(8, 0, ++timer, 4, theme); // increment the in-game time display
       }
       // Compile-time assert that we are working with a power of 2
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
       backgroundFrameCounter = (backgroundFrameCounter + 1) & (BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation) - 1);
-
-      DisplayNumber(8, 0, timer, 4, theme);
 
       // Display debugging information
       /* uint16_t sc = StackCount(); */
