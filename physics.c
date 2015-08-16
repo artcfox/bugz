@@ -706,29 +706,39 @@ static inline bool overlap(const int16_t x1, const int16_t y1, const uint8_t w1,
 /*   ++globalFrameCounter; */
 /* } */
 
+const uint8_t copyright[] PROGMEM = {
+  LAST_FIRE_TILE + 10, FIRST_SKY_TILE + SKY_TILES_IN_THEME, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2,
+  FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1,
+  FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 5, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
+  LAST_FIRE_TILE + 4, LAST_FIRE_TILE + 5, LAST_FIRE_TILE + 6, LAST_FIRE_TILE + 6,
+  FIRST_SKY_TILE + SKY_TILES_IN_THEME, LAST_FIRE_TILE + 1, LAST_FIRE_TILE + 5,
+  LAST_FIRE_TILE + 7, LAST_FIRE_TILE + 8, LAST_FIRE_TILE + 9, LAST_FIRE_TILE + 7,
+  LAST_FIRE_TILE + 5,
+};
+
+const uint8_t p1_vs_p2[] PROGMEM = {
+  LAST_FIRE_TILE + 1, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
+  LAST_FIRE_TILE + 2, LAST_FIRE_TILE + 3, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
+  LAST_FIRE_TILE + 1, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2,
+};
+
 __attribute__(( optimize("Os") ))
 static GAME_FLAGS doTitleScreen(ENTITY* const monster)
 {
+  // Switch to the last animation row, where the title screen tiles are
   SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * 2);
 
-  for (uint8_t i = 0; i < 11; ++i)
-    SetTile(15 + i, 13, LAST_FIRE_TILE + 4 + i);
+  for (uint8_t i = 0; i < NELEMS(copyright); ++i)
+    SetTile(5 + i, 13, pgm_read_byte(&copyright[i]));
 
-  SetTile(11, 17, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1);
-  SetTile(11, 19, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2);
+  for (uint8_t i = 0; i < 2; ++i) {
+    SetTile(11, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i);
+    SetTile(12, 17 + i * 2, LAST_FIRE_TILE + 1);
+  }
 
-  for (uint8_t i = 0; i < 4; i += 2)
-    SetTile(12, 17 + i, LAST_FIRE_TILE + 1);
-
-  SetTile(11, 21, LAST_FIRE_TILE + 1);
-  SetTile(17, 21, LAST_FIRE_TILE + 1);
-  SetTile(12, 21, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1);
-
-  for (uint8_t i = 0; i < 2; ++i)
-    SetTile(14 + i, 21, LAST_FIRE_TILE + 2 + i);
-
-  SetTile(18, 21, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2);
-
+  for (uint8_t i = 0; i < NELEMS(p1_vs_p2); ++i)
+    SetTile(11 + i, 21, pgm_read_byte(&p1_vs_p2[i]));
+  
   // Set pointer to 1P
   uint8_t selection = 0;
 
@@ -736,14 +746,12 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
   uint16_t held = 0;
 
   bool fadedIn = false;
+  bool wasReleased = false;
 
+  sprites[0].x -= 4;
+  
   for (;;) {
-    for (uint8_t i = 0; i < 3; ++i) {
-      if (i == selection)
-        SetTile(10, 17 + selection * 2, LAST_FIRE_TILE + 15);
-      else
-        SetTile(10, 17 + i * 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME);
-    }
+    sprites[0].y = (vt2p((17 + selection * 2)) + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 
     for (uint8_t i = 0; i < MONSTERS; ++i)
       monster[i].input(&monster[i]);
@@ -753,7 +761,7 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
       monster[i].render(&monster[i]);
 
     if (!fadedIn) {
-      FadeIn(1, true);
+      FadeIn(0, true);
       SetSpriteVisibility(true);
       fadedIn = true;
     }
@@ -774,7 +782,10 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
       if (--selection == 255)
         selection = 2;
     }
-    if (released & BTN_START) {
+    if ((held & BTN_START) == 0)
+      wasReleased = true;
+
+    if ((pressed & BTN_START) && wasReleased) {
       TriggerFx(2, 128, true);
       for (uint8_t j = 0; j < 3; ++j)
         if (j != selection)
@@ -817,10 +828,9 @@ int main()
 
   for (;;) {
     SetSpriteVisibility(false);
-    FadeOut(1, true);
+    FadeOut(0, true);
     SetTileTable(tileset);
 
-    //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
     levelOffset = LoadLevel(currentLevel, &theme);
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
@@ -844,8 +854,6 @@ int main()
 /*     ((ENTITY*)(&player[1]))->invincible = true; */
 /* #endif // (PLAYERS == 2) */
 
-    //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
-
     // Initialize monsters
     for (uint8_t i = 0; i < MONSTERS; ++i)
       spawnMonster(&monster[i], levelOffset, i);
@@ -855,7 +863,7 @@ int main()
       currentLevel = 1;
       continue;
     } else {
-      FadeIn(1, true);
+      FadeIn(0, true);
       SetSpriteVisibility(true);
     }
 
@@ -914,10 +922,12 @@ int main()
             overlap(p1->x, p1->y, WORLD_METER, WORLD_METER, p2->x, p2->y, WORLD_METER, WORLD_METER)) {
           if (((playerPrevY[0] + WORLD_METER - (1 << FP_SHIFT)) < (playerPrevY[1])) && !p2->invincible) {
             killPlayer(p2);
+            p2->monsterhop = false; // die like a bug
             if (p1->update == entity_update)
               p1->monsterhop = true;
           } else if (((playerPrevY[1] + WORLD_METER - (1 << FP_SHIFT)) < (playerPrevY[0])) && !p1->invincible) {
             killPlayer(p1);
+            p1->monsterhop = false; // die like a bug
             if (p2->update == entity_update)
               p2->monsterhop = true;
           }

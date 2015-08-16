@@ -119,7 +119,7 @@
 #define FIRE_TILES_IN_THEME 1
 #define FIRST_FIRE_TILE (LAST_DIGIT_TILE + 1)
 #define LAST_FIRE_TILE ((FIRST_FIRE_TILE + THEMES_N * FIRE_TILES_IN_THEME) - 1)
-#define TITLE_SCREEN_TILES 15
+#define TITLE_SCREEN_TILES 10
 
 #define TREASURE_TO_SKY_OFFSET (FIRST_SKY_TILE - FIRST_TREASURE_TILE)
 #define TREASURE_TO_LADDER_TOP_OFFSET ((FIRST_ONE_WAY_LADDER_TILE + THEMES_N * ONE_WAY_TILES_IN_THEME) - FIRST_TREASURE_TILE)
@@ -140,7 +140,7 @@
 #define isOneWay(t) (((t) >= FIRST_ONE_WAY_TILE) && ((t) <= LAST_ONE_WAY_LADDER_TILE))
 #define isLadder(t) ((((t) >= FIRST_SOLID_LADDER_TILE) && ((t) <= LAST_SOLID_LADDER_TILE)) || (((t) >= FIRST_ONE_WAY_LADDER_TILE) && ((t) <= LAST_SKY_LADDER_TILE)))
 
-// As long as the last tile is a fire tile, we can skip the '&& ((t) <= LAST_FIRE_TILE)' part of the condition
+// As long as the last (non-title screen) tile is a fire tile, we can skip the '&& ((t) <= LAST_FIRE_TILE)' part of the condition
 #define isFire(t) ((t) >= FIRST_FIRE_TILE)
 //#define isFire(t) (((t) >= FIRST_FIRE_TILE) && ((t) <= LAST_FIRE_TILE))
 
@@ -196,7 +196,8 @@ struct PLAYER { ENTITY entity;
 
 // Default functions that do nothing
 void null_input(ENTITY* const e);
-void null_update(ENTITY* const e);
+#define null_update null_input
+//void null_update(ENTITY* const e);
 void null_render(ENTITY* const e);
 
 void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse);

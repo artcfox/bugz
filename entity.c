@@ -60,7 +60,7 @@
 #include "data/patches.inc"
 
 void null_input(ENTITY* const e) { (void)e; }
-void null_update(ENTITY* const e) { (void)e; }
+//void null_update(ENTITY* const e) { (void)e; }
 void null_render(ENTITY* const e) { sprites[e->tag].x = OFF_SCREEN; }
 
 void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse)
@@ -77,7 +77,6 @@ void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*
   e->visible = true;
   e->jumpReleased = true;
   e->interacts = true;
-  //e->dx = e->dy = e->framesFalling = e->falling = e->jumping = e->left = e->right = e->up = e->down = e->jump = e->turbo = e->monsterhop = e->dead = e->animationFrameCounter = e->autorespawn = e->invincible = 0;
 }
 
 __attribute__(( always_inline ))
@@ -194,112 +193,6 @@ void ai_fly_horizontal(ENTITY* const e)
     }
   }
 }
-
-#if 0
-void entity_update(ENTITY* const e)
-{
-  bool wasLeft = (e->dx < 0);
-  bool wasRight = (e->dx > 0);
-
-  int16_t ddx = 0;
-  int16_t ddy = WORLD_GRAVITY;
-
-  if (e->left)
-    ddx -= WORLD_ACCEL;    // entity wants to go left
-  else if (wasLeft)
-    ddx += WORLD_FRICTION; // entity was going left, but not anymore
-
-  if (e->right)
-    ddx += WORLD_ACCEL;    // entity wants to go right
-  else if (wasRight)
-    ddx -= WORLD_FRICTION; // entity was going right, but not anymore
-
-  if (e->jump && !e->jumping && !e->falling) {
-    e->dy = 0;            // reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    ddy -= e->impulse; // apply an instantaneous (large) vertical impulse
-    e->jumping = true;
-  }
-
-  // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  e->x += (e->dx / WORLD_FPS);
-  e->dx += (ddx / WORLD_FPS);
-  if (e->dx < -e->maxdx)
-    e->dx = -e->maxdx;
-  else if (e->dx > e->maxdx)
-    e->dx = e->maxdx;
-
-  // Clamp horizontal velocity to zero if we detect that the entities direction has changed
-  if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0)))
-    e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
-
-  // Collision Detection for X
-  uint8_t tx = p2ht(e->x);
-  uint8_t ty = p2vt(e->y);
-  bool ny = (bool)nv(e->y);  // true if entity overlaps below
-  bool cell      = isSolid(GetTile(tx,     ty    ));
-  bool cellright = isSolid(GetTile(tx + 1, ty    ));
-  bool celldown  = isSolid(GetTile(tx,     ty + 1));
-  bool celldiag  = isSolid(GetTile(tx + 1, ty + 1));
-
-  if (e->dx > 0) {
-    if ((cellright && !cell) ||
-        (celldiag  && !celldown && ny)) {
-      e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform just hit
-      e->dx = 0;           // stop horizontal velocity
-    }
-  } else if (e->dx < 0) {
-    if ((cell     && !cellright) ||
-        (celldown && !celldiag && ny)) {
-      e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform just hit
-      e->dx = 0;           // stop horizontal velocity
-    }
-  }
-
-  // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  int16_t prevY = e->y; // cache previous Y value for one-way tiles
-  e->y += (e->dy / WORLD_FPS);
-  e->dy += (ddy / WORLD_FPS);
-  if (e->dy < -WORLD_MAXDY)
-    e->dy = -WORLD_MAXDY;
-  else if (e->dy > WORLD_MAXDY)
-    e->dy = WORLD_MAXDY;
-
-  // Has entity fallen down a hole?
-  if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
-    e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
-    e->dy = 0;
-    if (!e->invincible)
-      e->dead = true;
-    return;
-  }
-
-  // Collision Detection for Y
-  tx = p2ht(e->x);
-  ty = p2vt(e->y);
-  bool nx = (bool)nh(e->x);  // true if entity overlaps right
-  cell      = isSolidForEntity(tx,     ty, prevY,     WORLD_METER, e->down);
-  cellright = isSolidForEntity(tx + 1, ty, prevY,     WORLD_METER, e->down);
-  celldown  = isSolidForEntity(tx,     ty + 1, prevY, WORLD_METER, e->down);
-  celldiag  = isSolidForEntity(tx + 1, ty + 1, prevY, WORLD_METER, e->down);
-
-  if (e->dy > 0) {
-    if ((celldown && !cell) ||
-        (celldiag && !cellright && nx)) {
-      e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
-      e->dy = 0;           // stop downward velocity
-      e->jumping = false;  // no longer jumping
-    }
-  } else if (e->dy < 0) {
-    if ((cell      && !celldown) ||
-        (cellright && !celldiag && nx)) {
-      e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
-      e->dy = 0;           // stop updard velocity
-    }
-  }
-
-  e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
-}
-#endif
 
 void entity_update(ENTITY* const e)
 {
