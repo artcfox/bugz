@@ -735,9 +735,9 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
   uint16_t prev = 0;
   uint16_t held = 0;
 
-  for (;;) {
-    WaitVsync(1);
+  bool fadedIn = false;
 
+  for (;;) {
     for (uint8_t i = 0; i < 3; ++i) {
       if (i == selection)
         SetTile(10, 17 + selection * 2, LAST_FIRE_TILE + 15);
@@ -751,6 +751,12 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
       monster[i].update(&monster[i]);
     for (uint8_t i = 0; i < MONSTERS; ++i)
       monster[i].render(&monster[i]);
+
+    if (!fadedIn) {
+      FadeIn(1, true);
+      SetSpriteVisibility(true);
+      fadedIn = true;
+    }
 
     prev = held;
     held = ReadJoypad(0);
@@ -786,6 +792,7 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
       }
     }
 
+    WaitVsync(1);
   }
 }
 
@@ -809,13 +816,12 @@ int main()
   gameType = GFLAG_1P;
 
   for (;;) {
+    SetSpriteVisibility(false);
     FadeOut(1, true);
     SetTileTable(tileset);
 
     //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
     levelOffset = LoadLevel(currentLevel, &theme);
-
-    FadeIn(1, true);
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
 
@@ -848,6 +854,9 @@ int main()
       gameType = doTitleScreen(monster);
       currentLevel = 1;
       continue;
+    } else {
+      FadeIn(1, true);
+      SetSpriteVisibility(true);
     }
 
     // Display the level number
@@ -1046,10 +1055,6 @@ int main()
       held = ReadJoypad(0);
       uint16_t pressed = held & (held ^ prev);
 
-      // Check for level restart button
-      if (pressed & BTN_START)
-        break; // restart level
-
       // Check for level select buttons (hold select, and press a left or right shoulder button)
       if (held & BTN_SELECT) {
         if (pressed & BTN_SL) {
@@ -1060,8 +1065,15 @@ int main()
           if (++currentLevel == LEVELS)
             currentLevel = 1;
           break; // load next level
+        } else if (pressed & BTN_START) {
+          currentLevel = 0;
+          break; // return to title screen
         }
       }
+
+      // Check for level restart button
+      if (pressed & BTN_START)
+        break; // restart level
 
     }
   }
