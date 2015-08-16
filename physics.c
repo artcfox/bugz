@@ -709,6 +709,8 @@ static inline bool overlap(const int16_t x1, const int16_t y1, const uint8_t w1,
 __attribute__(( optimize("Os") ))
 static GAME_FLAGS doTitleScreen(ENTITY* const monster)
 {
+  SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * 2);
+
   for (uint8_t i = 0; i < 11; ++i)
     SetTile(15 + i, 13, LAST_FIRE_TILE + 4 + i);
 
@@ -807,12 +809,13 @@ int main()
   gameType = GFLAG_1P;
 
   for (;;) {
+    FadeOut(1, true);
     SetTileTable(tileset);
 
     //WaitVsync(1); // since it takes a while to decode the level, ensure we don't miss vsync
-    //FadeOut(0, true);
     levelOffset = LoadLevel(currentLevel, &theme);
-    //FadeIn(0, true);
+
+    FadeIn(1, true);
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
 
@@ -857,7 +860,7 @@ int main()
 
       // Animate all background tiles at once by modifying the tileset pointer
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
-        SetTileTable(tileset + 64 * (TILESET_SIZE / 3) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
+        SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
         DisplayNumber(8, 0, ++timer, 4, theme); // increment the in-game time display
       }
       // Compile-time assert that we are working with a power of 2
