@@ -721,6 +721,19 @@ void player_input(ENTITY* const e)
   // Improve the user experience, by allowing players to jump by holding the jump button before landing, but require them to release it before they can jump again
   if (e->jumpReleased) {                                      // jumping multiple times requires releasing the jump button between jumps
     e->jump = (bool)(p->buttons.held & BTN_A);                // player[i].jump can only be true if BTN_A has been released from the previous jump
+
+    if (e->jump && e->update == entity_update) {
+      // Look at the tile(s) above the player's head. If the jump would not be allowed, then don't set jump to true until they can actually jump
+      // This allows the player to hold the jump button early while jump-restricted, but still make the jump as soon as it is allowed
+      uint8_t tx = p2ht(e->x);
+      uint8_t ty = p2vt(e->y - 1);
+      bool nx = (bool)nh(e->x);  // true if entity overlaps right
+      bool cell      = isSolid(GetTile(tx,     ty));
+      bool cellright = isSolid(GetTile(tx + 1, ty));
+      if (cell || cellright && nx)
+        e->jump = false;
+    }
+
   } else {                                                    // otherwise, it means that we just jumped, and BTN_A is still being held down
     e->jump = false;                                          // explicitly disallow any additional jumps
     uint16_t released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
