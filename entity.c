@@ -98,14 +98,12 @@ void ai_walk_until_blocked(ENTITY* const e)
   uint8_t ty = p2vt(e->y);
 
   if (e->left) {
-    uint8_t cell = isSolid(GetTile(tx, ty));
-    if (cell || (e->x == 0)) {
+    if ((e->x == 0) || isSolid(GetTile(tx, ty))) { // cell
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
-    uint8_t cellright = isSolid(GetTile(tx + 1, ty));
-    if (cellright || (tx == SCREEN_TILES_H - 1)) {
+    if ((tx == SCREEN_TILES_H - 1) || isSolid(GetTile(tx + 1, ty))) { // cellright
       e->right = false;
       e->left = true;
     }
@@ -129,16 +127,16 @@ void ai_walk_until_blocked_or_ledge(ENTITY* const e)
   uint8_t ty = p2vt(e->y);
 
   if (e->left) {
-    uint8_t cell = isSolid(GetTile(tx, ty));
-    uint8_t celldown = isSolidForEntity(tx, ty + 1, e->y, WORLD_METER, e->down);
-    if (cell || (!celldown && !e->falling) || (e->x == 0)) {
+    if ((e->x == 0) || !(e->falling ||
+                         isSolidForEntity(tx, ty + 1, e->y, WORLD_METER, e->down)) || // celldown
+        isSolid(GetTile(tx, ty))) {                                                   // cell
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
-    uint8_t cellright = isSolid(GetTile(tx + 1, ty));
-    uint8_t celldiag  = isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER, e->down);
-    if (cellright || (!celldiag && !e->falling) || (tx == SCREEN_TILES_H - 1)) {
+    if ((tx == SCREEN_TILES_H - 1) || !(e->falling ||
+                                        isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER, e->down)) || // celldiag
+        isSolid(GetTile(tx + 1, ty))) {                                                                  // cellright
       e->right = false;
       e->left = true;
     }
@@ -272,13 +270,13 @@ void entity_update(ENTITY* const e)
 
   if (e->dx > 0) {
     if ((cellright && !cell) ||
-        (celldiag  && !celldown && ny)) {
+        (ny && celldiag  && !celldown)) {
       e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
     }
   } else if (e->dx < 0) {
     if ((cell     && !cellright) ||
-        (celldown && !celldiag && ny && !isLadder(GetTile(tx + 1, ty + 1)))) { // isLadder() check avoids potential glitch
+        (ny && celldown && !celldiag && !isLadder(GetTile(tx + 1, ty + 1)))) { // isLadder() check avoids potential glitch
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
     }
@@ -317,7 +315,7 @@ void entity_update(ENTITY* const e)
 
   if (e->dy > 0) {
     if ((celldown && !cell) ||
-        (celldiag && !cellright && nx)) {
+        (nx && celldiag && !cellright)) {
       e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
       e->dy = 0;           // stop downward velocity
       e->jumping = false;  // no longer jumping
@@ -325,7 +323,7 @@ void entity_update(ENTITY* const e)
     }
   } else if (e->dy < 0) {
     if ((cell      && !celldown) ||
-        (cellright && !celldiag && nx)) {
+        (nx && cellright && !celldiag)) {
       e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
       e->dy = 0;           // stop updard velocity
     }
