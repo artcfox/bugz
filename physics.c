@@ -419,8 +419,10 @@ const uint8_t MapTileToLadderMiddle[] PROGMEM = {
 __attribute__(( optimize("Os") ))
 static void DrawTreasure(const uint8_t x, const uint8_t y)
 {
-  if (x < SCREEN_TILES_H && y < SCREEN_TILES_V)
-    SetTile(x, y, GetTile(x, y) - (FIRST_TREASURE_TILE + THEMES_N * TREASURE_TILES_IN_THEME));
+  if (x < SCREEN_TILES_H && y < SCREEN_TILES_V) {
+    uint16_t offset = y * SCREEN_TILES_H + x;
+    vram[offset] -= (FIRST_TREASURE_TILE + THEMES_N * TREASURE_TILES_IN_THEME); // equiv. SetTile(x, y, GetTile(x, y) - ...
+  }
 }
 
 __attribute__(( optimize("Os") ))

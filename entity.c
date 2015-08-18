@@ -80,11 +80,11 @@ void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*
 }
 
 __attribute__(( always_inline ))
-static inline bool isSolidForEntity(const uint8_t tx, const uint8_t ty, const int16_t prevY, const uint8_t entityHeight, const bool down)
+static inline bool isSolidForEntity(const uint16_t offset, const uint8_t ty, const int16_t prevY, const uint8_t entityHeight, const bool down)
 {
-  uint8_t t = GetTile(tx, ty);
+  uint8_t t = vram[offset] - RAM_TILES_COUNT; // equiv. GetTile(tx, ty)
   // One-way tiles are only solid for Y collisions where your previous Y puts your feet above the tile, and you're not currently pressing down
-  return (isSolid(t) || (isOneWay(t) && ((prevY + entityHeight - 1) < vt2p(ty)) && !down));
+  return (isSolid(t) || (isOneWay(t) && !down && ((prevY + entityHeight - 1) < vt2p(ty))));
 }
 
 void ai_walk_until_blocked(ENTITY* const e)
@@ -126,17 +126,18 @@ void ai_walk_until_blocked_or_ledge(ENTITY* const e)
     tx = p2ht(e->x);
   uint8_t ty = p2vt(e->y);
 
+  uint16_t offset = ty * SCREEN_TILES_H + tx;
   if (e->left) {
     if ((e->x == 0) || !(e->falling ||
-                         isSolidForEntity(tx, ty + 1, e->y, WORLD_METER, e->down)) || // celldown
-        isSolid(GetTile(tx, ty))) {                                                   // cell
+                         isSolidForEntity(offset + SCREEN_TILES_H, ty + 1, e->y, WORLD_METER, e->down)) || // celldown, equiv. tx, ty + 1
+        isSolid(vram[offset] - RAM_TILES_COUNT)) {                                                         // cell,     equiv. tx, ty
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
     if ((tx == SCREEN_TILES_H - 1) || !(e->falling ||
-                                        isSolidForEntity(tx + 1, ty + 1, e->y, WORLD_METER, e->down)) || // celldiag
-        isSolid(GetTile(tx + 1, ty))) {                                                                  // cellright
+                                        isSolidForEntity(offset + SCREEN_TILES_H + 1, ty + 1, e->y, WORLD_METER, e->down)) || // celldiag,  equiv. tx + 1, ty + 1
+        isSolid(vram[offset + 1] - RAM_TILES_COUNT)) {                                                                        // cellright, equiv. tx + 1, ty
       e->right = false;
       e->left = true;
     }
@@ -263,10 +264,12 @@ void entity_update(ENTITY* const e)
   uint8_t tx = p2ht(e->x);
   uint8_t ty = p2vt(e->y);
   bool ny = (bool)nv(e->y); // true if entity overlaps below
-  bool cell      = isSolid(GetTile(tx,     ty    ));
-  bool cellright = isSolid(GetTile(tx + 1, ty    ));
-  bool celldown  = isSolid(GetTile(tx,     ty + 1));
-  bool celldiag  = isSolid(GetTile(tx + 1, ty + 1));
+  uint16_t offset = ty * SCREEN_TILES_H + tx;
+  bool cell      = isSolid(vram[offset                     ] - RAM_TILES_COUNT); // equiv. GetTile(tx,     ty    )
+  bool cellright = isSolid(vram[offset + 1                 ] - RAM_TILES_COUNT); // equiv. GetTile(tx + 1, ty    )
+  bool celldown  = isSolid(vram[offset + SCREEN_TILES_H    ] - RAM_TILES_COUNT); // equiv. GetTile(tx,     ty + 1)
+  uint8_t tdiag  =         vram[offset + SCREEN_TILES_H + 1] - RAM_TILES_COUNT;  // equiv. GetTile(tx + 1, ty + 1)
+  bool celldiag  = isSolid(tdiag);
 
   if (e->dx > 0) {
     if ((cellright && !cell) ||
@@ -276,7 +279,7 @@ void entity_update(ENTITY* const e)
     }
   } else if (e->dx < 0) {
     if ((cell     && !cellright) ||
-        (ny && celldown && !celldiag && !isLadder(GetTile(tx + 1, ty + 1)))) { // isLadder() check avoids potential glitch
+        (ny && celldown && !celldiag && !isLadder(tdiag))) { // isLadder() check avoids potential glitch
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
     }
@@ -308,10 +311,11 @@ void entity_update(ENTITY* const e)
   tx = p2ht(e->x);
   ty = p2vt(e->y);
   bool nx = (bool)nh(e->x);  // true if entity overlaps right
-  cell      = isSolidForEntity(tx,     ty,     prevY, WORLD_METER, e->down);
-  cellright = isSolidForEntity(tx + 1, ty,     prevY, WORLD_METER, e->down);
-  celldown  = isSolidForEntity(tx,     ty + 1, prevY, WORLD_METER, e->down);
-  celldiag  = isSolidForEntity(tx + 1, ty + 1, prevY, WORLD_METER, e->down);
+  offset = ty * SCREEN_TILES_H + tx;
+  cell      = isSolidForEntity(offset,                      ty,     prevY, WORLD_METER, e->down); // equiv. ... tx,     ty
+  cellright = isSolidForEntity(offset + 1,                  ty,     prevY, WORLD_METER, e->down); // equiv. ... tx + 1, ty
+  celldown  = isSolidForEntity(offset + SCREEN_TILES_H,     ty + 1, prevY, WORLD_METER, e->down); // equiv. ... tx,     ty + 1
+  celldiag  = isSolidForEntity(offset + SCREEN_TILES_H + 1, ty + 1, prevY, WORLD_METER, e->down); // equiv. ... tx + 1, ty + 1
 
   if (e->dy > 0) {
     if ((celldown && !cell) ||
@@ -343,10 +347,11 @@ void entity_update(ENTITY* const e)
       ny = (bool)nv(e->y - 1); // true if entity overlaps above
     }
     
-    if ((            isLadder(GetTile(tx,     ty    ))) || // cell
-        (nx &&       isLadder(GetTile(tx + 1, ty    ))) || // cellright
-        (ny &&       isLadder(GetTile(tx,     ty + 1))) || // celldown
-        (nx && ny && isLadder(GetTile(tx + 1, ty + 1)))) { // celldiag
+    uint16_t offset = ty * SCREEN_TILES_H + tx;
+    if ((            isLadder(vram[offset                     ] - RAM_TILES_COUNT)) || // cell,      equiv. ... GetTile(tx,     ty    ) ...
+        (nx &&       isLadder(vram[offset + 1                 ] - RAM_TILES_COUNT)) || // cellright, equiv. ... GetTile(tx + 1, ty    ) ...
+        (ny &&       isLadder(vram[offset + SCREEN_TILES_H    ] - RAM_TILES_COUNT)) || // celldown,  equiv. ... GetTile(tx,     ty + 1) ...
+        (nx && ny && isLadder(vram[offset + SCREEN_TILES_H + 1] - RAM_TILES_COUNT))) { // celldiag,  equiv. ... GetTile(tx + 1, ty + 1) ...
       if (e->down)
         e->y++; // allow entity to join a ladder directly below them
       else // e->up
@@ -723,7 +728,9 @@ void player_input(ENTITY* const e)
       // This allows the player to hold the jump button early while jump-restricted, but still make the jump as soon as it is allowed
       uint8_t tx = p2ht(e->x);
       uint8_t ty = p2vt(e->y - 1);
-      if (isSolid(GetTile(tx, ty)) || (isSolid(GetTile(tx + 1, ty)) && (bool)nh(e->x)))
+      uint16_t offset = ty * SCREEN_TILES_H + tx;
+      if (isSolid(vram[offset] - RAM_TILES_COUNT) ||                       // cellup,     equiv. ... GetTile(tx,     ty) ...
+          ((bool)nh(e->x) && isSolid(vram[offset + 1] - RAM_TILES_COUNT))) // cellupdiag, equiv. ... GetTile(tx + 1, ty) ...
         e->jump = false;
     }
 
