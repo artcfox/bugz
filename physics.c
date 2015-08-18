@@ -818,7 +818,8 @@ int main()
   uint8_t backgroundFrameCounter;
   uint16_t timer;
   uint8_t gameType;
-
+  
+  /* SetUserRamTilesCount(1); */
   SetSpritesTileBank(0, mysprites);
   InitMusicPlayer(patches);
 
@@ -874,6 +875,11 @@ int main()
     for (;;) {
       /* static uint8_t localFrameCounter; */
       WaitVsync(1);
+
+      /* uint8_t* ramTile = GetUserRamTile(0); */
+      /* CopyFlashTileToRam(RAM_TILES_COUNT, 0); */
+      /* ramTile[27] = 0x07; */
+      /* vram[0] = 0; */
 
       // Animate all background tiles at once by modifying the tileset pointer
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
@@ -1007,8 +1013,8 @@ int main()
           } else if (isFire(t)) {
             if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                         ht2p(tx    ) + (1 << FP_SHIFT),
-                        vt2p(ty    ) + (5 << FP_SHIFT),
-                        WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (3 << FP_SHIFT)))
+                        vt2p(ty    ) + (6 << FP_SHIFT),
+                        WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (2 << FP_SHIFT)))
               killedByFire = true;
           }
           t = GetTile(tx + 1, ty);
@@ -1019,8 +1025,8 @@ int main()
             } else if (isFire(t)) {
               if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                           ht2p(tx + 1) + (1 << FP_SHIFT),
-                          vt2p(ty    ) + (5 << FP_SHIFT),
-                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (3 << FP_SHIFT)))
+                          vt2p(ty    ) + (6 << FP_SHIFT),
+                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (2 << FP_SHIFT)))
                 killedByFire = true;
             }
           }
@@ -1032,8 +1038,8 @@ int main()
             } else if (isFire(t)) {
               if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                           ht2p(tx    ) + (1 << FP_SHIFT),
-                          vt2p(ty + 1) + (5 << FP_SHIFT),
-                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (3 << FP_SHIFT)))
+                          vt2p(ty + 1) + (6 << FP_SHIFT),
+                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (2 << FP_SHIFT)))
                 killedByFire = true;
             }
           }
@@ -1045,8 +1051,8 @@ int main()
             } else if (isFire(t)) {
               if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                           ht2p(tx + 1) + (1 << FP_SHIFT),
-                          vt2p(ty + 1) + (5 << FP_SHIFT),
-                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (3 << FP_SHIFT)))
+                          vt2p(ty + 1) + (6 << FP_SHIFT),
+                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (2 << FP_SHIFT)))
                 killedByFire = true;
             }
           }

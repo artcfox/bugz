@@ -345,12 +345,10 @@ void entity_update(ENTITY* const e)
       ny = (bool)nv(e->y - 1); // true if entity overlaps above
     }
     
-    cell      = isLadder(GetTile(tx,     ty    ));
-    cellright = isLadder(GetTile(tx + 1, ty    ));
-    celldown  = isLadder(GetTile(tx,     ty + 1));
-    celldiag  = isLadder(GetTile(tx + 1, ty + 1));
-
-    if ((cell) || (cellright && nx) || (celldown && ny) || (celldiag && nx && ny)) {
+    if ((            isLadder(GetTile(tx,     ty    ))) || // cell
+        (nx &&       isLadder(GetTile(tx + 1, ty    ))) || // cellright
+        (ny &&       isLadder(GetTile(tx,     ty + 1))) || // celldown
+        (nx && ny && isLadder(GetTile(tx + 1, ty + 1)))) { // celldiag
       if (e->down)
         e->y++; // allow entity to join a ladder directly below them
       else // e->up
@@ -727,10 +725,7 @@ void player_input(ENTITY* const e)
       // This allows the player to hold the jump button early while jump-restricted, but still make the jump as soon as it is allowed
       uint8_t tx = p2ht(e->x);
       uint8_t ty = p2vt(e->y - 1);
-      bool nx = (bool)nh(e->x);  // true if entity overlaps right
-      bool cell      = isSolid(GetTile(tx,     ty));
-      bool cellright = isSolid(GetTile(tx + 1, ty));
-      if (cell || cellright && nx)
+      if (isSolid(GetTile(tx, ty)) || (isSolid(GetTile(tx + 1, ty)) && (bool)nh(e->x)))
         e->jump = false;
     }
 
