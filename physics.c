@@ -769,7 +769,6 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
     prev = held;
     held = ReadJoypad(0);
     uint16_t pressed = held & (held ^ prev);
-    uint16_t released = prev & (held ^ prev);
 
     // Check for level select buttons (hold select, and press a left or right shoulder button)
     if (pressed & BTN_DOWN) {
@@ -877,7 +876,7 @@ int main()
       WaitVsync(1);
 
       /* uint8_t* ramTile = GetUserRamTile(0); */
-      /* CopyFlashTileToRam(RAM_TILES_COUNT, 0); */
+      /* CopyFlashTile(0, 0); */
       /* ramTile[27] = 0x07; */
       /* vram[0] = 0; */
 
