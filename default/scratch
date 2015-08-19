@@ -13,8 +13,8 @@ make clean && \
 make && \
 ./png2inc && \
 cd ../data && \
-~/uzebox/bin/gconvert_allow_dupes tileset.xml && \
-~/uzebox/bin/gconvert sprites.xml && \
+../../../bin/gconvert tileset.xml && \
+../../../bin/gconvert sprites.xml && \
 cd ../default && \
 make clean && \
 make && \

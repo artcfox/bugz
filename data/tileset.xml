@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <gfx-xform version="1">
   <input file="tileset.png" type="png" tile-width="8" tile-height="8" />
-  <output file="tileset.inc">
+  <output file="tileset.inc" remove-duplicate-tiles="false">
     <tiles var-name="tileset"/>
     <maps pointers-size="8">
     </maps>
