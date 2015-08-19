@@ -762,8 +762,7 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
       monster[i].render(&monster[i]);
 
     if (!fadedIn) {
-      FadeIn(0, true);
-      SetSpriteVisibility(true);
+      FadeIn(1, true);
       fadedIn = true;
     }
 
@@ -831,7 +830,8 @@ int main()
 
   for (;;) {
     if (levelEndTimer == 0) {
-      SetSpriteVisibility(false);
+      for (uint8_t i = 0; i < MAX_SPRITES; ++i)
+        sprites[i].x = OFF_SCREEN;
       FadeOut(0, true);
     }
     SetTileTable(tileset);
@@ -868,13 +868,8 @@ int main()
       currentLevel = 1;
       continue;
     } else {
-      if (levelEndTimer == 0) {
-        FadeIn(0, true);
-      } else {
-        levelEndTimer = 0;
-        FadeIn(1, true);
-      }
-      SetSpriteVisibility(true);
+      levelEndTimer = 0;
+      FadeIn(1, true);
     }
 
     // Display the level number
@@ -1085,21 +1080,13 @@ int main()
             e->interacts = false;
             e->invincible = true;
           }
-          for (uint8_t i = 0; i < MONSTERS; ++i) {
+          for (uint8_t i = 0; i < MONSTERS; ++i)
             monster[i].interacts = false;
-          }
-          //SetSpriteVisibility(false);
-        FadeOut(1, false);
+          FadeOut(1, false);
         }
         if (++levelEndTimer == 60) {
-          for (uint8_t i = 0; i < PLAYERS; ++i) {
-            ENTITY* e = (ENTITY*)&player[i];
-            sprites[e->tag].x = OFF_SCREEN;
-          }
-          for (uint8_t i = 0; i < MONSTERS; ++i) {
-            monster[i].interacts = false;
-            sprites[monster[i].tag].x = OFF_SCREEN;
-          }
+          for (uint8_t i = 0; i < MAX_SPRITES; ++i)
+            sprites[i].x = OFF_SCREEN;
           if (++currentLevel == LEVELS)
             currentLevel = 0;
           break;
