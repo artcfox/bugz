@@ -489,42 +489,10 @@ static inline void entityInitialXY(const uint16_t levelOffset, const uint8_t i, 
   *y = PgmPacked5Bit_read(packedCoordinatesStart, i * 2 + 1);
 }
 
-__attribute__(( optimize("Os") ))
-static void DrawAllLevelOverlays(const uint16_t levelOffset, const uint8_t theme)
-{
-  const uint8_t* packedCoordinatesStart = &levelData[levelOffset + LEVEL_PACKED_COORDINATES_START];
-  uint16_t packedOffset = MAX_PLAYERS * 2 + MAX_MONSTERS * 2; // 2 coordinates per player, 2 coordinates per monster
-  const uint8_t treasures = treasureCount(levelOffset);
-  for (uint8_t i = 0; i < treasures; ++i) {
-    const uint8_t x = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 2);
-    const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 2 + 1);
-    DrawTreasure(x, y);
-  }
-  packedOffset += treasures * 2; // 2 coordinates per treasure
-  const uint8_t oneways = onewayCount(levelOffset);
-  for (uint8_t i = 0; i < oneways; ++i) {
-    const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3);
-    const uint8_t x1 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 1);
-    const uint8_t x2 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 2);
-    DrawOneWay(y, x1, x2);
-  }
-  packedOffset += oneways * 3; // 3 coordinates per oneway
-  const uint8_t ladders = ladderCount(levelOffset);
-  for (uint8_t i = 0; i < ladders; ++i) {
-    const uint8_t x = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3);
-    const uint8_t y1 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 1);
-    const uint8_t y2 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 2);
-    DrawLadder(x, y1, y2);
-  }
-  packedOffset += ladders * 3; // 3 coordinates per ladder
-  const uint8_t fires = fireCount(levelOffset);
-  for (uint8_t i = 0; i < fires; ++i) {
-    const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3);
-    const uint8_t x1 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 1);
-    const uint8_t x2 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 2);
-    DrawFire(y, x1, x2, theme);
-  }
-}
+/* __attribute__(( optimize("Os") )) */
+/* static void DrawAllLevelOverlays(const uint16_t levelOffset, const uint8_t theme) */
+/* { */
+/* } */
 
 static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t pad, const uint8_t theme)
 {
@@ -536,7 +504,7 @@ static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t 
 
 // Returns offset into levelData PROGMEM array
 __attribute__(( optimize("Os") ))
-static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme)
+static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* const treasures)
 {
   // Bounds check level
   if (level >= LEVELS)
@@ -582,7 +550,38 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme)
   }
 
   // Overlay treasures, oneways, ladders, and fires
-  DrawAllLevelOverlays(levelOffset, *theme);
+  const uint8_t* packedCoordinatesStart = &levelData[levelOffset + LEVEL_PACKED_COORDINATES_START];
+  uint16_t packedOffset = MAX_PLAYERS * 2 + MAX_MONSTERS * 2; // 2 coordinates per player, 2 coordinates per monster
+  *treasures = treasureCount(levelOffset);
+  for (uint8_t i = 0; i < *treasures; ++i) {
+    const uint8_t x = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 2);
+    const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 2 + 1);
+    DrawTreasure(x, y);
+  }
+  packedOffset += *treasures * 2; // 2 coordinates per treasure
+  const uint8_t oneways = onewayCount(levelOffset);
+  for (uint8_t i = 0; i < oneways; ++i) {
+    const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3);
+    const uint8_t x1 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 1);
+    const uint8_t x2 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 2);
+    DrawOneWay(y, x1, x2);
+  }
+  packedOffset += oneways * 3; // 3 coordinates per oneway
+  const uint8_t ladders = ladderCount(levelOffset);
+  for (uint8_t i = 0; i < ladders; ++i) {
+    const uint8_t x = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3);
+    const uint8_t y1 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 1);
+    const uint8_t y2 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 2);
+    DrawLadder(x, y1, y2);
+  }
+  packedOffset += ladders * 3; // 3 coordinates per ladder
+  const uint8_t fires = fireCount(levelOffset);
+  for (uint8_t i = 0; i < fires; ++i) {
+    const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3);
+    const uint8_t x1 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 1);
+    const uint8_t x2 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 2);
+    DrawFire(y, x1, x2, *theme);
+  }
 
   return levelOffset;
 }
@@ -819,21 +818,24 @@ int main()
   uint8_t backgroundFrameCounter;
   uint16_t timer;
   uint8_t gameType;
-  
+  uint8_t treasuresLeft;
+  uint8_t levelEndTimer;
+
   /* SetUserRamTilesCount(1); */
   SetSpritesTileBank(0, mysprites);
   InitMusicPlayer(patches);
 
  begin:
-  currentLevel = levelOffset = theme = 0;
+  currentLevel = levelOffset = theme = levelEndTimer = 0;
   gameType = GFLAG_1P;
 
   for (;;) {
-    SetSpriteVisibility(false);
-    FadeOut(0, true);
+    if (levelEndTimer == 0) {
+      SetSpriteVisibility(false);
+      FadeOut(0, true);
+    }
     SetTileTable(tileset);
-
-    levelOffset = LoadLevel(currentLevel, &theme);
+    levelOffset = LoadLevel(currentLevel, &theme, &treasuresLeft);
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
 
@@ -861,11 +863,17 @@ int main()
       spawnMonster(&monster[i], levelOffset, i);
 
     if (currentLevel == 0) {
+      levelEndTimer = 0;
       gameType = doTitleScreen(monster);
       currentLevel = 1;
       continue;
     } else {
-      FadeIn(0, true);
+      if (levelEndTimer == 0) {
+        FadeIn(0, true);
+      } else {
+        levelEndTimer = 0;
+        FadeIn(1, true);
+      }
       SetSpriteVisibility(true);
     }
 
@@ -1010,6 +1018,7 @@ int main()
           uint8_t t = GetTile(tx, ty);
           if (isTreasure(t)) {
             SetTile(tx, ty, t + TREASURE_TO_SKY_OFFSET);
+            treasuresLeft--;
             collectedTreasure = true;
           } else if (isFire(t)) {
             if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
@@ -1022,6 +1031,7 @@ int main()
           if (nx) {
             if (isTreasure(t)) {
               SetTile(tx + 1, ty, t + TREASURE_TO_SKY_OFFSET);
+              treasuresLeft--;
               collectedTreasure = true;
             } else if (isFire(t)) {
               if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
@@ -1035,6 +1045,7 @@ int main()
           if (ny) {
             if (isTreasure(t)) {
               SetTile(tx, ty + 1, t + TREASURE_TO_SKY_OFFSET);
+              treasuresLeft--;
               collectedTreasure = true;
             } else if (isFire(t)) {
               if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
@@ -1048,6 +1059,7 @@ int main()
           if (nx && ny) {
             if (isTreasure(t)) {
               SetTile(tx + 1, ty + 1, t + TREASURE_TO_SKY_OFFSET);
+              treasuresLeft--;
               collectedTreasure = true;
             } else if (isFire(t)) {
               if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
@@ -1064,6 +1076,35 @@ int main()
         }
       }
 
+      // Check to see if the level is complete
+      if (treasuresLeft == 0) {
+        if (levelEndTimer == 0) {
+          // Make all players invincible, and non-interacting, then begin fading out
+          for (uint8_t i = 0; i < PLAYERS; ++i) {
+            ENTITY* e = (ENTITY*)&player[i];
+            e->interacts = false;
+            e->invincible = true;
+          }
+          for (uint8_t i = 0; i < MONSTERS; ++i) {
+            monster[i].interacts = false;
+          }
+          //SetSpriteVisibility(false);
+        FadeOut(1, false);
+        }
+        if (++levelEndTimer == 60) {
+          for (uint8_t i = 0; i < PLAYERS; ++i) {
+            ENTITY* e = (ENTITY*)&player[i];
+            sprites[e->tag].x = OFF_SCREEN;
+          }
+          for (uint8_t i = 0; i < MONSTERS; ++i) {
+            monster[i].interacts = false;
+            sprites[monster[i].tag].x = OFF_SCREEN;
+          }
+          if (++currentLevel == LEVELS)
+            currentLevel = 0;
+          break;
+        }
+      }
 
       // Read joypad independently of the players, because when a player dies, their joypad is no longer polled
       static uint16_t prev;
