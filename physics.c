@@ -375,11 +375,11 @@ const uint8_t MapTileToLadderTop[] PROGMEM = {
   34 + SOLID_TO_LADDER_TOP_OFFSET, 35 + SOLID_TO_LADDER_TOP_OFFSET,
 
   // Solid ladder tiles remain solid ladder tiles
-  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+  36, 37, 38, 39, 40, 41, 42, 43, 44,
 
   // One way tiles get a ladder top overlaid
-  48 + ONE_WAY_TO_LADDER_TOP_OFFSET, 49 + ONE_WAY_TO_LADDER_TOP_OFFSET,
-  50 + ONE_WAY_TO_LADDER_TOP_OFFSET,
+  45 + ONE_WAY_TO_LADDER_TOP_OFFSET, 46 + ONE_WAY_TO_LADDER_TOP_OFFSET,
+  47 + ONE_WAY_TO_LADDER_TOP_OFFSET,
 };
 
 const uint8_t MapTileToLadderMiddle[] PROGMEM = {
@@ -409,11 +409,11 @@ const uint8_t MapTileToLadderMiddle[] PROGMEM = {
   34 + SOLID_TO_LADDER_MIDDLE_OFFSET, 35 + SOLID_TO_LADDER_TOP_OFFSET,
 
   // Solid ladder tiles remain solid ladder tiles
-  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+  36, 37, 38, 39, 40, 41, 42, 43, 44,
 
   // One way tiles get a ladder top overlaid
-  48 + ONE_WAY_TO_LADDER_TOP_OFFSET, 49 + ONE_WAY_TO_LADDER_TOP_OFFSET,
-  50 + ONE_WAY_TO_LADDER_TOP_OFFSET, // these map to ladder top tiles, since they need to be one-way tiles
+  45 + ONE_WAY_TO_LADDER_TOP_OFFSET, 46 + ONE_WAY_TO_LADDER_TOP_OFFSET,
+  47 + ONE_WAY_TO_LADDER_TOP_OFFSET, // these map to ladder top tiles, since they need to be one-way tiles
 };
 
 __attribute__(( optimize("Os") ))
