@@ -182,8 +182,6 @@ typedef struct BUTTON_INFO BUTTON_INFO;
 
 struct BUTTON_INFO {
   uint16_t held;
-  //uint16_t pressed;
-  //uint16_t released;
   uint16_t prev;
 };
 
@@ -197,7 +195,6 @@ struct PLAYER { ENTITY entity;
 // Default functions that do nothing
 void null_input(ENTITY* const e);
 #define null_update null_input
-//void null_update(ENTITY* const e);
 void null_render(ENTITY* const e);
 
 void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse);

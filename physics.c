@@ -489,11 +489,6 @@ static inline void entityInitialXY(const uint16_t levelOffset, const uint8_t i, 
   *y = PgmPacked5Bit_read(packedCoordinatesStart, i * 2 + 1);
 }
 
-/* __attribute__(( optimize("Os") )) */
-/* static void DrawAllLevelOverlays(const uint16_t levelOffset, const uint8_t theme) */
-/* { */
-/* } */
-
 static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t pad, const uint8_t theme)
 {
   for (uint8_t i = 0; x != 255 && i < pad; ++i, n /= 10)
@@ -810,6 +805,8 @@ int main()
 {
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
+  uint16_t gameScore[PLAYERS];
+  uint16_t levelScore[PLAYERS];
 
   uint8_t currentLevel;
   uint16_t levelOffset;
@@ -862,13 +859,19 @@ int main()
     for (uint8_t i = 0; i < MONSTERS; ++i)
       spawnMonster(&monster[i], levelOffset, i);
 
+    levelEndTimer = 0;
+    for (uint8_t i = 0; i < PLAYERS; ++i)
+      levelScore[i] = 0;
+
     if (currentLevel == 0) {
-      levelEndTimer = 0;
       gameType = doTitleScreen(monster);
       currentLevel = 1;
+
+      for (uint8_t i = 0; i < PLAYERS; ++i)
+        gameScore[i] = 0;
+
       continue;
     } else {
-      levelEndTimer = 0;
       FadeIn(1, true);
     }
 
@@ -893,6 +896,9 @@ int main()
       // Compile-time assert that we are working with a power of 2
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
       backgroundFrameCounter = (backgroundFrameCounter + 1) & (BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation) - 1);
+
+      DisplayNumber(14, 0, gameScore[0] + levelScore[0], 5, theme);
+      /* DisplayNumber(20, 0, levelScore[0], 5, theme); */
 
       // Display debugging information
       /* uint16_t sc = StackCount(); */
@@ -962,6 +968,7 @@ int main()
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
+              levelScore[p] += 10;
               if (e->update == entity_update)
                 e->monsterhop = true; // player should now do the monster hop, but only if gravity applies
             } else {
@@ -1007,14 +1014,14 @@ int main()
           bool nx = nh(e->x) && (tx + 1 < SCREEN_TILES_H);  // true if entity overlaps right
           bool ny = nv(e->y) && (ty + 1 < SCREEN_TILES_V);  // true if entity overlaps below
 
-          bool collectedTreasure = false;
+          uint8_t treasureCollected = 0;
           bool killedByFire = false;
 
-          uint8_t t = GetTile(tx, ty);
+          uint16_t offset = ty * SCREEN_TILES_H + tx;
+          uint8_t t = vram[offset] - RAM_TILES_COUNT; // equiv. GetTile(tx, ty)
           if (isTreasure(t)) {
-            SetTile(tx, ty, t + TREASURE_TO_SKY_OFFSET);
-            treasuresLeft--;
-            collectedTreasure = true;
+            vram[offset] += TREASURE_TO_SKY_OFFSET;   // equiv. SetTile(tx, ty, ...
+            treasureCollected++;
           } else if (isFire(t)) {
             if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                         ht2p(tx    ) + (1 << FP_SHIFT),
@@ -1022,12 +1029,11 @@ int main()
                         WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (2 << FP_SHIFT)))
               killedByFire = true;
           }
-          t = GetTile(tx + 1, ty);
+          t = vram[offset + 1] - RAM_TILES_COUNT;         // equiv. GetTile(tx + 1, ty)
           if (nx) {
             if (isTreasure(t)) {
-              SetTile(tx + 1, ty, t + TREASURE_TO_SKY_OFFSET);
-              treasuresLeft--;
-              collectedTreasure = true;
+              vram[offset + 1] += TREASURE_TO_SKY_OFFSET; // equiv. SetTile(tx + 1, ty, ...
+              treasureCollected++;
             } else if (isFire(t)) {
               if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                           ht2p(tx + 1) + (1 << FP_SHIFT),
@@ -1036,12 +1042,11 @@ int main()
                 killedByFire = true;
             }
           }
-          t = GetTile(tx, ty + 1);
+          t = vram[offset + SCREEN_TILES_H] - RAM_TILES_COUNT;         // equiv. GetTile(tx, ty + 1)
           if (ny) {
             if (isTreasure(t)) {
-              SetTile(tx, ty + 1, t + TREASURE_TO_SKY_OFFSET);
-              treasuresLeft--;
-              collectedTreasure = true;
+              vram[offset + SCREEN_TILES_H] += TREASURE_TO_SKY_OFFSET; // equiv. SetTile(tx, ty + 1, ...
+              treasureCollected++;
             } else if (isFire(t)) {
               if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                           ht2p(tx    ) + (1 << FP_SHIFT),
@@ -1050,12 +1055,11 @@ int main()
                 killedByFire = true;
             }
           }
-          t = GetTile(tx + 1, ty + 1);
+          t = vram[offset + SCREEN_TILES_H + 1] - RAM_TILES_COUNT;         // equiv. GetTile(tx + 1, ty + 1)
           if (nx && ny) {
             if (isTreasure(t)) {
-              SetTile(tx + 1, ty + 1, t + TREASURE_TO_SKY_OFFSET);
-              treasuresLeft--;
-              collectedTreasure = true;
+              vram[offset + SCREEN_TILES_H + 1] += TREASURE_TO_SKY_OFFSET; // equiv. SetTile(tx + 1, ty + 1, ...
+              treasureCollected++;
             } else if (isFire(t)) {
               if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                           ht2p(tx + 1) + (1 << FP_SHIFT),
@@ -1064,8 +1068,11 @@ int main()
                 killedByFire = true;
             }
           }
-          if (collectedTreasure)
+          if (treasureCollected) {
             TriggerFx(2, 128, true);
+            treasuresLeft -= treasureCollected;
+            levelScore[i] += treasureCollected;
+          }
           if (killedByFire && !e->invincible)
             e->dead = true;
         }
@@ -1085,6 +1092,9 @@ int main()
           FadeOut(1, false);
         }
         if (++levelEndTimer == 60) {
+          for (uint8_t i = 0; i < PLAYERS; ++i) {
+            gameScore[i] += levelScore[i];
+          }
           for (uint8_t i = 0; i < MAX_SPRITES; ++i)
             sprites[i].x = OFF_SCREEN;
           if (++currentLevel == LEVELS)
@@ -1103,10 +1113,14 @@ int main()
       // Check for level select buttons (hold select, and press a left or right shoulder button)
       if (held & BTN_SELECT) {
         if (pressed & BTN_SL) {
+          for (uint8_t i = 0; i < PLAYERS; ++i)
+            gameScore[i] = 0;
           if (--currentLevel == 0)
             currentLevel = LEVELS - 1;
           break; // load previous level
         } else if (pressed & BTN_SR) {
+          for (uint8_t i = 0; i < PLAYERS; ++i)
+            gameScore[i] = 0;
           if (++currentLevel == LEVELS)
             currentLevel = 1;
           break; // load next level

@@ -60,7 +60,6 @@
 #include "data/patches.inc"
 
 void null_input(ENTITY* const e) { (void)e; }
-//void null_update(ENTITY* const e) { (void)e; }
 void null_render(ENTITY* const e) { sprites[e->tag].x = OFF_SCREEN; }
 
 void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse)
