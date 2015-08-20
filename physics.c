@@ -595,7 +595,7 @@ static void killPlayer(ENTITY* const e)
   e->monsterhop = true;
   e->dy = 0;
   e->interacts = false;
-  e->input = null_input;
+  //e->input = null_input;
   e->update = entity_update_dying;
 }
 
@@ -662,9 +662,9 @@ static void spawnPlayer(PLAYER* const p, const uint16_t levelOffset, const uint8
         render = NULL_RENDER;
         tx = ty = 0;
         playerFlags |= IFLAG_NOINTERACT;
-      } else if (gameType & GFLAG_P1_VS_P2) {
+      }/* else if (gameType & GFLAG_P1_VS_P2) {
         playerFlags |= IFLAG_AUTORESPAWN;
-      }
+        }*/
       player_init(p,
                   inputFunc(input),
                   updateFunc(update),
@@ -679,7 +679,7 @@ static void spawnPlayer(PLAYER* const p, const uint16_t levelOffset, const uint8
       //e->right = (bool)(playerFlags & IFLAG_RIGHT);
       //e->up = (bool)(playerFlags & IFLAG_UP);
       //e->down = (bool)(playerFlags & IFLAG_DOWN);
-      e->autorespawn = (bool)(playerFlags & IFLAG_AUTORESPAWN);
+      //e->autorespawn = (bool)(playerFlags & IFLAG_AUTORESPAWN);
       e->interacts = (bool)!(playerFlags & IFLAG_NOINTERACT);
       e->invincible = (bool)(playerFlags & IFLAG_INVINCIBLE);
       sprites[e->tag].flags = (playerFlags & IFLAG_SPRITE_FLIP_X) ? SPRITE_FLIP_X : 0;
@@ -805,7 +805,7 @@ int main()
 {
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
-  uint16_t gameScore[PLAYERS];
+  uint16_t gameScore[PLAYERS] = {0};
   uint16_t levelScore[PLAYERS];
 
   uint8_t currentLevel;
@@ -898,6 +898,11 @@ int main()
       backgroundFrameCounter = (backgroundFrameCounter + 1) & (BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation) - 1);
 
       DisplayNumber(14, 0, levelScore[0], 5, theme);
+#if (PLAYERS == 2)
+      if (!(gameType & GFLAG_1P))
+        DisplayNumber(20, 0, levelScore[1], 5, theme);
+#endif // (PLAYERS == 2)
+
       /* DisplayNumber(20, 0, gameScore[0], 5, theme); */
 
       // Display debugging information
@@ -949,7 +954,7 @@ int main()
           }
         }
       }
-#endif
+#endif // (PLAYERS == 2)
 
       // Update the state of the monsters, and perform collision detection with each player
       for (uint8_t i = 0; i < MONSTERS; ++i) {
@@ -997,8 +1002,8 @@ int main()
         ENTITY* const e = (ENTITY*)&player[i];
         if (e->interacts && e->dead)
           killPlayer(e);
-        if (e->dead && e->autorespawn && e->render == null_render) // player is dead, and its dying animation has finished
-          spawnPlayer(&player[i], levelOffset, i, gameType);
+        /* if (e->dead && e->autorespawn && e->render == null_render) // player is dead, and its dying animation has finished */
+        /*   spawnPlayer(&player[i], levelOffset, i, gameType); */
       }
 
       // Check for environmental collisions (treasure, fire) by looping over the interacting players, converting
@@ -1104,36 +1109,52 @@ int main()
       }
 
       // Read joypad independently of the players, because when a player dies, their joypad is no longer polled
-      static uint16_t prev;
-      static uint16_t held;
-      prev = held;
-      held = ReadJoypad(0);
-      uint16_t pressed = held & (held ^ prev);
+      static uint16_t prev[PLAYERS];
+      static uint16_t held[PLAYERS];
+      uint16_t pressed[PLAYERS];
+
+      for (uint8_t i = 0; i < PLAYERS; ++i) {
+        prev[i] = held[i];
+        held[i] = ReadJoypad(i);
+        pressed[i] = held[i] & (held[i] ^ prev[i]);
+      }
 
       // Check for level select buttons (hold select, and press a left or right shoulder button)
-      if (held & BTN_SELECT) {
-        if (pressed & BTN_SL) {
+      if (held[0] & BTN_SELECT) {
+        if (pressed[0] & BTN_SL) {
           for (uint8_t i = 0; i < PLAYERS; ++i)
             gameScore[i] = 0;
           if (--currentLevel == 0)
             currentLevel = LEVELS - 1;
           break; // load previous level
-        } else if (pressed & BTN_SR) {
+        } else if (pressed[0] & BTN_SR) {
           for (uint8_t i = 0; i < PLAYERS; ++i)
             gameScore[i] = 0;
           if (++currentLevel == LEVELS)
             currentLevel = 1;
           break; // load next level
-        } else if (pressed & BTN_START) {
+        } else if (pressed[0] & BTN_START) {
           currentLevel = 0;
           break; // return to title screen
         }
       }
 
-      // Check for level restart button
-      if (pressed & BTN_START)
-        break; // restart level
+      if (gameType & GFLAG_1P) {
+        // Check for level restart button
+        if ((pressed[0] & BTN_START) && (gameType & GFLAG_1P))
+          break; // restart level
+      } else {
+        // Check for respawns
+        for (uint8_t i = 0; i < PLAYERS; ++i) {
+          if ((pressed[i] & BTN_START)) {
+            ENTITY* e = (ENTITY*)&player[i];
+            if (e->dead && e->render == null_render) // player is dead, and its dying animation has finished
+              spawnPlayer((PLAYER*)e, levelOffset, i, gameType);
+          }
+        }
+      }
 
     }
   }
 }
+  
