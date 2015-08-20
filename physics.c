@@ -861,7 +861,7 @@ int main()
 
     levelEndTimer = 0;
     for (uint8_t i = 0; i < PLAYERS; ++i)
-      levelScore[i] = 0;
+      levelScore[i] = gameScore[i];
 
     if (currentLevel == 0) {
       gameType = doTitleScreen(monster);
@@ -897,8 +897,8 @@ int main()
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
       backgroundFrameCounter = (backgroundFrameCounter + 1) & (BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation) - 1);
 
-      DisplayNumber(14, 0, gameScore[0] + levelScore[0], 5, theme);
-      /* DisplayNumber(20, 0, levelScore[0], 5, theme); */
+      DisplayNumber(14, 0, levelScore[0], 5, theme);
+      /* DisplayNumber(20, 0, gameScore[0], 5, theme); */
 
       // Display debugging information
       /* uint16_t sc = StackCount(); */
@@ -1093,7 +1093,7 @@ int main()
         }
         if (++levelEndTimer == 60) {
           for (uint8_t i = 0; i < PLAYERS; ++i) {
-            gameScore[i] += levelScore[i];
+            gameScore[i] = levelScore[i];
           }
           for (uint8_t i = 0; i < MAX_SPRITES; ++i)
             sprites[i].x = OFF_SCREEN;
