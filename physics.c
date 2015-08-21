@@ -491,8 +491,10 @@ static inline void entityInitialXY(const uint16_t levelOffset, const uint8_t i, 
 
 static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t pad, const uint8_t theme)
 {
+  uint16_t offset = y * SCREEN_TILES_H + x;
   for (uint8_t i = 0; x != 255 && i < pad; ++i, n /= 10)
-    SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME);  // get next digit
+    vram[offset--] = (n % 10) + FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + RAM_TILES_COUNT; // get next digit
+    //SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME);  // get next digit
 }
 
 #define BaseMapIsSolid(x, y, levelOffset) (PgmBitArray_readBit(&levelData[(levelOffset) + LEVEL_MAP_START], (y) * SCREEN_TILES_H + (x)))
@@ -724,17 +726,25 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
   // Switch to the last animation row, where the title screen tiles are
   SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * 2);
 
+  uint16_t offset = 13 * SCREEN_TILES_H + 5;
   for (uint8_t i = 0; i < NELEMS(copyright); ++i)
-    SetTile(5 + i, 13, pgm_read_byte(&copyright[i]));
+    vram[offset + i] = pgm_read_byte(&copyright[i]) + RAM_TILES_COUNT;
+  //SetTile(5 + i, 13, pgm_read_byte(&copyright[i]));
 
+  offset = 21 * SCREEN_TILES_H + 11;
+  for (uint8_t i = 0; i < NELEMS(p1_vs_p2); ++i)
+    vram[offset + i] = pgm_read_byte(&p1_vs_p2[i]) + RAM_TILES_COUNT;
+    //SetTile(11 + i, 21, pgm_read_byte(&p1_vs_p2[i]));
+  
+  offset = 17 * SCREEN_TILES_H + 11;
   for (uint8_t i = 0; i < 2; ++i) {
-    SetTile(11, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i);
-    SetTile(12, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10);
+    vram[offset + (SCREEN_TILES_H * 2 * i)] = FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i + RAM_TILES_COUNT;
+    vram[offset + (SCREEN_TILES_H * 2 * i) + 1] = FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10 + RAM_TILES_COUNT;
+
+    //SetTile(11, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i);
+    //SetTile(12, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10);
   }
 
-  for (uint8_t i = 0; i < NELEMS(p1_vs_p2); ++i)
-    SetTile(11 + i, 21, pgm_read_byte(&p1_vs_p2[i]));
-  
   // Set pointer to 1P
   uint8_t selection = 0;
 
@@ -782,9 +792,12 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
     if ((pressed & BTN_START) && wasReleased) {
       TriggerFx(2, 128, true);
       for (uint8_t j = 0; j < 3; ++j)
-        if (j != selection)
-          for (uint8_t i = 11; i < 19; ++i)
-            SetTile(i, 17 + j * 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME);
+        if (j != selection) {
+          offset = (17 + (2 * j)) * SCREEN_TILES_H + 11;
+          for (uint8_t i = 0; i < 8; ++i)
+            vram[offset + i] = FIRST_SKY_TILE + SKY_TILES_IN_THEME + RAM_TILES_COUNT;
+            //SetTile(i, 17 + j * 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME);
+        }
 
       WaitVsync(32);
       switch (selection) {
@@ -879,11 +892,17 @@ int main()
     DisplayNumber(3, 0, currentLevel, 2, theme);
 
     // Display the player numbers
-    SetTile(11, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
-    SetTile(12, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 1);
+    uint16_t offset = 0 * SCREEN_TILES_H + 11;
+    vram[offset] = FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10 + RAM_TILES_COUNT;
+    vram[offset + 1] = FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 1 + RAM_TILES_COUNT;
+    //SetTile(11, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
+    //SetTile(12, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 1);
     if (!(gameType & GFLAG_1P)) {
-      SetTile(20, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
-      SetTile(21, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 2);
+      offset = 0 * SCREEN_TILES_H + 20;
+      vram[offset] = FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10 + RAM_TILES_COUNT;
+      vram[offset + 1] = FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 2 + RAM_TILES_COUNT;
+      //SetTile(20, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
+      //SetTile(21, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 2);
     }
 
     // Main game loop
@@ -1021,8 +1040,8 @@ int main()
         if (e->interacts && !e->dead) {
           uint8_t tx = p2ht(e->x);
           uint8_t ty = p2vt(e->y);
-          /* if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) // bounds check to prevent writing outside of VRAM */
-          /*   continue; */
+          if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) // bounds check to prevent writing outside of VRAM
+            continue;
 
           bool nx = nh(e->x) && (tx + 1 < SCREEN_TILES_H);  // true if entity overlaps right
           bool ny = nv(e->y) && (ty + 1 < SCREEN_TILES_V);  // true if entity overlaps below

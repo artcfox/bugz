@@ -97,12 +97,14 @@ void ai_walk_until_blocked(ENTITY* const e)
   uint8_t ty = p2vt(e->y);
 
   if (e->left) {
-    if ((e->x == 0) || isSolid(GetTile(tx, ty))) { // cell
+    uint16_t offset = ty * SCREEN_TILES_H + tx;
+    if ((e->x == 0) || isSolid(vram[offset] - RAM_TILES_COUNT)) { // cell, equiv. GetTile(tx, ty)
       e->left = false;
       e->right = true;
     }
   } else if (e->right) {
-    if ((tx == SCREEN_TILES_H - 1) || isSolid(GetTile(tx + 1, ty))) { // cellright
+    uint16_t offset = ty * SCREEN_TILES_H + tx + 1;
+    if ((tx == SCREEN_TILES_H - 1) || isSolid(vram[offset] - RAM_TILES_COUNT)) { // cellright, equiv. GetTile(tx + 1, ty)
       e->right = false;
       e->left = true;
     }
@@ -520,7 +522,11 @@ void entity_update_ladder(ENTITY* const e)
   bool ny = (bool)nv(e->y); // true if entity overlaps below
 
   // Check to see if the entity has left the ladder
-  if (!(isLadder(GetTile(tx, ty)) || (nx && isLadder(GetTile(tx + 1, ty))) || (ny && isLadder(GetTile(tx, ty + 1))) || (nx && ny && isLadder(GetTile(tx + 1, ty + 1))))) {
+  uint16_t offset = ty * SCREEN_TILES_H + tx;
+  if (!(             isLadder(vram[offset                     ] - RAM_TILES_COUNT) ||   // equiv. ... GetTile(tx, ty) ..
+        (nx &&       isLadder(vram[offset + 1                 ] - RAM_TILES_COUNT)) ||  // equiv. ... GetTile(tx + 1, ty) ...
+        (ny &&       isLadder(vram[offset + SCREEN_TILES_H    ] - RAM_TILES_COUNT)) ||  // equiv. ... GetTile(tx, ty + 1) ...
+        (nx && ny && isLadder(vram[offset + SCREEN_TILES_H + 1] - RAM_TILES_COUNT)))) { // equiv. ... GetTile(tx + 1, ty + 1) ...
     e->update = entity_update;
     e->animationFrameCounter = 0;
     e->framesFalling = 0;   // reset the counter so a grace jump is allowed if moving off the ladder causes the entity to fall
@@ -728,8 +734,8 @@ void player_input(ENTITY* const e)
       uint8_t tx = p2ht(e->x);
       uint8_t ty = p2vt(e->y - 1);
       uint16_t offset = ty * SCREEN_TILES_H + tx;
-      if (isSolid(vram[offset] - RAM_TILES_COUNT) ||                       // cellup,     equiv. ... GetTile(tx,     ty) ...
-          ((bool)nh(e->x) && isSolid(vram[offset + 1] - RAM_TILES_COUNT))) // cellupdiag, equiv. ... GetTile(tx + 1, ty) ...
+      if (                   isSolid(vram[offset    ] - RAM_TILES_COUNT) || // cellup,     equiv. ... GetTile(tx,     ty) ...
+          ((bool)nh(e->x) && isSolid(vram[offset + 1] - RAM_TILES_COUNT)))  // cellupdiag, equiv. ... GetTile(tx + 1, ty) ...
         e->jump = false;
     }
 
