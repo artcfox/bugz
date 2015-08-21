@@ -1171,8 +1171,10 @@ int main()
         // Check for respawn button (any button other than START)
         for (uint8_t i = 0; i < PLAYERS; ++i) {
           ENTITY* e = (ENTITY*)&player[i];
-          if (e->dead && (e->render == null_render) && (player[i].buttons.held && (player[i].buttons.held & ~BTN_START)))
+          if (e->dead && (e->render == null_render) && (player[i].buttons.held && (player[i].buttons.held & ~BTN_START))) {
+            levelScore[i] = gameScore[i]; // respawning in multiplayer mode resets your score for that level
             spawnPlayer((PLAYER*)e, levelOffset, i, gameType);
+          }
         }
       }
 
