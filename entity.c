@@ -689,7 +689,7 @@ void player_input(ENTITY* const e)
   // Read the current state of the player's controller
   p->buttons.prev = p->buttons.held;
   p->buttons.held = ReadJoypad(e->tag); // tag will be set to 0 or 1, depending on which player we are
-  //p->buttons.pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
+  p->buttons.pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
   //p->buttons.released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
 
 /* #if (PLAYERS > 1) */

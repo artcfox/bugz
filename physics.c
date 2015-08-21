@@ -1108,32 +1108,24 @@ int main()
         }
       }
 
-      // Read joypad independently of the players, because when a player dies, their joypad is no longer polled
-      static uint16_t prev[PLAYERS];
-      static uint16_t held[PLAYERS];
-      uint16_t pressed[PLAYERS];
-
-      for (uint8_t i = 0; i < PLAYERS; ++i) {
-        prev[i] = held[i];
-        held[i] = ReadJoypad(i);
-        pressed[i] = held[i] & (held[i] ^ prev[i]);
-      }
-
       // Check for level select buttons (hold select, and press a left or right shoulder button)
-      if (held[0] & BTN_SELECT) {
-        if (pressed[0] & BTN_SL) {
+      uint16_t held = player[0].buttons.held;
+      uint16_t pressed = player[0].buttons.pressed;
+
+      if (held & BTN_SELECT) {
+        if (pressed & BTN_SL) {
           for (uint8_t i = 0; i < PLAYERS; ++i)
             gameScore[i] = 0;
           if (--currentLevel == 0)
             currentLevel = LEVELS - 1;
           break; // load previous level
-        } else if (pressed[0] & BTN_SR) {
+        } else if (pressed & BTN_SR) {
           for (uint8_t i = 0; i < PLAYERS; ++i)
             gameScore[i] = 0;
           if (++currentLevel == LEVELS)
             currentLevel = 1;
           break; // load next level
-        } else if (pressed[0] & BTN_START) {
+        } else if (pressed & BTN_START) {
           currentLevel = 0;
           break; // return to title screen
         }
@@ -1141,16 +1133,19 @@ int main()
 
       if (gameType & GFLAG_1P) {
         // Check for level restart button
-        if ((pressed[0] & BTN_START) && (gameType & GFLAG_1P))
+        if (pressed & BTN_START)
           break; // restart level
       } else {
-        // Check for respawns
+        // Check for both players holding level restart button at the same time
+        if (((pressed & BTN_START) && (player[PLAYERS - 1].buttons.held & BTN_START)) ||
+            ((held & BTN_START) && (player[PLAYERS - 1].buttons.pressed & BTN_START)))
+          break;
+
+        // Check for respawn button (any button other than START)
         for (uint8_t i = 0; i < PLAYERS; ++i) {
-          if ((pressed[i] & BTN_START)) {
-            ENTITY* e = (ENTITY*)&player[i];
-            if (e->dead && e->render == null_render) // player is dead, and its dying animation has finished
-              spawnPlayer((PLAYER*)e, levelOffset, i, gameType);
-          }
+          ENTITY* e = (ENTITY*)&player[i];
+          if (e->dead && (e->render == null_render) && (player[i].buttons.held && (player[i].buttons.held & ~BTN_START)))
+            spawnPlayer((PLAYER*)e, levelOffset, i, gameType);
         }
       }
 

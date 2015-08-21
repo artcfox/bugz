@@ -183,6 +183,8 @@ typedef struct BUTTON_INFO BUTTON_INFO;
 struct BUTTON_INFO {
   uint16_t held;
   uint16_t prev;
+  uint16_t pressed;
+  //uint16_t released;
 };
 
 struct PLAYER;
