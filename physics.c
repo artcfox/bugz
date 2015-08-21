@@ -897,12 +897,15 @@ int main()
     vram[offset + 1] = FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 1 + RAM_TILES_COUNT;
     //SetTile(11, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
     //SetTile(12, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 1);
+    DisplayNumber(18, 0, levelScore[0], 5, theme);
+
     if (!(gameType & GFLAG_1P)) {
       offset = 0 * SCREEN_TILES_H + 20;
       vram[offset] = FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10 + RAM_TILES_COUNT;
       vram[offset + 1] = FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 2 + RAM_TILES_COUNT;
       //SetTile(20, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
       //SetTile(21, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 2);
+      DisplayNumber(18 + (PLAYERS - 1) * 9, 0, levelScore[PLAYERS - 1], 5, theme);
     }
 
     // Main game loop
@@ -918,17 +921,18 @@ int main()
       // Animate all background tiles at once by modifying the tileset pointer
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
         SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
-        DisplayNumber(8, 0, ++timer, 4, theme); // increment the in-game time display
+        if (timer != 9999)
+          DisplayNumber(8, 0, ++timer, 4, theme); // increment the in-game time display
       }
       // Compile-time assert that we are working with a power of 2
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
       backgroundFrameCounter = (backgroundFrameCounter + 1) & (BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation) - 1);
 
-      DisplayNumber(18, 0, levelScore[0], 5, theme);
-#if (PLAYERS == 2)
-      if (!(gameType & GFLAG_1P))
-        DisplayNumber(27, 0, levelScore[1], 5, theme);
-#endif // (PLAYERS == 2)
+/*       DisplayNumber(18, 0, levelScore[0], 5, theme); */
+/* #if (PLAYERS == 2) */
+/*       if (!(gameType & GFLAG_1P)) */
+/*         DisplayNumber(27, 0, levelScore[1], 5, theme); */
+/* #endif // (PLAYERS == 2) */
 
       /* DisplayNumber(20, 0, gameScore[0], 5, theme); */
 
@@ -1000,7 +1004,8 @@ int main()
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
-              levelScore[p] += 10;
+              levelScore[p] += 20;
+              DisplayNumber(18 + p * 9, 0, levelScore[p], 5, theme);
               if (e->update == entity_update)
                 e->monsterhop = true; // player should now do the monster hop, but only if gravity applies
             } else {
@@ -1104,6 +1109,7 @@ int main()
             TriggerFx(2, 128, true);
             treasuresLeft -= treasureCollected;
             levelScore[i] += treasureCollected;
+            DisplayNumber(18 + i * 9, 0, levelScore[i], 5, theme);
           }
           if (killedByFire && !e->invincible)
             e->dead = true;
@@ -1173,6 +1179,7 @@ int main()
           ENTITY* e = (ENTITY*)&player[i];
           if (e->dead && (e->render == null_render) && (player[i].buttons.held && (player[i].buttons.held & ~BTN_START))) {
             levelScore[i] = gameScore[i]; // respawning in multiplayer mode resets your score for that level
+            DisplayNumber(18 + i * 9, 0, levelScore[i], 5, theme);
             spawnPlayer((PLAYER*)e, levelOffset, i, gameType);
           }
         }
