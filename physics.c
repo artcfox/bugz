@@ -703,19 +703,19 @@ static inline bool overlap(const int16_t x1, const int16_t y1, const uint8_t w1,
 /* } */
 
 const uint8_t copyright[] PROGMEM = {
-  LAST_FIRE_TILE + 10, FIRST_SKY_TILE + SKY_TILES_IN_THEME, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2,
+  LAST_FIRE_TILE + 9, FIRST_SKY_TILE + SKY_TILES_IN_THEME, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2,
   FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1,
   FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 5, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
-  LAST_FIRE_TILE + 4, LAST_FIRE_TILE + 5, LAST_FIRE_TILE + 6, LAST_FIRE_TILE + 6,
-  FIRST_SKY_TILE + SKY_TILES_IN_THEME, LAST_FIRE_TILE + 1, LAST_FIRE_TILE + 5,
-  LAST_FIRE_TILE + 7, LAST_FIRE_TILE + 8, LAST_FIRE_TILE + 9, LAST_FIRE_TILE + 7,
-  LAST_FIRE_TILE + 5,
+  LAST_FIRE_TILE + 3, LAST_FIRE_TILE + 4, LAST_FIRE_TILE + 5, LAST_FIRE_TILE + 5,
+  FIRST_SKY_TILE + SKY_TILES_IN_THEME, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10, LAST_FIRE_TILE + 4,
+  LAST_FIRE_TILE + 6, LAST_FIRE_TILE + 7, LAST_FIRE_TILE + 8, LAST_FIRE_TILE + 6,
+  LAST_FIRE_TILE + 4,
 };
 
 const uint8_t p1_vs_p2[] PROGMEM = {
-  LAST_FIRE_TILE + 1, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
-  LAST_FIRE_TILE + 2, LAST_FIRE_TILE + 3, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
-  LAST_FIRE_TILE + 1, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2,
+  FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
+  LAST_FIRE_TILE + 1, LAST_FIRE_TILE + 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
+  FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2,
 };
 
 __attribute__(( optimize("Os") ))
@@ -729,7 +729,7 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
 
   for (uint8_t i = 0; i < 2; ++i) {
     SetTile(11, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i);
-    SetTile(12, 17 + i * 2, LAST_FIRE_TILE + 1);
+    SetTile(12, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10);
   }
 
   for (uint8_t i = 0; i < NELEMS(p1_vs_p2); ++i)
@@ -878,6 +878,14 @@ int main()
     // Display the level number
     DisplayNumber(3, 0, currentLevel, 2, theme);
 
+    // Display the player numbers
+    SetTile(11, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
+    SetTile(12, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 1);
+    if (!(gameType & GFLAG_1P)) {
+      SetTile(20, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
+      SetTile(21, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 2);
+    }
+
     // Main game loop
     for (;;) {
       /* static uint8_t localFrameCounter; */
@@ -897,10 +905,10 @@ int main()
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
       backgroundFrameCounter = (backgroundFrameCounter + 1) & (BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation) - 1);
 
-      DisplayNumber(14, 0, levelScore[0], 5, theme);
+      DisplayNumber(18, 0, levelScore[0], 5, theme);
 #if (PLAYERS == 2)
       if (!(gameType & GFLAG_1P))
-        DisplayNumber(20, 0, levelScore[1], 5, theme);
+        DisplayNumber(27, 0, levelScore[1], 5, theme);
 #endif // (PLAYERS == 2)
 
       /* DisplayNumber(20, 0, gameScore[0], 5, theme); */
