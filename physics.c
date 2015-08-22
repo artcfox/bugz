@@ -482,6 +482,7 @@ static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2, const 
 #define MAX_PLAYERS 2
 #define MAX_MONSTERS 6
 
+__attribute__(( always_inline ))
 static inline void entityInitialXY(const uint16_t levelOffset, const uint8_t i, uint8_t* const x, uint8_t* const y)
 {
   const uint8_t* packedCoordinatesStart = &levelData[levelOffset + LEVEL_PACKED_COORDINATES_START];
@@ -632,7 +633,7 @@ static void spawnMonster(ENTITY* const e, const uint16_t levelOffset, const uint
               inputFunc(input),
               updateFunc(update),
               renderFunc(render),
-              PLAYERS + i + 6, // offset by 2, so the EXIT sign is between the players and monsters
+              PLAYERS + i + 4, // offset by 4, so the EXIT sign is between the players and monsters
               (int16_t)(tx * (TILE_WIDTH << FP_SHIFT)),
               (int16_t)(ty * (TILE_HEIGHT << FP_SHIFT)),
               (int16_t)(monsterMaxDX(levelOffset, i)),
@@ -938,7 +939,7 @@ int main()
 
       // Display debugging information
       /* uint16_t sc = StackCount(); */
-      /* DisplayNumber(SCREEN_TILES_H - 3, 0, sc, 4, theme); */
+      /* DisplayNumber(SCREEN_TILES_H - 3, 1, sc, 4, theme); */
       /* DisplayNumber(2, 0, globalFrameCounter, 3); */
       /* DisplayNumber(6, 0, localFrameCounter++, 3); */
       /* DisplayNumber(4, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
@@ -1112,8 +1113,10 @@ int main()
             DisplayNumber(18 + i * 9, 0, levelScore[i], 5, theme);
             
             // Check to see if the last treasure has just been collected
-            if (treasuresLeft == 0)
-              show_exit_sign(7, 25);
+            if (treasuresLeft == 0) {
+              entityInitialXY(levelOffset, 0, &tx, &ty);
+              show_exit_sign(tx, ty - 1);
+            }
           }
           if (killedByFire && !e->invincible)
             e->dead = true;
@@ -1126,7 +1129,7 @@ int main()
           for (uint8_t i = 0; i < PLAYERS; ++i) {
             ENTITY* e = (ENTITY*)&player[i];
             if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
-                        ht2p(7), vt2p(25), 2 * WORLD_METER, 2 * WORLD_METER))
+                        sprites[PLAYERS].x << FP_SHIFT, sprites[PLAYERS].y << FP_SHIFT, 2 * WORLD_METER, 2 * WORLD_METER))
               gotStar = true;
           }
           if (gotStar) {
