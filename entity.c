@@ -804,3 +804,26 @@ void player_render(ENTITY* const e)
   sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
+
+#define EXIT_SIGN_START 59
+
+void show_exit_sign(const uint8_t tx, const uint8_t ty)
+{
+  sprites[PLAYERS    ].tileIndex = EXIT_SIGN_START;
+  sprites[PLAYERS + 1].tileIndex = EXIT_SIGN_START + 1;
+  sprites[PLAYERS + 2].tileIndex = EXIT_SIGN_START + 2;
+  sprites[PLAYERS + 3].tileIndex = EXIT_SIGN_START + 3;
+
+  sprites[PLAYERS].flags = sprites[PLAYERS + 1].flags = sprites[PLAYERS + 2].flags = sprites[PLAYERS + 3].flags = 0;
+
+  sprites[PLAYERS    ].x = sprites[PLAYERS + 2].x = (tx    ) * TILE_WIDTH;
+  sprites[PLAYERS + 1].x = sprites[PLAYERS + 3].x = (tx + 1) * TILE_WIDTH;
+  sprites[PLAYERS    ].y = sprites[PLAYERS + 1].y = (ty    ) * TILE_HEIGHT;
+  sprites[PLAYERS + 2].y = sprites[PLAYERS + 3].y = (ty + 1) * TILE_HEIGHT;
+}
+
+void hide_exit_sign(void)
+{
+  for (uint8_t i = PLAYERS; i < PLAYERS + 4; ++i)
+    sprites[i].x = OFF_SCREEN;
+}

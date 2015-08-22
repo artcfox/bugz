@@ -632,7 +632,7 @@ static void spawnMonster(ENTITY* const e, const uint16_t levelOffset, const uint
               inputFunc(input),
               updateFunc(update),
               renderFunc(render),
-              PLAYERS + i,
+              PLAYERS + i + 6, // offset by 2, so the EXIT sign is between the players and monsters
               (int16_t)(tx * (TILE_WIDTH << FP_SHIFT)),
               (int16_t)(ty * (TILE_HEIGHT << FP_SHIFT)),
               (int16_t)(monsterMaxDX(levelOffset, i)),
@@ -1110,29 +1110,43 @@ int main()
             treasuresLeft -= treasureCollected;
             levelScore[i] += treasureCollected;
             DisplayNumber(18 + i * 9, 0, levelScore[i], 5, theme);
+            
+            // Check to see if the last treasure has just been collected
+            if (treasuresLeft == 0)
+              show_exit_sign(7, 25);
           }
           if (killedByFire && !e->invincible)
             e->dead = true;
         }
       }
 
-      // Check to see if the level is complete
       if (treasuresLeft == 0) {
         if (levelEndTimer == 0) {
-          // Make all players invincible, and non-interacting, then begin fading out
+          bool gotStar = false;
           for (uint8_t i = 0; i < PLAYERS; ++i) {
             ENTITY* e = (ENTITY*)&player[i];
-            e->interacts = false;
-            e->invincible = true;
+            if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
+                        ht2p(7), vt2p(25), 2 * WORLD_METER, 2 * WORLD_METER))
+              gotStar = true;
           }
-          for (uint8_t i = 0; i < MONSTERS; ++i)
-            monster[i].interacts = false;
-          FadeOut(1, false);
-        }
-        if (++levelEndTimer == 60) {
-          for (uint8_t i = 0; i < PLAYERS; ++i) {
+          if (gotStar) {
+            // Keep the physics engine running, but ensure players can't die
+            for (uint8_t i = 0; i < PLAYERS; ++i) {
+              ENTITY* e = (ENTITY*)&player[i];
+              e->interacts = false;
+              e->invincible = true;
+            }
+            for (uint8_t i = 0; i < MONSTERS; ++i)
+              monster[i].interacts = false;
+            ++levelEndTimer; // initiate level end sequence
+          }
+        } else if (levelEndTimer++ == WORLD_FALLING_GRACE_FRAMES + 1) { // ensure portal is shown (albiet briefly) if a player overlaps it before it is displayed
+          TriggerFx(2, 128, true);
+          hide_exit_sign();
+          FadeOut(1, false); // asynchronous fade to black
+        } else if (levelEndTimer == 60) {
+          for (uint8_t i = 0; i < PLAYERS; ++i)
             gameScore[i] = levelScore[i];
-          }
           for (uint8_t i = 0; i < MAX_SPRITES; ++i)
             sprites[i].x = OFF_SCREEN;
           if (++currentLevel == LEVELS)

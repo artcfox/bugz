@@ -224,4 +224,7 @@ void fruitfly_render(ENTITY* const e);
 void bee_render(ENTITY* const e);
 void spider_render(ENTITY* const e);
 
+void show_exit_sign(const uint8_t tx, const uint8_t ty);
+void hide_exit_sign(void);
+
 #endif // __ENTITY_H__
