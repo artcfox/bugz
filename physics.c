@@ -402,7 +402,7 @@ const uint8_t MapTileToLadderMiddle[] PROGMEM = {
   25 + SKY_TO_LADDER_MIDDLE_OFFSET, 26 + SKY_TO_LADDER_MIDDLE_OFFSET,
   27 + SKY_TO_LADDER_MIDDLE_OFFSET, 28 + SKY_TO_LADDER_MIDDLE_OFFSET,
   29 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  
+
   // Solid tiles get a ladder middle overlaid, except for ones that are surface tiles
   30 + SOLID_TO_LADDER_MIDDLE_OFFSET, 31 + SOLID_TO_LADDER_TOP_OFFSET,
   32 + SOLID_TO_LADDER_MIDDLE_OFFSET, 33 + SOLID_TO_LADDER_TOP_OFFSET,
@@ -469,7 +469,7 @@ static void DrawLadder(const uint8_t x, const uint8_t y1, const uint8_t y2)
 
 __attribute__(( optimize("Os") ))
 static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2, const uint8_t theme)
-{  
+{
   if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
     for (uint8_t x = x1; x <= x2; ++x) {
       uint8_t t = GetTile(x, y);
@@ -665,9 +665,7 @@ static void spawnPlayer(PLAYER* const p, const uint16_t levelOffset, const uint8
         render = NULL_RENDER;
         tx = ty = 0;
         playerFlags |= IFLAG_NOINTERACT;
-      }/* else if (gameType & GFLAG_P1_VS_P2) {
-        playerFlags |= IFLAG_AUTORESPAWN;
-        }*/
+      }
       player_init(p,
                   inputFunc(input),
                   updateFunc(update),
@@ -736,7 +734,7 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
   for (uint8_t i = 0; i < NELEMS(p1_vs_p2); ++i)
     vram[offset + i] = pgm_read_byte(&p1_vs_p2[i]) + RAM_TILES_COUNT;
     //SetTile(11 + i, 21, pgm_read_byte(&p1_vs_p2[i]));
-  
+
   offset = 17 * SCREEN_TILES_H + 11;
   for (uint8_t i = 0; i < 2; ++i) {
     vram[offset + (SCREEN_TILES_H * 2 * i)] = FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i + RAM_TILES_COUNT;
@@ -756,7 +754,7 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
   bool wasReleased = false;
 
   sprites[0].x -= 4;
-  
+
   for (;;) {
     sprites[0].y = (vt2p((17 + selection * 2)) + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 
@@ -860,14 +858,6 @@ int main()
     // Initialize players
     for (uint8_t i = 0; i < PLAYERS; ++i)
       spawnPlayer(&player[i], levelOffset, i, gameType);
-
-/* #if (PLAYERS == 2) */
-/*     // Player 2 starts off hidden and disabled */
-/*     ((ENTITY*)(&player[1]))->render(((ENTITY*)(&player[1]))); // setup sprite */
-/*     ((ENTITY*)(&player[1]))->interacts = false; */
-/*     ((ENTITY*)(&player[1]))->render = null_render; */
-/*     ((ENTITY*)(&player[1]))->invincible = true; */
-/* #endif // (PLAYERS == 2) */
 
     // Initialize monsters
     for (uint8_t i = 0; i < MONSTERS; ++i)
@@ -977,12 +967,12 @@ int main()
             killPlayer(p2);
             p2->monsterhop = false; // die like a bug
             if (p1->update == entity_update)
-              p1->monsterhop = true;
+              p1->monsterhop = true; // player should now do the monster hop, but only if gravity applies
           } else if (((playerPrevY[1] + WORLD_METER - (1 << FP_SHIFT)) < (playerPrevY[0])) && !p1->invincible) {
             killPlayer(p1);
             p1->monsterhop = false; // die like a bug
             if (p2->update == entity_update)
-              p2->monsterhop = true;
+              p2->monsterhop = true; // player should now do the monster hop, but only if gravity applies
           }
         }
       }
@@ -1030,13 +1020,11 @@ int main()
           spawnMonster(&monster[i], levelOffset, i);
       }
 
-      // Check if the dead flag has been set for a player and/or if we need to respawn a player
+      // Check if the dead flag has been set for a player
       for (uint8_t i = 0; i < PLAYERS; ++i) {
         ENTITY* const e = (ENTITY*)&player[i];
         if (e->interacts && e->dead)
           killPlayer(e);
-        /* if (e->dead && e->autorespawn && e->render == null_render) // player is dead, and its dying animation has finished */
-        /*   spawnPlayer(&player[i], levelOffset, i, gameType); */
       }
 
       // Check for environmental collisions (treasure, fire) by looping over the interacting players, converting
@@ -1111,7 +1099,7 @@ int main()
             treasuresLeft -= treasureCollected;
             levelScore[i] += treasureCollected;
             DisplayNumber(18 + i * 9, 0, levelScore[i], 5, theme);
-            
+
             // Check to see if the last treasure has just been collected
             if (treasuresLeft == 0) {
               entityInitialXY(levelOffset, 0, &tx, &ty);
@@ -1125,26 +1113,24 @@ int main()
 
       if (treasuresLeft == 0) {
         if (levelEndTimer == 0) {
-          bool gotStar = false;
+          bool overlapsPortal = false;
           for (uint8_t i = 0; i < PLAYERS; ++i) {
             ENTITY* e = (ENTITY*)&player[i];
             if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
                         sprites[PLAYERS].x << FP_SHIFT, sprites[PLAYERS].y << FP_SHIFT, 2 * WORLD_METER, 2 * WORLD_METER))
-              gotStar = true;
+              overlapsPortal = true;
           }
-          if (gotStar) {
-            // Keep the physics engine running, but ensure players can't die
+          if (overlapsPortal) {
+            // Ensure players can't die while the physics engine keeps running
             for (uint8_t i = 0; i < PLAYERS; ++i) {
               ENTITY* e = (ENTITY*)&player[i];
               e->interacts = false;
               e->invincible = true;
             }
-            for (uint8_t i = 0; i < MONSTERS; ++i)
-              monster[i].interacts = false;
             ++levelEndTimer; // initiate level end sequence
           }
         } else if (levelEndTimer++ == WORLD_FALLING_GRACE_FRAMES + 1) { // ensure portal is shown (albiet briefly) if a player overlaps it before it is displayed
-          TriggerFx(2, 128, true);
+          TriggerFx(2, 128, true); // maybe add a victory 'level complete' sound effect
           hide_exit_sign();
           FadeOut(1, false); // asynchronous fade to black
         } else if (levelEndTimer == 60) {
@@ -1205,4 +1191,3 @@ int main()
     }
   }
 }
-  
