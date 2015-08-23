@@ -883,7 +883,7 @@ int main()
       goto title_screen;
 
     backgroundFrameCounter = 0;
-    timer = -1;
+    timer = 201;
 
     // Initialize players
     for (uint8_t i = 0; i < PLAYERS; ++i)
@@ -910,7 +910,7 @@ int main()
     }
 
     if (currentLevel == LEVELS - 1)
-      timer = 9999; // don't display the timer or level number on the victory screen
+      timer = 0; // don't display the timer or level number on the victory screen
     else
       DisplayNumber(3, 0, currentLevel, 2, theme); // display the level number
 
@@ -944,8 +944,8 @@ int main()
       // Animate all background tiles at once by modifying the tileset pointer
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
         SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
-        if (timer != 9999)
-          DisplayNumber(8, 0, ++timer, 4, theme); // increment the in-game time display
+        if (timer != 0)
+          DisplayNumber(8, 0, --timer, 4, theme); // increment the in-game time display
       }
       // Compile-time assert that we are working with a power of 2
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
@@ -1167,7 +1167,7 @@ int main()
           FadeOut(1, false); // asynchronous fade to black
         } else if (levelEndTimer == 60) {
           for (uint8_t i = 0; i < PLAYERS; ++i)
-            gameScore[i] = levelScore[i];
+            gameScore[i] = levelScore[i] + timer; // add time bonus
           for (uint8_t i = 0; i < MAX_SPRITES; ++i)
             sprites[i].x = OFF_SCREEN;
           if (++currentLevel == LEVELS)
