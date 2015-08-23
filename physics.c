@@ -652,39 +652,39 @@ static void spawnMonster(ENTITY* const e, const uint16_t levelOffset, const uint
 
 static void spawnPlayer(PLAYER* const p, const uint16_t levelOffset, const uint8_t i, const uint8_t gameType)
 {
-      uint8_t input = playerInput(levelOffset, i);
-      uint8_t update = playerUpdate(levelOffset, i);
-      uint8_t render = playerRender(levelOffset, i);
-      uint8_t tx;
-      uint8_t ty;
-      entityInitialXY(levelOffset, i, &tx, &ty);
-      uint8_t playerFlags = playerFlags(levelOffset, i);
-      if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V || ((i == 1) && (gameType & GFLAG_1P))) {
-        input = NULL_INPUT;
-        update = NULL_UPDATE;
-        render = NULL_RENDER;
-        tx = ty = 0;
-        playerFlags |= IFLAG_NOINTERACT;
-      }
-      player_init(p,
-                  inputFunc(input),
-                  updateFunc(update),
-                  renderFunc(render), i,
-                  (int16_t)(tx * (TILE_WIDTH << FP_SHIFT)),
-                  (int16_t)(ty * (TILE_HEIGHT << FP_SHIFT)),
-                  (int16_t)(playerMaxDX(levelOffset, i)),
-                  (int16_t)(playerImpulse(levelOffset, i)));
-      ENTITY* const e = (ENTITY*)p;
-      // The cast to bool is necessary to properly set bit flags
-      //e->left = (bool)(playerFlags & IFLAG_LEFT);
-      //e->right = (bool)(playerFlags & IFLAG_RIGHT);
-      //e->up = (bool)(playerFlags & IFLAG_UP);
-      //e->down = (bool)(playerFlags & IFLAG_DOWN);
-      //e->autorespawn = (bool)(playerFlags & IFLAG_AUTORESPAWN);
-      e->interacts = (bool)!(playerFlags & IFLAG_NOINTERACT);
-      e->invincible = (bool)(playerFlags & IFLAG_INVINCIBLE);
-      sprites[e->tag].flags = (playerFlags & IFLAG_SPRITE_FLIP_X) ? SPRITE_FLIP_X : 0;
-      e->render(e);
+  uint8_t input = playerInput(levelOffset, i);
+  uint8_t update = playerUpdate(levelOffset, i);
+  uint8_t render = playerRender(levelOffset, i);
+  uint8_t tx;
+  uint8_t ty;
+  entityInitialXY(levelOffset, i, &tx, &ty);
+  uint8_t playerFlags = playerFlags(levelOffset, i);
+  if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V || ((i == 1) && (gameType & GFLAG_1P))) {
+    input = NULL_INPUT;
+    update = NULL_UPDATE;
+    render = NULL_RENDER;
+    tx = ty = 0;
+    playerFlags |= IFLAG_NOINTERACT;
+  }
+  player_init(p,
+              inputFunc(input),
+              updateFunc(update),
+              renderFunc(render), i,
+              (int16_t)(tx * (TILE_WIDTH << FP_SHIFT)),
+              (int16_t)(ty * (TILE_HEIGHT << FP_SHIFT)),
+              (int16_t)(playerMaxDX(levelOffset, i)),
+              (int16_t)(playerImpulse(levelOffset, i)));
+  ENTITY* const e = (ENTITY*)p;
+  // The cast to bool is necessary to properly set bit flags
+  //e->left = (bool)(playerFlags & IFLAG_LEFT);
+  //e->right = (bool)(playerFlags & IFLAG_RIGHT);
+  //e->up = (bool)(playerFlags & IFLAG_UP);
+  //e->down = (bool)(playerFlags & IFLAG_DOWN);
+  //e->autorespawn = (bool)(playerFlags & IFLAG_AUTORESPAWN);
+  e->interacts = (bool)!(playerFlags & IFLAG_NOINTERACT);
+  e->invincible = (bool)(playerFlags & IFLAG_INVINCIBLE);
+  sprites[e->tag].flags = (playerFlags & IFLAG_SPRITE_FLIP_X) ? SPRITE_FLIP_X : 0;
+  e->render(e);
 }
 
 __attribute__(( always_inline ))
@@ -838,10 +838,10 @@ int main()
   gameType = GFLAG_1P;
 
   for (;;) {
-    if (levelEndTimer == 0) {
+    if (levelEndTimer == 0) { // this occurs when loading a level, unless we just legitimately beat a level
       for (uint8_t i = 0; i < MAX_SPRITES; ++i)
-        sprites[i].x = OFF_SCREEN;
-      FadeOut(0, true);
+        sprites[i].x = OFF_SCREEN; // hide all sprites, avoiding artifacts that SetSpriteVisibility causes when showing them at different positions later
+      FadeOut(0, true); // fade to black immediately
     }
     SetTileTable(tileset);
     levelOffset = LoadLevel(currentLevel, &theme, &treasuresLeft);
@@ -1140,7 +1140,7 @@ int main()
             sprites[i].x = OFF_SCREEN;
           if (++currentLevel == LEVELS)
             currentLevel = 0;
-          break;
+          break; // since levelEndTimer is not zero (this is a legit level complete), the instant fade out at the top of the for loop will be skipped
         }
       }
 

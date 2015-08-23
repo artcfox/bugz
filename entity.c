@@ -698,26 +698,6 @@ void player_input(ENTITY* const e)
   p->buttons.pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev);
   //p->buttons.released = p->buttons.prev & (p->buttons.held ^ p->buttons.prev);
 
-/* #if (PLAYERS > 1) */
-/*   // Allow player 2 to join/leave the game at any time */
-/*   if (e->tag) { // only for player 2 */
-/*     uint16_t pressed = p->buttons.held & (p->buttons.held ^ p->buttons.prev); */
-/*     if (pressed & BTN_START) { */
-/*       if (e->interacts) { */
-/*         e->interacts = false; */
-/*         e->render = null_render; */
-/*       } else { */
-/*         e->interacts = true; */
-/*         e->render = player_render; */
-/*       } */
-/*     } */
-/*     if (!e->interacts) */
-/*       return; */
-/*     if (pressed & BTN_SELECT) */
-/*       e->invincible = !e->invincible; */
-/*   } */
-/* #endif // (PLAYERS > 1) */
-
   e->left = (bool)(p->buttons.held & BTN_LEFT);
   e->right = (bool)(p->buttons.held & BTN_RIGHT);
   e->up = (bool)(p->buttons.held & BTN_UP);
