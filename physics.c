@@ -1148,8 +1148,8 @@ int main()
           bool overlapsPortal = false;
           for (uint8_t i = 0; i < PLAYERS; ++i) {
             ENTITY* e = (ENTITY*)&player[i];
-            if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
-                        sprites[PLAYERS].x << FP_SHIFT, sprites[PLAYERS].y << FP_SHIFT, 2 * WORLD_METER, 2 * WORLD_METER))
+            if (!e->dead && overlap(e->x, e->y, WORLD_METER, WORLD_METER,
+                                    sprites[PLAYERS].x << FP_SHIFT, sprites[PLAYERS].y << FP_SHIFT, 2 * WORLD_METER, 2 * WORLD_METER))
               overlapsPortal = true;
           }
           if (overlapsPortal) {
