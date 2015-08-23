@@ -516,7 +516,7 @@ static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t 
     //SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME);  // get next digit
 }
 
-#define BaseMapIsSolid(offset, mapStart) (PgmBitArray_readBit(mapStart, offset))
+#define BaseMapIsSolid PgmBitArray_readBit
 
 // Returns offset into levelData PROGMEM array
 __attribute__(( optimize("Os") ))
@@ -527,21 +527,21 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
     return 0xFFFF; // bogus value
 
   // Determine the offset into the PROGMEM array where the level data begins
-  uint16_t levelOffset = levelOffset(level);
+  const uint16_t levelOffset = levelOffset(level);
 
   // Using that offset, read the theme, and draw the base map
   *theme = theme(levelOffset);
   if (*theme >= THEMES_N) // something major went wrong
     return 0xFFFF; // bogus value
 
-  const uint8_t* const mapStart = &levelData[levelOffset + LEVEL_MAP_START];
+  const uint8_t* const map = &levelData[levelOffset + LEVEL_MAP_START];
 
   for (uint8_t y = 0; y < SCREEN_TILES_V; ++y) {
     for (uint8_t x = 0; x < SCREEN_TILES_H; ++x) {
       uint16_t offset = y * SCREEN_TILES_H + x;
 
-      if (BaseMapIsSolid(offset/* x, y */, mapStart)) { // (x, y)
-        if (y == 0 || BaseMapIsSolid(offset - SCREEN_TILES_H/* x, y - 1 */, mapStart)) { // if we are the top tile, or there is a solid tile above us
+      if (BaseMapIsSolid(map, offset/* x, y */)) {
+        if (y == 0 || BaseMapIsSolid(map, offset - SCREEN_TILES_H/* x, y - 1 */)) { // if we are the top tile, or there is a solid tile above us
           vram[offset] = 0 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME) + RAM_TILES_COUNT; // underground tile
           //SetTile(x, y, 0 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // underground tile
         } else {
@@ -553,9 +553,9 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
           vram[offset] = 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT; // full sky tile
           //SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME)); // full sky tile
         } else { // interior tile
-          bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(offset + SCREEN_TILES_H - 1/* x - 1, y + 1 */, mapStart));
-          bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(offset + SCREEN_TILES_H + 1/* x + 1, y + 1 */, mapStart));
-          bool solidBelow = BaseMapIsSolid(offset + SCREEN_TILES_H/* x, y + 1 */, mapStart);
+          bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(map, offset + SCREEN_TILES_H - 1/* x - 1, y + 1 */));
+          bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(map, offset + SCREEN_TILES_H + 1/* x + 1, y + 1 */));
+          bool solidBelow = BaseMapIsSolid(map, offset + SCREEN_TILES_H/* x, y + 1 */);
 
           if (!solidLDiag && !solidRDiag && solidBelow) // island
             vram[offset] = 1 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
@@ -945,7 +945,7 @@ int main()
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
         SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
         if (timer != 0)
-          DisplayNumber(8, 0, --timer, 4, theme); // increment the in-game time display
+          DisplayNumber(8, 0, --timer, 3, theme); // increment the in-game time display
       }
       // Compile-time assert that we are working with a power of 2
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
@@ -1027,7 +1027,7 @@ int main()
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
-              levelScore[p] += 20;
+              levelScore[p] += 25;
               DisplayNumber(18 + p * 9, 0, levelScore[p], 5, theme);
               if (e->update == entity_update)
                 e->monsterhop = true; // player should now do the monster hop, but only if gravity applies
@@ -1129,7 +1129,7 @@ int main()
           if (treasureCollected) {
             TriggerFx(2, 128, true);
             treasuresLeft -= treasureCollected;
-            levelScore[i] += treasureCollected;
+            levelScore[i] += treasureCollected * 5; // each treasure is worth 5 points
             DisplayNumber(18 + i * 9, 0, levelScore[i], 5, theme);
 
             // Check to see if the last treasure has just been collected
@@ -1159,15 +1159,16 @@ int main()
               e->interacts = false;
               e->invincible = true;
             }
+            for (uint8_t i = 0; i < PLAYERS; ++i)
+              gameScore[i] = levelScore[i] + timer; // add time bonus
+            timer = 0;
             ++levelEndTimer; // initiate level end sequence
           }
         } else if (levelEndTimer++ == WORLD_FALLING_GRACE_FRAMES + 1) { // ensure portal is shown (albiet briefly) if a player overlaps it before it is displayed
-          TriggerFx(2, 128, true); // maybe add a victory 'level complete' sound effect
+          TriggerFx(2, 128, true); // maybe add a victory 'level complete' sound effect?
           hide_exit_sign();
           FadeOut(1, false); // asynchronous fade to black
         } else if (levelEndTimer == 60) {
-          for (uint8_t i = 0; i < PLAYERS; ++i)
-            gameScore[i] = levelScore[i] + timer; // add time bonus
           for (uint8_t i = 0; i < MAX_SPRITES; ++i)
             sprites[i].x = OFF_SCREEN;
           if (++currentLevel == LEVELS)
