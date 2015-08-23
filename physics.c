@@ -365,70 +365,76 @@ const uint8_t levelData[] PROGMEM = {
 
 const uint8_t MapTileToLadderTop[] PROGMEM = {
   // If a ladder top overlaps a treasure tile, the treasure gets replaced with open sky and gets a ladder top overlaid
-  0 + TREASURE_TO_LADDER_TOP_OFFSET, 1 + TREASURE_TO_LADDER_TOP_OFFSET,
-  2 + TREASURE_TO_LADDER_TOP_OFFSET, 3 + TREASURE_TO_LADDER_TOP_OFFSET,
-  4 + TREASURE_TO_LADDER_TOP_OFFSET, 5 + TREASURE_TO_LADDER_TOP_OFFSET,
-  6 + TREASURE_TO_LADDER_TOP_OFFSET, 7 + TREASURE_TO_LADDER_TOP_OFFSET,
-  8 + TREASURE_TO_LADDER_TOP_OFFSET, 9 + TREASURE_TO_LADDER_TOP_OFFSET,
-  10 + TREASURE_TO_LADDER_TOP_OFFSET, 11 + TREASURE_TO_LADDER_TOP_OFFSET,
-  12 + TREASURE_TO_LADDER_TOP_OFFSET, 13 + TREASURE_TO_LADDER_TOP_OFFSET,
-  14 + TREASURE_TO_LADDER_TOP_OFFSET,
+  0 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 1 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  2 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 3 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  4 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 5 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  6 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 7 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  8 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 9 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  10 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 11 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  12 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 13 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  14 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
 
   // Open sky tiles get a ladder top overlaid
-  15 + SKY_TO_LADDER_TOP_OFFSET, 16 + SKY_TO_LADDER_TOP_OFFSET,
-  17 + SKY_TO_LADDER_TOP_OFFSET, 18 + SKY_TO_LADDER_TOP_OFFSET,
-  19 + SKY_TO_LADDER_TOP_OFFSET, 20 + SKY_TO_LADDER_TOP_OFFSET,
-  21 + SKY_TO_LADDER_TOP_OFFSET, 22 + SKY_TO_LADDER_TOP_OFFSET,
-  23 + SKY_TO_LADDER_TOP_OFFSET, 24 + SKY_TO_LADDER_TOP_OFFSET,
-  25 + SKY_TO_LADDER_TOP_OFFSET, 26 + SKY_TO_LADDER_TOP_OFFSET,
-  27 + SKY_TO_LADDER_TOP_OFFSET, 28 + SKY_TO_LADDER_TOP_OFFSET,
-  29 + SKY_TO_LADDER_TOP_OFFSET,
+  15 + SKY_TO_SKY_LADDER_TOP_OFFSET, 16 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  17 + SKY_TO_SKY_LADDER_TOP_OFFSET, 18 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  19 + SKY_TO_SKY_LADDER_TOP_OFFSET, 20 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  21 + SKY_TO_SKY_LADDER_TOP_OFFSET, 22 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  23 + SKY_TO_SKY_LADDER_TOP_OFFSET, 24 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  25 + SKY_TO_SKY_LADDER_TOP_OFFSET, 26 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  27 + SKY_TO_SKY_LADDER_TOP_OFFSET, 28 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  29 + SKY_TO_SKY_LADDER_TOP_OFFSET,
 
-  // Solid tiles get a ladder top overlaid
-  30 + SOLID_TO_LADDER_TOP_OFFSET, 31 + SOLID_TO_LADDER_TOP_OFFSET,
-  32 + SOLID_TO_LADDER_TOP_OFFSET, 33 + SOLID_TO_LADDER_TOP_OFFSET,
-  34 + SOLID_TO_LADDER_TOP_OFFSET, 35 + SOLID_TO_LADDER_TOP_OFFSET,
+  // Underground tiles get an underground ladder top overlaid
+  30 + UNDERGROUND_TO_UNDERGROUND_LADDER_TOP_OFFSET, 31 + UNDERGROUND_TO_UNDERGROUND_LADDER_TOP_OFFSET,
+  32 + UNDERGROUND_TO_UNDERGROUND_LADDER_TOP_OFFSET,
 
-  // Solid ladder tiles remain solid ladder tiles
+  // Aboveground tiles get an aboveground ladder top overlaid
+  33 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET, 34 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET,
+  35 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET,
+
+  // Ladder tiles remain ladder tiles
   36, 37, 38, 39, 40, 41, 42, 43, 44,
 
   // One way tiles get a ladder top overlaid
-  45 + ONE_WAY_TO_LADDER_TOP_OFFSET, 46 + ONE_WAY_TO_LADDER_TOP_OFFSET,
-  47 + ONE_WAY_TO_LADDER_TOP_OFFSET,
+  45 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET, 46 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET,
+  47 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET,
 };
 
 const uint8_t MapTileToLadderMiddle[] PROGMEM = {
   // If a ladder middle overlaps a treasure tile, the treasure gets replaced with open sky and gets a ladder middle overlaid
-  0 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 1 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  2 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 3 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  4 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 5 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  6 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 7 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  8 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 9 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  10 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 11 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  12 + TREASURE_TO_LADDER_MIDDLE_OFFSET, 13 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
-  14 + TREASURE_TO_LADDER_MIDDLE_OFFSET,
+  0 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 1 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  2 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 3 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  4 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 5 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  6 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 7 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  8 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 9 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  10 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 11 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  12 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 13 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  14 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
 
   // Open sky tiles get a ladder middle overlaid
-  15 + SKY_TO_LADDER_MIDDLE_OFFSET, 16 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  17 + SKY_TO_LADDER_MIDDLE_OFFSET, 18 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  19 + SKY_TO_LADDER_MIDDLE_OFFSET, 20 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  21 + SKY_TO_LADDER_MIDDLE_OFFSET, 22 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  23 + SKY_TO_LADDER_MIDDLE_OFFSET, 24 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  25 + SKY_TO_LADDER_MIDDLE_OFFSET, 26 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  27 + SKY_TO_LADDER_MIDDLE_OFFSET, 28 + SKY_TO_LADDER_MIDDLE_OFFSET,
-  29 + SKY_TO_LADDER_MIDDLE_OFFSET,
+  15 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 16 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  17 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 18 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  19 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 20 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  21 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 22 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  23 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 24 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  25 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 26 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  27 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 28 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  29 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
 
-  // Solid tiles get a ladder middle overlaid, except for ones that are surface tiles
-  30 + SOLID_TO_LADDER_MIDDLE_OFFSET, 31 + SOLID_TO_LADDER_TOP_OFFSET,
-  32 + SOLID_TO_LADDER_MIDDLE_OFFSET, 33 + SOLID_TO_LADDER_TOP_OFFSET,
-  34 + SOLID_TO_LADDER_MIDDLE_OFFSET, 35 + SOLID_TO_LADDER_TOP_OFFSET,
+  // Underground tiles get an underground ladder middle overlaid
+  30 + UNDERGROUND_TO_UNDERGROUND_LADDER_MIDDLE_OFFSET, 31 + UNDERGROUND_TO_UNDERGROUND_LADDER_MIDDLE_OFFSET,
+  32 + UNDERGROUND_TO_UNDERGROUND_LADDER_MIDDLE_OFFSET,
 
-  // Solid ladder tiles remain solid ladder tiles
+  // Aboveground tiles get an aboveground ladder top (yes, TOP) overlaid
+  33 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET, 34 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET,
+  35 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET,
+
+  // Ladder tiles remain ladder tiles
   36, 37, 38, 39, 40, 41, 42, 43, 44,
 
-  // One way tiles get a ladder top overlaid
-  45 + ONE_WAY_TO_LADDER_TOP_OFFSET, 46 + ONE_WAY_TO_LADDER_TOP_OFFSET,
-  47 + ONE_WAY_TO_LADDER_TOP_OFFSET, // these map to ladder top tiles, since they need to be one-way tiles
+  // One way tiles get a ladder top (yes, TOP) overlaid
+  45 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET, 46 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET,
+  47 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET,
 };
 
 __attribute__(( optimize("Os") ))
@@ -436,7 +442,7 @@ static void DrawTreasure(const uint8_t x, const uint8_t y)
 {
   if (x < SCREEN_TILES_H && y < SCREEN_TILES_V) {
     uint16_t offset = y * SCREEN_TILES_H + x;
-    vram[offset] -= (FIRST_TREASURE_TILE + THEMES_N * TREASURE_TILES_IN_THEME); // equiv. SetTile(x, y, GetTile(x, y) - ...
+    vram[offset] -= TREASURE_TO_SKY_OFFSET; // equiv. SetTile(x, y, GetTile(x, y) - ...
   }
 }
 
@@ -447,20 +453,8 @@ static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
   if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
     for (uint8_t x = x1; x <= x2; ++x) {
       uint8_t t = GetTile(x, y);
-      switch (t) {
-      case FIRST_SOLID_TILE + 1:
-        t = FIRST_ONE_WAY_TILE;
-        break;
-      case FIRST_SOLID_TILE + 3:
-        t = FIRST_ONE_WAY_TILE + 1;
-        break;
-      case FIRST_SOLID_TILE + 5:
-        t = FIRST_ONE_WAY_TILE + 2;
-        break;
-      default:
-        return;
-      }
-      SetTile(x, y, t);
+      if ((t >= FIRST_ABOVEGROUND_TILE) && (t <= LAST_ABOVEGROUND_TILE))
+        SetTile(x, y, t + ABOVEGROUND_TO_ABOVEGROUND_ONE_WAY_OFFSET);
     }
   }
 }
@@ -491,7 +485,7 @@ static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2, const 
   if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
     for (uint8_t x = x1; x <= x2; ++x) {
       uint8_t t = GetTile(x, y);
-      if (t < FIRST_SOLID_TILE)
+      if (t < FIRST_UNDERGROUND_TILE)
         SetTile(x, y, FIRST_FIRE_TILE + theme * FIRE_TILES_IN_THEME);
     }
   }
@@ -542,15 +536,15 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
 
       if (BaseMapIsSolid(map, offset/* x, y */)) {
         if (y == 0 || BaseMapIsSolid(map, offset - SCREEN_TILES_H/* x, y - 1 */)) { // if we are the top tile, or there is a solid tile above us
-          vram[offset] = 0 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME) + RAM_TILES_COUNT; // underground tile
+          vram[offset] = FIRST_UNDERGROUND_TILE + (*theme * UNDERGROUND_TILES_IN_THEME) + RAM_TILES_COUNT; // underground tile
           //SetTile(x, y, 0 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // underground tile
         } else {
-          vram[offset] = 1 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME) + RAM_TILES_COUNT; // aboveground tile
+          vram[offset] = FIRST_ABOVEGROUND_TILE + (*theme * ABOVEGROUND_TILES_IN_THEME) + RAM_TILES_COUNT; // aboveground tile
           //SetTile(x, y, 1 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // aboveground tile
         }
       } else { // we are a sky tile
         if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-          vram[offset] = 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT; // full sky tile
+          vram[offset] = FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT; // full sky tile
           //SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME)); // full sky tile
         } else { // interior tile
           bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(map, offset + SCREEN_TILES_H - 1/* x - 1, y + 1 */));
@@ -558,19 +552,19 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
           bool solidBelow = BaseMapIsSolid(map, offset + SCREEN_TILES_H/* x, y + 1 */);
 
           if (!solidLDiag && !solidRDiag && solidBelow) // island
-            vram[offset] = 1 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            vram[offset] = 1 + FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
             //SetTile(x, y, 1 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-            vram[offset] = 2 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            vram[offset] = 2 + FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
             //SetTile(x, y, 2 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-            vram[offset] = 3 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            vram[offset] = 3 + FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
             //SetTile(x, y, 3 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-            vram[offset] = 4 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            vram[offset] = 4 + FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
             //SetTile(x, y, 4 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else // clear all around
-            vram[offset] = 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            vram[offset] = FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
             //SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
         }
       }
