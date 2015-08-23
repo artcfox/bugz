@@ -224,47 +224,48 @@ const uint8_t levelData[] PROGMEM = {
 // Include the auto-generated table of level offsets (uint16_t levelOffsets[numLevels])
 #include "editor/levels/level_offsets.inc"
 
-/*           // ---------- start of level 0 data */
-  1,      // uint8_t theme;
-
-  IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X, // uint8_t playerFlags[2]
-  LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
-  LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
-  PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
-  ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2]
-  PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2]
-  IFLAG_RIGHT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT,      // uint8_t monsterFlags[6]
-  LE(WORLD_METER * 6), LE(WORLD_METER * 1), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 1), // int16_t monsterMaxDX[6]
-  3, 25, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6]
-  AI_FLY_HORIZONTAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
-  ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
-  BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
+  1,  // uint8_t theme
+  LE(0),  // uint16_t timeBonus
+  IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X,  // INITIAL_FLAGS playerFlags[2]
+  LE(WORLD_MAXDX), LE(WORLD_MAXDX),  // int16_t playerMaxDX[2]
+  LE(WORLD_JUMP), LE(WORLD_JUMP),  // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT,  // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE,  // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER,  // RENDER_FUNCTIONS playerRenderFuncs[2]
+  IFLAG_RIGHT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT,  // INITIAL_FLAGS monsterFlags[6]
+  LE(WORLD_METER * 6), LE(WORLD_METER * 1), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 1),  // int16_t monsterMaxDX[6]
+  3, 25, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP),  // int16_t monsterImpulse[6]
+  AI_FLY_HORIZONTAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED,  // INPUT_FUNCTIONS monsterInputFuncs[6]
+  ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE,  // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
+  BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER,  // RENDER_FUNCTIONS monsterRenderFuncs[6]
 #include "editor/levels/0000-title_level.xcf.png.inc"
 
 
-  0,      // uint8_t theme;
+  0, // uint8_t theme
+  LE(150), // uint16_t timeBonus
   0, 0, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
-  LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
-  PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
-  ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2]
-  PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2]
-  IFLAG_LEFT, IFLAG_LEFT|IFLAG_AUTORESPAWN, IFLAG_RIGHT, IFLAG_RIGHT, IFLAG_RIGHT|IFLAG_AUTORESPAWN, IFLAG_RIGHT,      // uint8_t monsterFlags[6]
+  LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT, // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER, // RENDER_FUNCTIONS playerRenderFuncs[2]
+  IFLAG_LEFT, IFLAG_LEFT|IFLAG_AUTORESPAWN, IFLAG_RIGHT, IFLAG_RIGHT, IFLAG_RIGHT|IFLAG_AUTORESPAWN, IFLAG_RIGHT, // uint8_t monsterFlags[6]
   LE(WORLD_METER * 2), LE(WORLD_METER * 2), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 2), // int16_t monsterMaxDX[6]
-  LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP),    // int16_t monsterImpulse[6]
+  LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6]
   AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
   ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 #include "editor/levels/0010-prototype_level.xcf.png.inc"
 
-  1,      // uint8_t theme;
+  1, // uint8_t theme;
+  LE(100), // uint16_t timeBonus
   0, 0, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
-  LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
-  PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
-  ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2]
-  PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2]
-  IFLAG_DOWN, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT,      // uint8_t monsterFlags[6]
+  LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT, // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER, // RENDER_FUNCTIONS playerRenderFuncs[2]
+  IFLAG_DOWN, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, // uint8_t monsterFlags[6]
   LE(WORLD_METER * 12), LE(WORLD_METER * 1), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 1), // int16_t monsterMaxDX[6]
   16, 23, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6]
   AI_FLY_VERTICAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
@@ -272,14 +273,15 @@ const uint8_t levelData[] PROGMEM = {
   BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 #include "editor/levels/0020-test_level.xcf.png.inc"
 
-  2,      // uint8_t theme;
+  2, // uint8_t theme;
+  LE(100), // uint16_t timeBonus
   IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
-  LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
-  PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
-  ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2]
-  PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2]
-  IFLAG_DOWN|IFLAG_SPRITE_FLIP_X, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT,      // uint8_t monsterFlags[6]
+  LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT, // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER, // RENDER_FUNCTIONS playerRenderFuncs[2]
+  IFLAG_DOWN|IFLAG_SPRITE_FLIP_X, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT, // uint8_t monsterFlags[6]
   LE(WORLD_METER * 5), LE(WORLD_METER * 1), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 1), // int16_t monsterMaxDX[6]
   16, 23, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6]
   AI_FLY_VERTICAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
@@ -287,14 +289,15 @@ const uint8_t levelData[] PROGMEM = {
   BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 #include "editor/levels/0030-space_level.xcf.png.inc"
 
-  2,      // uint8_t theme;
+  2, // uint8_t theme;
+  LE(0), // uint16_t timeBonus
   IFLAG_SPRITE_FLIP_X, 0, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
-  LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
-  PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
-  ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2]
-  PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2]
-  IFLAG_DOWN|IFLAG_SPRITE_FLIP_X, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT,      // uint8_t monsterFlags[6]
+  LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT, // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER, // RENDER_FUNCTIONS playerRenderFuncs[2]
+  IFLAG_DOWN|IFLAG_SPRITE_FLIP_X, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT, // uint8_t monsterFlags[6]
   LE(WORLD_METER * 5), LE(WORLD_METER * 1), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 1), // int16_t monsterMaxDX[6]
   16, 23, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6]
   AI_FLY_VERTICAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
@@ -307,7 +310,9 @@ const uint8_t levelData[] PROGMEM = {
 #define LEVEL_HEADER_SIZE 1
 #define LEVEL_THEME_START 0
 #define LEVEL_THEME_SIZE 1
-#define LEVEL_PLAYER_INITIAL_FLAGS_START (LEVEL_THEME_START + LEVEL_THEME_SIZE)
+#define LEVEL_TIME_BONUS_START (LEVEL_THEME_START + LEVEL_THEME_SIZE)
+#define LEVEL_TIME_BONUS_SIZE 2
+#define LEVEL_PLAYER_INITIAL_FLAGS_START (LEVEL_TIME_BONUS_START + LEVEL_TIME_BONUS_SIZE)
 #define LEVEL_PLAYER_INITIAL_FLAGS_SIZE 2
 #define LEVEL_PLAYER_MAXDX_START (LEVEL_PLAYER_INITIAL_FLAGS_START + LEVEL_PLAYER_INITIAL_FLAGS_SIZE)
 #define LEVEL_PLAYER_MAXDX_SIZE (2 * sizeof(int16_t))
@@ -346,6 +351,7 @@ const uint8_t levelData[] PROGMEM = {
 #define numLevels() ((uint8_t)pgm_read_byte(&levelData[0]))
 #define levelOffset(level) ((uint16_t)pgm_read_word(&levelData[LEVEL_HEADER_SIZE + ((level) * sizeof(uint16_t))]))
 #define theme(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_THEME_START]))
+#define timeBonus(levelOffset) ((uint16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_TIME_BONUS_START]))
 #define playerFlags(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INITIAL_FLAGS_START + (i)]))
 #define playerMaxDX(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_MAXDX_START + ((i) * sizeof(int16_t))]))
 #define playerImpulse(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_IMPULSE_START + ((i) * sizeof(int16_t))]))
@@ -514,7 +520,7 @@ static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t 
 
 // Returns offset into levelData PROGMEM array
 __attribute__(( optimize("Os") ))
-static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* const treasures)
+static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* const treasures, uint16_t* const timeBonus)
 {
   // Bounds check level
   if (level >= LEVELS)
@@ -527,6 +533,10 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
   *theme = theme(levelOffset);
   if (*theme >= THEMES_N) // something major went wrong
     return 0xFFFF; // bogus value
+
+  *timeBonus = timeBonus(levelOffset) + 1;
+  if (*timeBonus > 999)
+    *timeBonus = 1000;
 
   const uint8_t* const map = &levelData[levelOffset + LEVEL_MAP_START];
 
@@ -848,7 +858,7 @@ int main()
   uint16_t levelOffset;
   uint8_t theme;
   uint8_t backgroundFrameCounter;
-  uint16_t timer;
+  uint16_t timer = 0;
   uint8_t gameType;
   uint8_t treasuresLeft;
   uint8_t levelEndTimer;
@@ -868,7 +878,7 @@ int main()
       FadeOut(0, true); // fade to black immediately
     }
     SetTileTable(tileset);
-    levelOffset = LoadLevel(currentLevel, &theme, &treasuresLeft);
+    levelOffset = LoadLevel(currentLevel, &theme, &treasuresLeft, &timer);
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
 
@@ -877,7 +887,6 @@ int main()
       goto title_screen;
 
     backgroundFrameCounter = 0;
-    timer = 201;
 
     // Initialize players
     for (uint8_t i = 0; i < PLAYERS; ++i)

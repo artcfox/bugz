@@ -751,7 +751,7 @@ int addDirectory(char *directory) {
         }
       }
 
-      // The level size is 174 + packedCoordinateBytes
+      // The level size is 176 + packedCoordinateBytes
 
       // This is the spot where we should know exactly how many players, monsters, treasures, oneways, ladders, and fires are defined
       // and we can calculate how many bytes we need to store them as packed 5-bit values. Once we know how many bytes we need, malloc
@@ -775,7 +775,7 @@ int addDirectory(char *directory) {
       packedCoordinates = malloc(packedCoordinateBytes);
       memset(packedCoordinates, 0, packedCoordinateBytes);
 
-      levelSize[totalLevels] = 174 + packedCoordinateBytes;
+      levelSize[totalLevels] = 176 + packedCoordinateBytes;
 
       // Increment the total number of levels, so at the very end we can write out a separate .inc file that defines the number of levels
       totalLevels++;
