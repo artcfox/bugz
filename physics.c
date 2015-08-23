@@ -287,6 +287,21 @@ const uint8_t levelData[] PROGMEM = {
   BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 #include "editor/levels/0030-space_level.xcf.png.inc"
 
+  2,      // uint8_t theme;
+  IFLAG_SPRITE_FLIP_X, 0, // uint8_t playerFlags[2]
+  LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
+  LE(WORLD_JUMP), LE(WORLD_JUMP),   // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT,       // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE,     // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER,     // RENDER_FUNCTIONS playerRenderFuncs[2]
+  IFLAG_DOWN|IFLAG_SPRITE_FLIP_X, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT,      // uint8_t monsterFlags[6]
+  LE(WORLD_METER * 5), LE(WORLD_METER * 1), LE(WORLD_METER * 3), LE(WORLD_METER * 2), LE(WORLD_METER * 1), LE(WORLD_METER * 1), // int16_t monsterMaxDX[6]
+  16, 23, LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6]
+  AI_FLY_VERTICAL, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
+  ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
+  BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
+#include "editor/levels/9999-victory_level.xcf.png.inc"
+
  };
 
 #define LEVEL_HEADER_SIZE 1
@@ -428,6 +443,7 @@ static void DrawTreasure(const uint8_t x, const uint8_t y)
 __attribute__(( optimize("Os") ))
 static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
 {
+  // In this function, using GetTile/SetTile produces smaller code than using vram directly
   if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
     for (uint8_t x = x1; x <= x2; ++x) {
       uint8_t t = GetTile(x, y);
@@ -452,6 +468,7 @@ static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
 __attribute__(( optimize("Os") ))
 static void DrawLadder(const uint8_t x, const uint8_t y1, const uint8_t y2)
 {
+  // In this function, using GetTile/SetTile produces smaller code than using vram directly
   if ((x < SCREEN_TILES_H) && (y1 < SCREEN_TILES_V) && (y2 < SCREEN_TILES_V)) {
     // Draw the top of the ladder
     uint8_t t = GetTile(x, y1);
@@ -470,6 +487,7 @@ static void DrawLadder(const uint8_t x, const uint8_t y1, const uint8_t y2)
 __attribute__(( optimize("Os") ))
 static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2, const uint8_t theme)
 {
+  // In this function, using GetTile/SetTile produces smaller code than using vram directly
   if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
     for (uint8_t x = x1; x <= x2; ++x) {
       uint8_t t = GetTile(x, y);
@@ -845,7 +863,7 @@ int main()
   SetSpritesTileBank(0, mysprites);
   InitMusicPlayer(patches);
 
- begin:
+ title_screen:
   currentLevel = levelOffset = theme = levelEndTimer = 0;
   gameType = GFLAG_1P;
 
@@ -862,7 +880,7 @@ int main()
 
     // Check the return value of LoadLevel
     if (levelOffset == 0xFFFF)
-      goto begin;
+      goto title_screen;
 
     backgroundFrameCounter = 0;
     timer = -1;
@@ -891,8 +909,10 @@ int main()
       FadeIn(1, true);
     }
 
-    // Display the level number
-    DisplayNumber(3, 0, currentLevel, 2, theme);
+    if (currentLevel == LEVELS - 1)
+      timer = 9999; // don't display the timer or level number on the victory screen
+    else
+      DisplayNumber(3, 0, currentLevel, 2, theme); // display the level number
 
     // Display the player numbers
     uint16_t offset = 0 * SCREEN_TILES_H + 11;
@@ -1165,12 +1185,12 @@ int main()
           for (uint8_t i = 0; i < PLAYERS; ++i)
             gameScore[i] = 0;
           if (--currentLevel == 0)
-            currentLevel = LEVELS - 1;
+            currentLevel = LEVELS - 2;
           break; // load previous level
         } else if (pressed & BTN_SR) {
           for (uint8_t i = 0; i < PLAYERS; ++i)
             gameScore[i] = 0;
-          if (++currentLevel == LEVELS)
+          if (++currentLevel == LEVELS - 1)
             currentLevel = 1;
           break; // load next level
         } else if (pressed & BTN_START) {
@@ -1181,13 +1201,21 @@ int main()
 
       if (gameType & GFLAG_1P) {
         // Check for level restart button
-        if (pressed & BTN_START)
-          break; // restart level
+        if (pressed & BTN_START) {
+          if (currentLevel == LEVELS - 1) // victory level
+            goto title_screen;
+          else
+            break; // restart level
+        }
       } else {
         // Check for both players holding level restart button at the same time
         if (((pressed & BTN_START) && (player[PLAYERS - 1].buttons.held & BTN_START)) ||
-            ((held & BTN_START) && (player[PLAYERS - 1].buttons.pressed & BTN_START)))
-          break;
+            ((held & BTN_START) && (player[PLAYERS - 1].buttons.pressed & BTN_START))) {
+          if (currentLevel == LEVELS - 1) // victory level
+            goto title_screen;
+          else
+            break;
+        }
 
         // Check for respawn button (any button other than START)
         for (uint8_t i = 0; i < PLAYERS; ++i) {
