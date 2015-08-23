@@ -498,7 +498,7 @@ static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t 
     //SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME);  // get next digit
 }
 
-#define BaseMapIsSolid(x, y, levelOffset) (PgmBitArray_readBit(&levelData[(levelOffset) + LEVEL_MAP_START], (y) * SCREEN_TILES_H + (x)))
+#define BaseMapIsSolid(offset, mapStart) (PgmBitArray_readBit(mapStart, offset))
 
 // Returns offset into levelData PROGMEM array
 __attribute__(( optimize("Os") ))
@@ -516,32 +516,44 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
   if (*theme >= THEMES_N) // something major went wrong
     return 0xFFFF; // bogus value
 
+  const uint8_t* const mapStart = &levelData[levelOffset + LEVEL_MAP_START];
+
   for (uint8_t y = 0; y < SCREEN_TILES_V; ++y) {
     for (uint8_t x = 0; x < SCREEN_TILES_H; ++x) {
-      if (BaseMapIsSolid(x, y, levelOffset)) {
-        if (y == 0 || BaseMapIsSolid(x, y - 1, levelOffset)) { // if we are the top tile, or there is a solid tile above us
-          SetTile(x, y, 0 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // underground tile
+      uint16_t offset = y * SCREEN_TILES_H + x;
+
+      if (BaseMapIsSolid(offset/* x, y */, mapStart)) { // (x, y)
+        if (y == 0 || BaseMapIsSolid(offset - SCREEN_TILES_H/* x, y - 1 */, mapStart)) { // if we are the top tile, or there is a solid tile above us
+          vram[offset] = 0 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME) + RAM_TILES_COUNT; // underground tile
+          //SetTile(x, y, 0 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // underground tile
         } else {
-          SetTile(x, y, 1 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // aboveground tile
+          vram[offset] = 1 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME) + RAM_TILES_COUNT; // aboveground tile
+          //SetTile(x, y, 1 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // aboveground tile
         }
       } else { // we are a sky tile
         if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-          SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME)); // full sky tile
+          vram[offset] = 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT; // full sky tile
+          //SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME)); // full sky tile
         } else { // interior tile
-          bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(x - 1, y + 1, levelOffset));
-          bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(x + 1, y + 1, levelOffset));
-          bool solidBelow = BaseMapIsSolid(x, y + 1, levelOffset);
+          bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(offset + SCREEN_TILES_H - 1/* x - 1, y + 1 */, mapStart));
+          bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(offset + SCREEN_TILES_H + 1/* x + 1, y + 1 */, mapStart));
+          bool solidBelow = BaseMapIsSolid(offset + SCREEN_TILES_H/* x, y + 1 */, mapStart);
 
           if (!solidLDiag && !solidRDiag && solidBelow) // island
-            SetTile(x, y, 1 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
+            vram[offset] = 1 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            //SetTile(x, y, 1 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-            SetTile(x, y, 2 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
+            vram[offset] = 2 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            //SetTile(x, y, 2 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-            SetTile(x, y, 3 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
+            vram[offset] = 3 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            //SetTile(x, y, 3 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-            SetTile(x, y, 4 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
+            vram[offset] = 4 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            //SetTile(x, y, 4 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else // clear all around
-            SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
+            vram[offset] = 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            //SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
         }
       }
     }
