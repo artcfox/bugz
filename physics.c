@@ -443,6 +443,8 @@ const uint8_t MapTileToLadderMiddle[] PROGMEM = {
   47 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET,
 };
 
+#define BaseMapIsSolid PgmBitArray_readBit
+
 __attribute__(( optimize("Os") ))
 static void DrawTreasure(const uint8_t x, const uint8_t y)
 {
@@ -453,13 +455,13 @@ static void DrawTreasure(const uint8_t x, const uint8_t y)
 }
 
 __attribute__(( optimize("Os") ))
-static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2)
+static void DrawOneWay(const uint8_t y, const uint8_t x1, const uint8_t x2, const uint8_t* const map)
 {
   // In this function, using GetTile/SetTile produces smaller code than using vram directly
   if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
     for (uint8_t x = x1; x <= x2; ++x) {
       uint8_t t = GetTile(x, y);
-      if ((t >= FIRST_ABOVEGROUND_TILE) && (t <= LAST_ABOVEGROUND_TILE))
+      if ((t >= FIRST_ABOVEGROUND_TILE) && (t <= LAST_ABOVEGROUND_TILE) && ((y == SCREEN_TILES_V) || !BaseMapIsSolid(map, (y + 1) * SCREEN_TILES_H + x)))
         SetTile(x, y, t + ABOVEGROUND_TO_ABOVEGROUND_ONE_WAY_OFFSET);
     }
   }
@@ -516,7 +518,6 @@ static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t 
     //SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME);  // get next digit
 }
 
-#define BaseMapIsSolid PgmBitArray_readBit
 
 // Returns offset into levelData PROGMEM array
 __attribute__(( optimize("Os") ))
@@ -596,7 +597,7 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
     const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3);
     const uint8_t x1 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 1);
     const uint8_t x2 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 2);
-    DrawOneWay(y, x1, x2);
+    DrawOneWay(y, x1, x2, map);
   }
   packedOffset += oneways * 3; // 3 coordinates per oneway
   const uint8_t ladders = ladderCount(levelOffset);
