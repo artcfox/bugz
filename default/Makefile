@@ -11,10 +11,18 @@ CC = avr-gcc
 INFO=../gameinfo.properties
 UZEBIN_DIR=../../../bin
 
+## Escape spaces in maxer path (due to custom sounds.inc)
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+SPACE_ESC := \\$(SPACE)
+MIX_PATH := $(realpath ../data/sounds.inc)
+MIX_PATH_ESC := $(subst $(SPACE),$(SPACE_ESC),$(MIX_PATH))
+
 ## Kernel settings
 KERNEL_DIR = ../../../kernel
 KERNEL_OPTIONS  = -DVIDEO_MODE=3 -DINTRO_LOGO=0 -DSCROLLING=0 -DSOUND_MIXER=1
 KERNEL_OPTIONS += -DMAX_SPRITES=12 -DRAM_TILES_COUNT=36 -DSCREEN_TILES_V=28
+KERNEL_OPTIONS += -DMIXER_WAVES=\"$(MIX_PATH_ESC)\"
 
 ## Options common to compile, link and assembly rules
 COMMON = -mmcu=$(MCU)

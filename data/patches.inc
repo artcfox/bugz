@@ -34,7 +34,7 @@
 
 //FX: jump
 const char patch00[] PROGMEM ={
-0,PC_WAVE,3,
+0,PC_WAVE,0,
 0,PC_ENV_SPEED,-8,
 0,PC_PITCH,80,
 1,PC_NOTE_UP,4,
@@ -44,7 +44,7 @@ const char patch00[] PROGMEM ={
 
 //FX: kill monster
 const char patch01[] PROGMEM ={
-0,PC_WAVE,4,
+0,PC_WAVE,1,
 0,PC_ENV_SPEED,-8,
 1,PC_PITCH,84,
 1,PC_PITCH,80,
@@ -56,7 +56,7 @@ const char patch01[] PROGMEM ={
 
 //FX: cookie
 const char patch02[] PROGMEM ={
-0,PC_WAVE,4,
+0,PC_WAVE,1,
 0,PC_ENV_SPEED,-8,
 1,PC_PITCH,95,
 1,PC_NOTE_UP,2,
@@ -67,7 +67,7 @@ const char patch02[] PROGMEM ={
 
 //FX: player death
 const char patch03[] PROGMEM ={
-0,PC_WAVE,4,
+0,PC_WAVE,1,
 0,PC_ENV_SPEED,-16,
 1,PC_PITCH,54,
 1,PC_NOTE_DOWN,2,
@@ -76,19 +76,9 @@ const char patch03[] PROGMEM ={
 0,PATCH_END
 };
 
-/* //FX: unused */
-/* const char patch04[] PROGMEM ={ */
-/* 0,PC_WAVE,4, */
-/* 0,PC_ENV_SPEED,0, */
-/* 1,PC_PITCH,100, */
-/* 1,PC_NOTE_CUT,0, */
-/* 0,PATCH_END */
-/* }; */
-	
 const struct PatchStruct patches[] PROGMEM = {
 {0,NULL,patch00,0,0},
 {0,NULL,patch01,0,0},
 {0,NULL,patch02,0,0},
 {0,NULL,patch03,0,0},
-/* {0,NULL,patch04,0,0}, */
 };
