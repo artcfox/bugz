@@ -738,6 +738,40 @@ static inline bool overlap(const int16_t x1, const int16_t y1, const uint8_t w1,
 /*   ++globalFrameCounter; */
 /* } */
 
+#define EEPROM_ID 0x0089
+#define EEPROM_SAVEGAME_VERSION 0x0000
+
+struct EEPROM_SAVEGAME;
+typedef struct EEPROM_SAVEGAME EEPROM_SAVEGAME;
+
+struct EEPROM_SAVEGAME {
+  uint16_t id;
+  uint16_t version;
+  uint16_t score;
+  char reserved[26];
+} __attribute__ ((packed));
+
+static uint16_t LoadHighScore(void)
+{
+  EEPROM_SAVEGAME save = {0};
+  uint8_t retval = EepromReadBlock(EEPROM_ID, (struct EepromBlockStruct*)&save);
+  if (retval == EEPROM_ERROR_BLOCK_NOT_FOUND || save.version == 0xFFFF) {
+    save.id = EEPROM_ID;
+    save.version = EEPROM_SAVEGAME_VERSION;
+    EepromWriteBlock((struct EepromBlockStruct*)&save);
+  }
+  return save.score;
+}
+
+static void SaveHighScore(const uint16_t score)
+{
+  EEPROM_SAVEGAME save = {0};
+  save.id = EEPROM_ID;
+  save.version = EEPROM_SAVEGAME_VERSION;
+  save.score = score;
+  EepromWriteBlock((struct EepromBlockStruct*)&save);
+}
+
 const uint8_t copyright[] PROGMEM = {
   LAST_FIRE_TILE + 9, FIRST_SKY_TILE + SKY_TILES_IN_THEME, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2,
   FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1,
@@ -755,7 +789,7 @@ const uint8_t p1_vs_p2[] PROGMEM = {
 };
 
 __attribute__(( optimize("Os") ))
-static GAME_FLAGS doTitleScreen(ENTITY* const monster)
+static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
 {
   // Switch to the last animation row, where the title screen tiles are
   SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * 2);
@@ -774,7 +808,6 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
   for (uint8_t i = 0; i < 2; ++i) {
     vram[offset + (SCREEN_TILES_H * 2 * i)] = FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i + RAM_TILES_COUNT;
     vram[offset + (SCREEN_TILES_H * 2 * i) + 1] = FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10 + RAM_TILES_COUNT;
-
     //SetTile(11, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i);
     //SetTile(12, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10);
   }
@@ -788,9 +821,24 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster)
   bool fadedIn = false;
   bool wasReleased = false;
 
+  *highScore = LoadHighScore();
+
   sprites[0].x -= 4;
 
   for (;;) {
+    if (selection == 0 && *highScore != 0) { // 1P
+      // Using SetTile here results in smaller code
+      SetTile(11, 24, LAST_FIRE_TILE + 10);
+      SetTile(12, 24, LAST_FIRE_TILE + 8);
+      DisplayNumber(18, 24, *highScore, 5, 1);
+    } else {
+      // erase the display of the high score
+      offset = 24 * SCREEN_TILES_H + 11;
+      for (uint8_t i = 0; i < 8; ++i)
+        vram[offset + i] = FIRST_SKY_TILE + SKY_TILES_IN_THEME + RAM_TILES_COUNT;
+        //SetTile(i, 17 + j * 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME);
+    }
+
     sprites[0].y = (vt2p((17 + selection * 2)) + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 
     for (uint8_t i = 0; i < MONSTERS; ++i)
@@ -854,7 +902,7 @@ int main()
   ENTITY monster[MONSTERS];
   uint16_t gameScore[PLAYERS] = {0};
   uint16_t levelScore[PLAYERS];
-
+  uint16_t highScore = 0;
   uint8_t currentLevel;
   uint16_t levelOffset;
   uint8_t theme;
@@ -902,7 +950,7 @@ int main()
       levelScore[i] = gameScore[i];
 
     if (currentLevel == 0) {
-      gameType = doTitleScreen(monster);
+      gameType = doTitleScreen(monster, &highScore);
       currentLevel = 1;
 
       for (uint8_t i = 0; i < PLAYERS; ++i)
@@ -1163,8 +1211,12 @@ int main()
               e->interacts = false;
               e->invincible = true;
             }
-            for (uint8_t i = 0; i < PLAYERS; ++i)
+            for (uint8_t i = 0; i < PLAYERS; ++i) {
+              uint16_t prev = gameScore[i];
               gameScore[i] = levelScore[i] + timer; // add time bonus
+              if (gameScore[i] < prev)
+                gameScore[i] = -1; // prevent rollover
+            }
             timer = 0;
             ++levelEndTimer; // initiate level end sequence
           }
@@ -1173,6 +1225,8 @@ int main()
           hide_exit_sign();
           FadeOut(1, false); // asynchronous fade to black
         } else if (levelEndTimer == 60) {
+          if ((gameType & GFLAG_1P) && (gameScore[0] > highScore))
+            SaveHighScore(gameScore[0]);
           for (uint8_t i = 0; i < MAX_SPRITES; ++i)
             sprites[i].x = OFF_SCREEN;
           if (++currentLevel == LEVELS)

@@ -145,7 +145,7 @@
 #define FIRST_FIRE_TILE (LAST_DIGIT_TILE + 1)
 #define LAST_FIRE_TILE ((FIRST_FIRE_TILE + THEMES_N * FIRE_TILES_IN_THEME) - 1)
 
-#define TITLE_SCREEN_TILES 9
+#define TITLE_SCREEN_TILES 10
 
 #define TREASURE_TO_SKY_OFFSET (FIRST_SKY_TILE - FIRST_TREASURE_TILE)
 
@@ -216,7 +216,7 @@ struct BUTTON_INFO {
   uint16_t prev;
   uint16_t pressed;
   //uint16_t released;
-};
+} __attribute__ ((packed));
 
 struct PLAYER;
 typedef struct PLAYER PLAYER;
