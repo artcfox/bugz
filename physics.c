@@ -751,6 +751,7 @@ struct EEPROM_SAVEGAME {
   char reserved[26];
 } __attribute__ ((packed));
 
+__attribute__(( optimize("Os") ))
 static uint16_t LoadHighScore(void)
 {
   EEPROM_SAVEGAME save = {0};
@@ -763,6 +764,7 @@ static uint16_t LoadHighScore(void)
   return save.score;
 }
 
+__attribute__(( optimize("Os") ))
 static void SaveHighScore(const uint16_t score)
 {
   EEPROM_SAVEGAME save = {0};
@@ -782,11 +784,13 @@ const uint8_t copyright[] PROGMEM = {
   LAST_FIRE_TILE + 4,
 };
 
+#if (PLAYERS == 2)
 const uint8_t p1_vs_p2[] PROGMEM = {
   FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
   LAST_FIRE_TILE + 1, LAST_FIRE_TILE + 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
   FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2,
 };
+#endif // (PLAYERS == 2)
 
 __attribute__(( optimize("Os") ))
 static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
@@ -799,13 +803,15 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
     vram[offset + i] = pgm_read_byte(&copyright[i]) + RAM_TILES_COUNT;
   //SetTile(5 + i, 13, pgm_read_byte(&copyright[i]));
 
+#if (PLAYERS == 2)
   offset = 21 * SCREEN_TILES_H + 11;
   for (uint8_t i = 0; i < NELEMS(p1_vs_p2); ++i)
     vram[offset + i] = pgm_read_byte(&p1_vs_p2[i]) + RAM_TILES_COUNT;
     //SetTile(11 + i, 21, pgm_read_byte(&p1_vs_p2[i]));
+#endif // (PLAYERS == 2)
 
   offset = 17 * SCREEN_TILES_H + 11;
-  for (uint8_t i = 0; i < 2; ++i) {
+  for (uint8_t i = 0; i < PLAYERS; ++i) {
     vram[offset + (SCREEN_TILES_H * 2 * i)] = FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i + RAM_TILES_COUNT;
     vram[offset + (SCREEN_TILES_H * 2 * i) + 1] = FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10 + RAM_TILES_COUNT;
     //SetTile(11, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i);
@@ -857,7 +863,8 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
     held = ReadJoypad(0);
     uint16_t pressed = held & (held ^ prev);
 
-    // Check for level select buttons (hold select, and press a left or right shoulder button)
+#if (PLAYERS == 2)
+    // Check for mode switch buttons
     if (pressed & BTN_DOWN) {
       TriggerFx(3, 128, true);
       if (++selection == 3)
@@ -868,18 +875,23 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
       if (--selection == 255)
         selection = 2;
     }
+#endif // (PLAYERS == 2)
+
     if ((held & BTN_START) == 0)
       wasReleased = true;
 
     if ((pressed & BTN_START) && wasReleased) {
       TriggerFx(2, 128, true);
-      for (uint8_t j = 0; j < 3; ++j)
+#if (PLAYERS == 2)
+      for (uint8_t j = 0; j < 3; ++j) {
         if (j != selection) {
           offset = (17 + (2 * j)) * SCREEN_TILES_H + 11;
           for (uint8_t i = 0; i < 8; ++i)
             vram[offset + i] = FIRST_SKY_TILE + SKY_TILES_IN_THEME + RAM_TILES_COUNT;
             //SetTile(i, 17 + j * 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME);
         }
+      }
+#endif // (PLAYERS == 2)
 
       WaitVsync(32);
       switch (selection) {
@@ -1267,13 +1279,14 @@ int main()
             break; // restart level
         }
       } else {
+        // Stop showing the victory level when any player presses START
+        if ((currentLevel == LEVELS - 1) && ((pressed & BTN_START) || (player[PLAYERS - 1].buttons.pressed & BTN_START)))
+          goto title_screen;
+        
         // Check for both players holding level restart button at the same time
         if (((pressed & BTN_START) && (player[PLAYERS - 1].buttons.held & BTN_START)) ||
             ((held & BTN_START) && (player[PLAYERS - 1].buttons.pressed & BTN_START))) {
-          if (currentLevel == LEVELS - 1) // victory level
-            goto title_screen;
-          else
-            break;
+          break;
         }
 
         // Check for respawn button (any button other than START)
