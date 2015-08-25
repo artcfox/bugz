@@ -224,7 +224,7 @@ const uint8_t levelData[] PROGMEM = {
 // Include the auto-generated table of level offsets (uint16_t levelOffsets[numLevels])
 #include "editor/levels/level_offsets.inc"
 
-  1,  // uint8_t theme
+  2,  // uint8_t theme
   LE(0),  // uint16_t timeBonus
   IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X,  // INITIAL_FLAGS playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX),  // int16_t playerMaxDX[2]
@@ -257,7 +257,7 @@ const uint8_t levelData[] PROGMEM = {
   ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 #include "editor/levels/0010-prototype_level.xcf.png.inc"
 
-  1, // uint8_t theme;
+  2, // uint8_t theme;
   LE(100), // uint16_t timeBonus
   0, 0, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
@@ -273,7 +273,7 @@ const uint8_t levelData[] PROGMEM = {
   BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 #include "editor/levels/0020-test_level.xcf.png.inc"
 
-  2, // uint8_t theme;
+  1, // uint8_t theme;
   LE(100), // uint16_t timeBonus
   IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
@@ -289,7 +289,7 @@ const uint8_t levelData[] PROGMEM = {
   BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 #include "editor/levels/0030-space_level.xcf.png.inc"
 
-  2, // uint8_t theme;
+  1, // uint8_t theme;
   LE(0), // uint16_t timeBonus
   IFLAG_SPRITE_FLIP_X, 0, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
@@ -371,76 +371,58 @@ const uint8_t levelData[] PROGMEM = {
 
 const uint8_t MapTileToLadderTop[] PROGMEM = {
   // If a ladder top overlaps a treasure tile, the treasure gets replaced with open sky and gets a ladder top overlaid
-  0 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 1 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
-  2 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 3 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
-  4 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 5 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
-  6 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 7 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
-  8 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 9 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
-  10 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 11 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
-  12 + TREASURE_TO_SKY_LADDER_TOP_OFFSET, 13 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
-  14 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  0 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  1 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  2 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  3 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
+  4 + TREASURE_TO_SKY_LADDER_TOP_OFFSET,
 
   // Open sky tiles get a ladder top overlaid
-  15 + SKY_TO_SKY_LADDER_TOP_OFFSET, 16 + SKY_TO_SKY_LADDER_TOP_OFFSET,
-  17 + SKY_TO_SKY_LADDER_TOP_OFFSET, 18 + SKY_TO_SKY_LADDER_TOP_OFFSET,
-  19 + SKY_TO_SKY_LADDER_TOP_OFFSET, 20 + SKY_TO_SKY_LADDER_TOP_OFFSET,
-  21 + SKY_TO_SKY_LADDER_TOP_OFFSET, 22 + SKY_TO_SKY_LADDER_TOP_OFFSET,
-  23 + SKY_TO_SKY_LADDER_TOP_OFFSET, 24 + SKY_TO_SKY_LADDER_TOP_OFFSET,
-  25 + SKY_TO_SKY_LADDER_TOP_OFFSET, 26 + SKY_TO_SKY_LADDER_TOP_OFFSET,
-  27 + SKY_TO_SKY_LADDER_TOP_OFFSET, 28 + SKY_TO_SKY_LADDER_TOP_OFFSET,
-  29 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  5 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  6 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  7 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  8 + SKY_TO_SKY_LADDER_TOP_OFFSET,
+  9 + SKY_TO_SKY_LADDER_TOP_OFFSET,
 
   // Underground tiles get an underground ladder top overlaid
-  30 + UNDERGROUND_TO_UNDERGROUND_LADDER_TOP_OFFSET, 31 + UNDERGROUND_TO_UNDERGROUND_LADDER_TOP_OFFSET,
-  32 + UNDERGROUND_TO_UNDERGROUND_LADDER_TOP_OFFSET,
+  10 + UNDERGROUND_TO_UNDERGROUND_LADDER_TOP_OFFSET,
 
   // Aboveground tiles get an aboveground ladder top overlaid
-  33 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET, 34 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET,
-  35 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET,
+  11 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET,
 
   // Ladder tiles remain ladder tiles
-  36, 37, 38, 39, 40, 41, 42, 43, 44,
+  12, 13, 14,
 
   // One way tiles get a ladder top overlaid
-  45 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET, 46 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET,
-  47 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET,
+  15 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET,
 };
 
 const uint8_t MapTileToLadderMiddle[] PROGMEM = {
   // If a ladder middle overlaps a treasure tile, the treasure gets replaced with open sky and gets a ladder middle overlaid
-  0 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 1 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
-  2 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 3 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
-  4 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 5 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
-  6 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 7 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
-  8 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 9 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
-  10 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 11 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
-  12 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET, 13 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
-  14 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  0 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  1 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  2 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  3 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
+  4 + TREASURE_TO_SKY_LADDER_MIDDLE_OFFSET,
 
   // Open sky tiles get a ladder middle overlaid
-  15 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 16 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
-  17 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 18 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
-  19 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 20 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
-  21 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 22 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
-  23 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 24 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
-  25 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 26 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
-  27 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET, 28 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
-  29 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  5 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  6 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  7 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  8 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
+  9 + SKY_TO_SKY_LADDER_MIDDLE_OFFSET,
 
   // Underground tiles get an underground ladder middle overlaid
-  30 + UNDERGROUND_TO_UNDERGROUND_LADDER_MIDDLE_OFFSET, 31 + UNDERGROUND_TO_UNDERGROUND_LADDER_MIDDLE_OFFSET,
-  32 + UNDERGROUND_TO_UNDERGROUND_LADDER_MIDDLE_OFFSET,
+  10 + UNDERGROUND_TO_UNDERGROUND_LADDER_MIDDLE_OFFSET,
 
   // Aboveground tiles get an aboveground ladder top (yes, TOP) overlaid
-  33 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET, 34 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET,
-  35 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET,
+  11 + ABOVEGROUND_TO_ABOVEGROUND_LADDER_TOP_OFFSET,
 
   // Ladder tiles remain ladder tiles
-  36, 37, 38, 39, 40, 41, 42, 43, 44,
+  12, 13, 14,
 
   // One way tiles get a ladder top (yes, TOP) overlaid
-  45 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET, 46 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET,
-  47 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET,
+  15 + ABOVEGROUND_ONE_WAY_TO_ABOVEGROUND_ONE_WAY_LADDER_TOP_OFFSET,
 };
 
 #define BaseMapIsSolid PgmBitArray_readBit
@@ -487,14 +469,14 @@ static void DrawLadder(const uint8_t x, const uint8_t y1, const uint8_t y2)
 }
 
 __attribute__(( optimize("Os") ))
-static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2, const uint8_t theme)
+static void DrawFire(const uint8_t y, const uint8_t x1, const uint8_t x2)
 {
   // In this function, using GetTile/SetTile produces smaller code than using vram directly
   if ((y < SCREEN_TILES_V) && (x1 < SCREEN_TILES_H) && (x2 < SCREEN_TILES_H)) {
     for (uint8_t x = x1; x <= x2; ++x) {
       uint8_t t = GetTile(x, y);
       if (t < FIRST_UNDERGROUND_TILE)
-        SetTile(x, y, FIRST_FIRE_TILE + theme * FIRE_TILES_IN_THEME);
+        SetTile(x, y, FIRST_FIRE_TILE);
     }
   }
 }
@@ -510,11 +492,11 @@ static inline void entityInitialXY(const uint16_t levelOffset, const uint8_t i, 
   *y = PgmPacked5Bit_read(packedCoordinatesStart, i * 2 + 1);
 }
 
-static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t pad, const uint8_t theme)
+static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t pad)
 {
   uint16_t offset = y * SCREEN_TILES_H + x;
   for (uint8_t i = 0; x != 255 && i < pad; ++i, n /= 10)
-    vram[offset--] = (n % 10) + FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + RAM_TILES_COUNT; // get next digit
+    vram[offset--] = (n % 10) + FIRST_DIGIT_TILE + RAM_TILES_COUNT; // get next digit
     //SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME);  // get next digit
 }
 
@@ -535,6 +517,8 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
   if (*theme >= THEMES_N) // something major went wrong
     return 0xFFFF; // bogus value
 
+  SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * *theme);
+
   *timeBonus = timeBonus(levelOffset) + 1;
   if (*timeBonus > 999)
     *timeBonus = 1000;
@@ -547,15 +531,15 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
 
       if (BaseMapIsSolid(map, offset/* x, y */)) {
         if (y == 0 || BaseMapIsSolid(map, offset - SCREEN_TILES_H/* x, y - 1 */)) { // if we are the top tile, or there is a solid tile above us
-          vram[offset] = FIRST_UNDERGROUND_TILE + (*theme * UNDERGROUND_TILES_IN_THEME) + RAM_TILES_COUNT; // underground tile
+          vram[offset] = FIRST_UNDERGROUND_TILE + RAM_TILES_COUNT; // underground tile
           //SetTile(x, y, 0 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // underground tile
         } else {
-          vram[offset] = FIRST_ABOVEGROUND_TILE + (*theme * ABOVEGROUND_TILES_IN_THEME) + RAM_TILES_COUNT; // aboveground tile
+          vram[offset] = FIRST_ABOVEGROUND_TILE + RAM_TILES_COUNT; // aboveground tile
           //SetTile(x, y, 1 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // aboveground tile
         }
       } else { // we are a sky tile
         if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
-          vram[offset] = FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT; // full sky tile
+          vram[offset] = FIRST_SKY_TILE + RAM_TILES_COUNT; // full sky tile
           //SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME)); // full sky tile
         } else { // interior tile
           bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(map, offset + SCREEN_TILES_H - 1/* x - 1, y + 1 */));
@@ -563,19 +547,19 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
           bool solidBelow = BaseMapIsSolid(map, offset + SCREEN_TILES_H/* x, y + 1 */);
 
           if (!solidLDiag && !solidRDiag && solidBelow) // island
-            vram[offset] = 1 + FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            vram[offset] = 1 + FIRST_SKY_TILE + RAM_TILES_COUNT;
             //SetTile(x, y, 1 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
-            vram[offset] = 2 + FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            vram[offset] = 2 + FIRST_SKY_TILE + RAM_TILES_COUNT;
             //SetTile(x, y, 2 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
-            vram[offset] = 3 + FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            vram[offset] = 3 + FIRST_SKY_TILE + RAM_TILES_COUNT;
             //SetTile(x, y, 3 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
-            vram[offset] = 4 + FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            vram[offset] = 4 + FIRST_SKY_TILE + RAM_TILES_COUNT;
             //SetTile(x, y, 4 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else // clear all around
-            vram[offset] = FIRST_SKY_TILE + (*theme * SKY_TILES_IN_THEME) + RAM_TILES_COUNT;
+            vram[offset] = FIRST_SKY_TILE + RAM_TILES_COUNT;
             //SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
         }
       }
@@ -613,7 +597,7 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
     const uint8_t y = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3);
     const uint8_t x1 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 1);
     const uint8_t x2 = PgmPacked5Bit_read(packedCoordinatesStart, packedOffset + i * 3 + 2);
-    DrawFire(y, x1, x2, *theme);
+    DrawFire(y, x1, x2);
   }
 
   return levelOffset;
@@ -775,20 +759,20 @@ static void SaveHighScore(const uint16_t score)
 }
 
 const uint8_t copyright[] PROGMEM = {
-  LAST_FIRE_TILE + 9, FIRST_SKY_TILE + SKY_TILES_IN_THEME, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2,
-  FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1,
-  FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 5, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
+  LAST_FIRE_TILE + 9, FIRST_SKY_TILE, FIRST_DIGIT_TILE + 2,
+  FIRST_DIGIT_TILE, FIRST_DIGIT_TILE + 1,
+  FIRST_DIGIT_TILE + 5, FIRST_SKY_TILE,
   LAST_FIRE_TILE + 3, LAST_FIRE_TILE + 4, LAST_FIRE_TILE + 5, LAST_FIRE_TILE + 5,
-  FIRST_SKY_TILE + SKY_TILES_IN_THEME, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10, LAST_FIRE_TILE + 4,
+  FIRST_SKY_TILE, FIRST_DIGIT_TILE + 10, LAST_FIRE_TILE + 4,
   LAST_FIRE_TILE + 6, LAST_FIRE_TILE + 7, LAST_FIRE_TILE + 8, LAST_FIRE_TILE + 6,
   LAST_FIRE_TILE + 4,
 };
 
 #if (PLAYERS == 2)
 const uint8_t p1_vs_p2[] PROGMEM = {
-  FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
-  LAST_FIRE_TILE + 1, LAST_FIRE_TILE + 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME,
-  FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 2,
+  FIRST_DIGIT_TILE + 10, FIRST_DIGIT_TILE + 1, FIRST_SKY_TILE,
+  LAST_FIRE_TILE + 1, LAST_FIRE_TILE + 2, FIRST_SKY_TILE,
+  FIRST_DIGIT_TILE + 10, FIRST_DIGIT_TILE + 2,
 };
 #endif // (PLAYERS == 2)
 
@@ -796,7 +780,9 @@ __attribute__(( optimize("Os") ))
 static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
 {
   // Switch to the last animation row, where the title screen tiles are
-  SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * 2);
+  //SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * 2);
+  SetTileTable((tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * 2) + 
+               64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * 2/*pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP])*/);
 
   uint16_t offset = 13 * SCREEN_TILES_H + 5;
   for (uint8_t i = 0; i < NELEMS(copyright); ++i)
@@ -812,8 +798,8 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
 
   offset = 17 * SCREEN_TILES_H + 11;
   for (uint8_t i = 0; i < PLAYERS; ++i) {
-    vram[offset + (SCREEN_TILES_H * 2 * i)] = FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i + RAM_TILES_COUNT;
-    vram[offset + (SCREEN_TILES_H * 2 * i) + 1] = FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10 + RAM_TILES_COUNT;
+    vram[offset + (SCREEN_TILES_H * 2 * i)] = FIRST_DIGIT_TILE + 1 + i + RAM_TILES_COUNT;
+    vram[offset + (SCREEN_TILES_H * 2 * i) + 1] = FIRST_DIGIT_TILE + 10 + RAM_TILES_COUNT;
     //SetTile(11, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i);
     //SetTile(12, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10);
   }
@@ -836,12 +822,12 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
       // Using SetTile here results in smaller code
       SetTile(11, 24, LAST_FIRE_TILE + 10);
       SetTile(12, 24, LAST_FIRE_TILE + 8);
-      DisplayNumber(18, 24, *highScore, 5, 1);
+      DisplayNumber(18, 24, *highScore, 5);
     } else {
       // erase the display of the high score
       offset = 24 * SCREEN_TILES_H + 11;
       for (uint8_t i = 0; i < 8; ++i)
-        vram[offset + i] = FIRST_SKY_TILE + SKY_TILES_IN_THEME + RAM_TILES_COUNT;
+        vram[offset + i] = FIRST_SKY_TILE + RAM_TILES_COUNT;
         //SetTile(i, 17 + j * 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME);
     }
 
@@ -887,7 +873,7 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
         if (j != selection) {
           offset = (17 + (2 * j)) * SCREEN_TILES_H + 11;
           for (uint8_t i = 0; i < 8; ++i)
-            vram[offset + i] = FIRST_SKY_TILE + SKY_TILES_IN_THEME + RAM_TILES_COUNT;
+            vram[offset + i] = FIRST_SKY_TILE + RAM_TILES_COUNT;
             //SetTile(i, 17 + j * 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME);
         }
       }
@@ -976,23 +962,23 @@ int main()
     if (currentLevel == LEVELS - 1)
       timer = 0; // don't display the timer or level number on the victory screen
     else
-      DisplayNumber(3, 0, currentLevel, 2, theme); // display the level number
+      DisplayNumber(3, 0, currentLevel, 2); // display the level number
 
     // Display the player numbers
     uint16_t offset = 0 * SCREEN_TILES_H + 11;
-    vram[offset] = FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10 + RAM_TILES_COUNT;
-    vram[offset + 1] = FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 1 + RAM_TILES_COUNT;
+    vram[offset] = FIRST_DIGIT_TILE + 10 + RAM_TILES_COUNT;
+    vram[offset + 1] = FIRST_DIGIT_TILE + 1 + RAM_TILES_COUNT;
     //SetTile(11, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
     //SetTile(12, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 1);
-    DisplayNumber(18, 0, levelScore[0], 5, theme);
+    DisplayNumber(18, 0, levelScore[0], 5);
 
     if (!(gameType & GFLAG_1P)) {
       offset = 0 * SCREEN_TILES_H + 20;
-      vram[offset] = FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10 + RAM_TILES_COUNT;
-      vram[offset + 1] = FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 2 + RAM_TILES_COUNT;
+      vram[offset] = FIRST_DIGIT_TILE + 10 + RAM_TILES_COUNT;
+      vram[offset + 1] = FIRST_DIGIT_TILE + 2 + RAM_TILES_COUNT;
       //SetTile(20, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
       //SetTile(21, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 2);
-      DisplayNumber(18 + (PLAYERS - 1) * 9, 0, levelScore[PLAYERS - 1], 5, theme);
+      DisplayNumber(18 + (PLAYERS - 1) * 9, 0, levelScore[PLAYERS - 1], 5);
     }
 
     // Main game loop
@@ -1007,9 +993,11 @@ int main()
 
       // Animate all background tiles at once by modifying the tileset pointer
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
-        SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
+        SetTileTable((tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * theme) + 
+                     64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
+        //        SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
         if (timer != 0)
-          DisplayNumber(8, 0, --timer, 3, theme); // increment the in-game time display
+          DisplayNumber(8, 0, --timer, 3); // increment the in-game time display
       }
       // Compile-time assert that we are working with a power of 2
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
@@ -1092,7 +1080,7 @@ int main()
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
               levelScore[p] += 25;
-              DisplayNumber(18 + p * 9, 0, levelScore[p], 5, theme);
+              DisplayNumber(18 + p * 9, 0, levelScore[p], 5);
               if (e->update == entity_update)
                 e->monsterhop = true; // player should now do the monster hop, but only if gravity applies
             } else {
@@ -1194,7 +1182,7 @@ int main()
             TriggerFx(2, 128, true);
             treasuresLeft -= treasureCollected;
             levelScore[i] += treasureCollected * 5; // each treasure is worth 5 points
-            DisplayNumber(18 + i * 9, 0, levelScore[i], 5, theme);
+            DisplayNumber(18 + i * 9, 0, levelScore[i], 5);
 
             // Check to see if the last treasure has just been collected
             if (treasuresLeft == 0) {
@@ -1294,7 +1282,7 @@ int main()
           ENTITY* e = (ENTITY*)&player[i];
           if (e->dead && (e->render == null_render) && (player[i].buttons.held && (player[i].buttons.held & ~BTN_START))) {
             levelScore[i] = gameScore[i]; // respawning in multiplayer mode resets your score for that level
-            DisplayNumber(18 + i * 9, 0, levelScore[i], 5, theme);
+            DisplayNumber(18 + i * 9, 0, levelScore[i], 5);
             spawnPlayer((PLAYER*)e, levelOffset, i, gameType);
           }
         }
