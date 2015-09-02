@@ -242,7 +242,7 @@ const uint8_t levelData[] PROGMEM = {
 
 
   0, // uint8_t theme
-  LE(150), // uint16_t timeBonus
+  LE(300), // uint16_t timeBonus
   0, 0, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
   LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t playerImpulse[2]
@@ -258,7 +258,7 @@ const uint8_t levelData[] PROGMEM = {
 #include "editor/levels/0010-prototype_level.xcf.png.inc"
 
   2, // uint8_t theme;
-  LE(100), // uint16_t timeBonus
+  LE(200), // uint16_t timeBonus
   0, 0, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
   LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t playerImpulse[2]
@@ -274,7 +274,7 @@ const uint8_t levelData[] PROGMEM = {
 #include "editor/levels/0020-test_level.xcf.png.inc"
 
   1, // uint8_t theme;
-  LE(100), // uint16_t timeBonus
+  LE(200), // uint16_t timeBonus
   IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
   LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t playerImpulse[2]
@@ -288,6 +288,38 @@ const uint8_t levelData[] PROGMEM = {
   ENTITY_UPDATE_FLYING, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
   BEE_RENDER, CRICKET_RENDER, LADYBUG_RENDER, GRASSHOPPER_RENDER, ANT_RENDER, ANT_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
 #include "editor/levels/0030-space_level.xcf.png.inc"
+
+  0, // uint8_t theme;
+  LE(200), // uint16_t timeBonus
+  IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X, // uint8_t playerFlags[2]
+  LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
+  LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT, // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER, // RENDER_FUNCTIONS playerRenderFuncs[2]
+  IFLAG_SPRITE_FLIP_X|IFLAG_RIGHT, IFLAG_SPRITE_FLIP_X|IFLAG_RIGHT, IFLAG_SPRITE_FLIP_X|IFLAG_RIGHT, IFLAG_LEFT, IFLAG_DOWN, IFLAG_LEFT, // uint8_t monsterFlags[6]
+  LE(WORLD_METER * 4), LE(WORLD_METER * 2), LE(WORLD_METER * 3), LE(WORLD_METER * 6), LE(WORLD_METER * 8), LE(WORLD_METER * 4), // int16_t monsterMaxDX[6]
+  LE(WORLD_JUMP), LE(WORLD_JUMP >> 1), LE(WORLD_JUMP), 1, 14, 13, 23, LE(WORLD_JUMP), // int16_t monsterImpulse[6]
+  AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_HOP_UNTIL_BLOCKED, AI_WALK_UNTIL_BLOCKED_OR_LEDGE, AI_FLY_HORIZONTAL, AI_FLY_VERTICAL, AI_HOP_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
+  ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE_FLYING, ENTITY_UPDATE_FLYING, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
+  ANT_RENDER, CRICKET_RENDER, ANT_RENDER, FRUITFLY_RENDER, SPIDER_RENDER, GRASSHOPPER_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
+#include "editor/levels/0040-underground_level.xcf.png.inc"
+
+  2, // uint8_t theme;
+  LE(200), // uint16_t timeBonus
+  IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X, // uint8_t playerFlags[2]
+  LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
+  LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t playerImpulse[2]
+  PLAYER_INPUT, PLAYER_INPUT, // INPUT_FUNCTIONS playerInputFuncs[2]
+  ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS playerUpdateFuncs[2]
+  PLAYER_RENDER, PLAYER_RENDER, // RENDER_FUNCTIONS playerRenderFuncs[2]
+  IFLAG_SPRITE_FLIP_X|IFLAG_RIGHT, IFLAG_SPRITE_FLIP_X|IFLAG_RIGHT, IFLAG_SPRITE_FLIP_X|IFLAG_RIGHT, IFLAG_LEFT, IFLAG_LEFT,  IFLAG_LEFT, // uint8_t monsterFlags[6]
+  LE(WORLD_METER * 4), LE(WORLD_METER * 2), LE(WORLD_METER * 3), LE(WORLD_METER * 4), LE(WORLD_METER * 2), LE(WORLD_METER * 3), // int16_t monsterMaxDX[6]
+  LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t monsterImpulse[6]
+  AI_HOP_UNTIL_BLOCKED, AI_HOP_UNTIL_BLOCKED, AI_HOP_UNTIL_BLOCKED, AI_HOP_UNTIL_BLOCKED, AI_HOP_UNTIL_BLOCKED, AI_HOP_UNTIL_BLOCKED, // INPUT_FUNCTIONS monsterInputFuncs[6]
+  ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, ENTITY_UPDATE, // UPDATE_FUNCTIONS monsterUpdateFuncs[6]
+  GRASSHOPPER_RENDER, GRASSHOPPER_RENDER, GRASSHOPPER_RENDER, GRASSHOPPER_RENDER, GRASSHOPPER_RENDER, GRASSHOPPER_RENDER, // RENDER_FUNCTIONS monsterRenderFuncs[6]
+#include "editor/levels/0050-grasshoppers_level.xcf.png.inc"
 
   1, // uint8_t theme;
   LE(0), // uint16_t timeBonus
@@ -604,7 +636,7 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
 }
 
 // How many frames to wait between animating treasure
-#define BACKGROUND_FRAME_SKIP 16
+#define BACKGROUND_FRAME_SKIP 8
 // Defines the order in which the tileset "rows" are swapped in for animating tiles
 const uint8_t backgroundAnimation[] PROGMEM = { 0, 1, 2, 1 };
 
@@ -617,7 +649,6 @@ static void killPlayer(ENTITY* const e)
   e->monsterhop = true;
   e->dy = 0;
   e->interacts = false;
-  //e->input = null_input;
   e->update = entity_update_dying;
 }
 
@@ -768,6 +799,15 @@ const uint8_t copyright[] PROGMEM = {
   LAST_FIRE_TILE + 4,
 };
 
+const uint8_t x_player[] PROGMEM = {
+  FIRST_DIGIT_TILE + 10,
+  LAST_FIRE_TILE + 11,
+  LAST_FIRE_TILE + 4,
+  LAST_FIRE_TILE + 12,
+  LAST_FIRE_TILE + 13,
+  LAST_FIRE_TILE + 14,
+};
+
 #if (PLAYERS == 2)
 const uint8_t p1_vs_p2[] PROGMEM = {
   FIRST_DIGIT_TILE + 10, FIRST_DIGIT_TILE + 1, FIRST_SKY_TILE,
@@ -799,7 +839,9 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
   offset = 17 * SCREEN_TILES_H + 11;
   for (uint8_t i = 0; i < PLAYERS; ++i) {
     vram[offset + (SCREEN_TILES_H * 2 * i)] = FIRST_DIGIT_TILE + 1 + i + RAM_TILES_COUNT;
-    vram[offset + (SCREEN_TILES_H * 2 * i) + 1] = FIRST_DIGIT_TILE + 10 + RAM_TILES_COUNT;
+    for (uint8_t j = 0; j < NELEMS(x_player); ++j)
+      vram[offset + (SCREEN_TILES_H * 2 * i) + 2 + j] = pgm_read_byte(&x_player[j]) + RAM_TILES_COUNT;
+    /* vram[offset + (SCREEN_TILES_H * 2 * i) + 1] = FIRST_DIGIT_TILE + 10 + RAM_TILES_COUNT; */
     //SetTile(11, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i);
     //SetTile(12, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10);
   }

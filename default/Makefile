@@ -11,7 +11,11 @@ CC = avr-gcc
 INFO=../gameinfo.properties
 UZEBIN_DIR=../../../bin
 
-## Escape spaces in maxer path (due to custom sounds.inc)
+## Used for programming the HEX file directly
+PROGRAMMER = -c avrispmkII -P usb
+AVRDUDE = avrdude $(PROGRAMMER) -p $(MCU)
+
+## Escape spaces in mixer path (due to custom sounds.inc)
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
 SPACE_ESC := \\$(SPACE)
@@ -96,7 +100,7 @@ $(TARGET): $(OBJECTS)
 
 %.hex: $(TARGET)
 	avr-objcopy -O ihex $(HEX_FLASH_FLAGS)  $< $@
-	avr-size -A --format=avr --mcu=$(DEVICE) $^
+	avr-size -A --format=avr --mcu=$(MCU) $^
 
 %.eep: $(TARGET)
 	-avr-objcopy $(HEX_EEPROM_FLAGS) -O ihex $< $@ || exit 0
@@ -108,10 +112,15 @@ $(TARGET): $(OBJECTS)
 	-$(UZEBIN_DIR)/packrom $(GAME).hex $@ $(INFO)
 
 ## Clean target
-.PHONY: clean
+.PHONY: clean flash read_flash
 clean:
 	-rm -rf $(OBJECTS) $(GAME).eep $(GAME).elf $(GAME).hex $(GAME).lss $(GAME).map $(GAME).o $(GAME).uze dep/*
 
+flash: all
+	$(AVRDUDE) -U flash:w:$(GAME).hex:i
+
+read_flash:
+	$(AVRDUDE) -U flash:r:$(GAME).bin:r
 
 ## Other dependencies
 -include $(shell mkdir dep 2>/dev/null) $(wildcard dep/*)
