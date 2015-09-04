@@ -267,7 +267,8 @@ void entity_update(ENTITY* const e)
   bool ny = (bool)nv(e->y); // true if entity overlaps below
   uint16_t offset = ty * SCREEN_TILES_H + tx;
   bool cell      = isSolid(vram[offset                     ] - RAM_TILES_COUNT); // equiv. GetTile(tx,     ty    )
-  bool cellright = isSolid(vram[offset + 1                 ] - RAM_TILES_COUNT); // equiv. GetTile(tx + 1, ty    )
+  uint8_t tright =         vram[offset + 1                 ] - RAM_TILES_COUNT;  // equiv. GetTile(tx + 1, ty    )
+  bool cellright = isSolid(tright); 
   bool celldown  = isSolid(vram[offset + SCREEN_TILES_H    ] - RAM_TILES_COUNT); // equiv. GetTile(tx,     ty + 1)
   uint8_t tdiag  =         vram[offset + SCREEN_TILES_H + 1] - RAM_TILES_COUNT;  // equiv. GetTile(tx + 1, ty + 1)
   bool celldiag  = isSolid(tdiag);
@@ -279,8 +280,8 @@ void entity_update(ENTITY* const e)
       e->dx = 0;           // stop horizontal velocity
     }
   } else if (e->dx < 0) {
-    if ((cell     && !cellright) ||
-        (ny && celldown && !celldiag && !isLadder(tdiag))) { // isLadder() check avoids potential glitch
+    if ((      cell     && !cellright && !isLadder(tright)) ||
+        (ny && celldown && !celldiag  && !isLadder(tdiag))) { // isLadder() checks avoid glitch
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
     }
@@ -327,7 +328,7 @@ void entity_update(ENTITY* const e)
       e->framesFalling = 0;
     }
   } else if (e->dy < 0) {
-    if ((cell      && !celldown) ||
+    if ((      cell      && !celldown) ||
         (nx && cellright && !celldiag)) {
       e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
       e->dy = 0;           // stop updard velocity
