@@ -565,7 +565,7 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
   if (*theme >= THEMES_N) // something major went wrong
     return 0xFFFF; // bogus value
 
-  SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * *theme);
+  SetTileTable(tileset + (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * *theme);
 
   *timeBonus = timeBonus(levelOffset) + 1;
   if (*timeBonus > 999)
@@ -837,8 +837,8 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
 {
   // Switch to the last animation row, where the title screen tiles are
   //SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * 2);
-  SetTileTable((tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * 2) + 
-               64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * 2/*pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP])*/);
+  SetTileTable((tileset + (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * 2) + 
+               (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * 2/*pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP])*/);
 
   uint16_t offset = 13 * SCREEN_TILES_H + 5;
   for (uint8_t i = 0; i < NELEMS(copyright); ++i)
@@ -1051,8 +1051,8 @@ int main()
 
       // Animate all background tiles at once by modifying the tileset pointer
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
-        SetTileTable((tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * theme) + 
-                     64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
+        SetTileTable((tileset + (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * theme) + 
+                     (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
         //        SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
         if (timer != 0)
           DisplayNumber(8, 0, --timer, 3); // increment the in-game time display
