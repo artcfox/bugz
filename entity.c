@@ -200,7 +200,6 @@ void entity_update(ENTITY* const e)
   bool wasRight = (e->dx > 0);
 
   int16_t ddx = 0;
-  int16_t ddy = WORLD_GRAVITY;
 
   if (e->left)
     ddx -= WORLD_ACCEL;    // entity wants to go left
@@ -211,27 +210,6 @@ void entity_update(ENTITY* const e)
     ddx += WORLD_ACCEL;    // entity wants to go right
   else if (wasRight)
     ddx -= WORLD_FRICTION; // entity was going right, but not anymore
-
-  if (e->jump && !e->jumping && !(e->falling ? (e->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
-    if (e->tag < PLAYERS)  // only play the jump sound effect when a human player is jumping
-      TriggerFx(0, 128, true);
-    e->dy = 0;             // reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
-    e->jumping = true;
-    e->jumpReleased = false;
-  }
-
-  // Bounce a bit when you stomp a monster
-  if (e->monsterhop) {
-    e->monsterhop = e->jumping = e->falling = false;
-    e->jumpReleased = true;
-    e->dy = e->framesFalling = 0;
-    ddy -= (WORLD_JUMP >> 1);
-  }
-
-  // Variable height jumping
-  if (e->jumping && e->jumpReleased && (e->dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
-      e->dy = -WORLD_CUT_JUMP_SPEED_LIMIT;
 
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
@@ -274,7 +252,7 @@ void entity_update(ENTITY* const e)
   bool celldiag  = isSolid(tdiag);
 
   if (e->dx > 0) {
-    if ((cellright && !cell) ||
+    if ((      cellright && !cell) ||
         (ny && celldiag  && !celldown)) {
       e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
@@ -286,6 +264,31 @@ void entity_update(ENTITY* const e)
       e->dx = 0;           // stop horizontal velocity
     }
   }
+
+
+  int16_t ddy = WORLD_GRAVITY;
+
+  // Jump logic
+  if (e->jump && !e->jumping && !(e->falling ? (e->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
+    if (e->tag < PLAYERS)  // only play the jump sound effect when a human player is jumping
+      TriggerFx(0, 128, true);
+    e->dy = 0;             // reset vertical velocity so jumps during grace period are consistent with jumps from ground
+    ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
+    e->jumping = true;
+    e->jumpReleased = false;
+  }
+
+  // Bounce a bit when you stomp a monster
+  if (e->monsterhop) {
+    e->monsterhop = e->jumping = e->falling = false;
+    e->jumpReleased = true;
+    e->dy = e->framesFalling = 0;
+    ddy -= (WORLD_JUMP >> 1);
+  }
+
+  // Variable height jumping
+  if (e->jumping && e->jumpReleased && (e->dy < -WORLD_CUT_JUMP_SPEED_LIMIT))
+      e->dy = -WORLD_CUT_JUMP_SPEED_LIMIT;
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
   int16_t prevY = e->y; // cache previous Y value for one-way tiles
@@ -320,7 +323,7 @@ void entity_update(ENTITY* const e)
   celldiag  = isSolidForEntity(offset + SCREEN_TILES_H + 1, ty + 1, prevY, WORLD_METER, e->down); // equiv. ... tx + 1, ty + 1
 
   if (e->dy > 0) {
-    if ((celldown && !cell) ||
+    if ((      celldown && !cell) ||
         (nx && celldiag && !cellright)) {
       e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
       e->dy = 0;           // stop downward velocity
@@ -425,11 +428,8 @@ void entity_update_flying(ENTITY* const e)
 {
   bool wasLeft = (e->dx < 0);
   bool wasRight = (e->dx > 0);
-  bool wasUp = (e->dy < 0);
-  bool wasDown = (e->dy > 0);
 
   int16_t ddx = 0;
-  int16_t ddy = 0;
 
   if (e->left)
     ddx -= WORLD_ACCEL;    // entity wants to go left
@@ -440,16 +440,6 @@ void entity_update_flying(ENTITY* const e)
     ddx += WORLD_ACCEL;    // entity wants to go right
   else if (wasRight)
     ddx -= WORLD_FRICTION; // entity was going right, but not anymore
-
-  if (e->up)
-    ddy -= WORLD_ACCEL;    // entity wants to go up
-  else if (wasUp)
-    ddy += WORLD_FRICTION; // entity was going up, but not anymore
-
-  if (e->down)
-    ddy += WORLD_ACCEL;    // entity wants to go down
-  else if (wasDown)
-    ddy -= WORLD_FRICTION; // entity was going down, but not anymore
 
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
@@ -478,6 +468,22 @@ void entity_update_flying(ENTITY* const e)
     e->x = 0;
     e->dx = 0;
   }
+
+
+  bool wasUp = (e->dy < 0);
+  bool wasDown = (e->dy > 0);
+
+  int16_t ddy = 0;
+
+  if (e->up)
+    ddy -= WORLD_ACCEL;    // entity wants to go up
+  else if (wasUp)
+    ddy += WORLD_FRICTION; // entity was going up, but not anymore
+
+  if (e->down)
+    ddy += WORLD_ACCEL;    // entity wants to go down
+  else if (wasDown)
+    ddy -= WORLD_FRICTION; // entity was going down, but not anymore
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->y += (e->dy / WORLD_FPS);
