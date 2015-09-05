@@ -306,7 +306,7 @@ const uint8_t levelData[] PROGMEM = {
 #include "editor/levels/0040-underground_level.xcf.png.inc"
 
   2, // uint8_t theme;
-  LE(200), // uint16_t timeBonus
+  LE(300), // uint16_t timeBonus
   IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
   LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t playerImpulse[2]
@@ -322,7 +322,7 @@ const uint8_t levelData[] PROGMEM = {
 #include "editor/levels/0050-grasshoppers_level.xcf.png.inc"
 
   1, // uint8_t theme;
-  LE(200), // uint16_t timeBonus
+  LE(300), // uint16_t timeBonus
   0, 0, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
   LE(WORLD_JUMP), LE(WORLD_JUMP), // int16_t playerImpulse[2]

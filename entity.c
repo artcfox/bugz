@@ -374,40 +374,37 @@ void entity_update_dying(ENTITY* const e)
     return;
   }
 
-  int16_t ddx = 0;
-  int16_t ddy = WORLD_GRAVITY;
+  // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->x += (e->dx / WORLD_FPS);
 
   // Decelerate any motion along the X axis
   if (e->dx < 0)
-    ddx += WORLD_FRICTION;
+    e->dx += WORLD_FRICTION / WORLD_FPS;
   else if (e->dx > 0)
-    ddx -= WORLD_FRICTION;
-
-  // Repurpose the monsterhop flag to bounce up a bit when you die
-  if (e->monsterhop) {
-    e->monsterhop = false;
-    ddy -= (e->impulse >> 1);
-  }
-
-  // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  e->x += (e->dx / WORLD_FPS);
-  e->dx += (ddx / WORLD_FPS);
+    e->dx -= WORLD_FRICTION / WORLD_FPS;
+  
   // When dying, we can only decelerate, so it is safe to skip the bounds check for dx
 
   // Clamp X to within screen bounds
   if (e->x > ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT))) {
     e->x = ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT));
     e->dx = 0;
-    e->visible = false; // we hit the edge of the screen, so now hide the entity
   } else if (e->x < 0) {
     e->x = 0;
     e->dx = 0;
-    e->visible = false; // we hit the edge of the screen, so now hide the entity
   }
 
   // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->y += (e->dy / WORLD_FPS);
-  e->dy += (ddy / WORLD_FPS);
+
+  // Repurpose the monsterhop flag to bounce up a bit when you die
+  if (e->monsterhop) {
+    e->monsterhop = false;
+    e->dy += (WORLD_GRAVITY - (WORLD_JUMP >> 1)) / WORLD_FPS;
+  } else {
+    e->dy += WORLD_GRAVITY / WORLD_FPS;
+  }
+
   if (e->dy < -WORLD_MAXDY)
     e->dy = -WORLD_MAXDY;
   else if (e->dy > WORLD_MAXDY)
@@ -417,11 +414,10 @@ void entity_update_dying(ENTITY* const e)
   if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
     e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
     e->dy = 0;
-    e->visible = false; // we hit the edge of the screen, so now hide the entity
+    e->visible = false; // we hit the bottom of the screen, so now hide the entity
   } else if (e->y < 0) {
     e->y = 0;
     e->dy = 0;
-    e->visible = false; // we hit the edge of the screen, so now hide the entity
   }
 }
 
