@@ -298,22 +298,25 @@ void entity_update(ENTITY* const e)
 
   int16_t ddy = WORLD_GRAVITY;
 
-  // Jump logic
-  if (e->jump && !e->jumping && !(e->falling ? (e->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
-    if (e->tag < PLAYERS)  // only play the jump sound effect when a human player is jumping
-      TriggerFx(0, 128, true);
-    e->dy = 0;             // reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
-    e->jumping = true;
-    e->jumpReleased = false;
-  }
-
   // Bounce a bit when you stomp a monster
   if (e->monsterhop) {
     e->monsterhop = e->jumping = e->falling = false;
     e->jumpReleased = true;
-    e->dy = e->framesFalling = 0;
+    e->framesFalling = 0;
+    if (e->dy > 0)
+      e->dy = 0;           // if falling down, reset vertical velocity
     ddy -= (WORLD_JUMP >> 1);
+  }
+
+  // Jump logic
+  if (e->jump && !e->jumping && !(e->falling ? (e->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
+    if (e->tag < PLAYERS)  // only play the jump sound effect when a human player is jumping
+      TriggerFx(0, 128, true);
+    if (e->dy > 0)
+      e->dy = 0;           // if falling down, reset vertical velocity so jumps during grace period are consistent with jumps from ground
+    ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
+    e->jumping = true;
+    e->jumpReleased = false;
   }
 
   // Variable height jumping
