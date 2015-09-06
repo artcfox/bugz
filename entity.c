@@ -194,6 +194,34 @@ void ai_fly_horizontal(ENTITY* const e)
   }
 }
 
+/* struct horiz { */
+/*   unsigned int left : 1; */
+/*   unsigned int wasLeft : 1; */
+/*   unsigned int right : 1; */
+/*   unsigned int wasRight : 1; */
+/*   unsigned int reserved : 4; */
+/* } __attribute__ ((packed)); */
+
+/* // e->wasRight, e->right, e->wasLeft, e->left */
+/* uint16_t ddx_table[] = { */
+/*   0, // 0 0 0 0 */
+/*   -WORLD_ACCEL / WORLD_FPS,   // 0 0 0 1 */
+/*   WORLD_FRICTION / WORLD_FPS,   // 0 0 1 0 */
+/*   -WORLD_ACCEL / WORLD_FPS,  // 0 0 1 1 */
+/*   WORLD_ACCEL / WORLD_FPS,   // 0 1 0 0 */
+/*   0,   // 0 1 0 1 */
+/*   (WORLD_FRICTION + WORLD_ACCEL) / WORLD_FPS,  // 0 1 1 0 */
+/*   0,   // 0 1 1 1 */
+/*   -WORLD_FRICTION / WORLD_FPS,   // 1 0 0 0 */
+/*   (-WORLD_ACCEL - WORLD_FRICTION) / WORLD_FPS,  // 1 0 0 1 */
+/*   0,   // 1 0 1 0 (impossible) */
+/*   0,   // 1 0 1 1 (impossible) */
+/*   WORLD_ACCEL / WORLD_FPS,   // 1 1 0 0 */
+/*   0,   // 1 1 0 1 */
+/*   0,   // 1 1 1 0 (impossible) */
+/*   0,   // 1 1 1 1 (impossible) */
+/* }; */
+
 void entity_update(ENTITY* const e)
 {
   bool wasLeft = (e->dx < 0);
@@ -214,6 +242,8 @@ void entity_update(ENTITY* const e)
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
   e->dx += (ddx / WORLD_FPS);
+  /* struct horiz h = { e->left, wasLeft, e->right, wasRight, 0 }; */
+  /* e->dx += ddx_table[*((uint8_t*)&h)]; */
   if (e->turbo) {
     if (e->dx < -(e->maxdx + WORLD_METER))
       e->dx = -(e->maxdx + WORLD_METER);
