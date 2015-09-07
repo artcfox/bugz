@@ -316,7 +316,7 @@ void entity_update(ENTITY* const e)
       e->dy = 0;           // if falling down, reset vertical velocity so jumps during grace period are consistent with jumps from ground
     ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
     e->jumping = true;
-    e->jumpReleased = false;
+    e->jumpReleased = e->falling = false;
   }
 
   // Variable height jumping
