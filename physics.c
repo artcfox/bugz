@@ -99,6 +99,8 @@ enum INPUT_FUNCTION {
   AI_HOP_UNTIL_BLOCKED_OR_LEDGE = 5,
   AI_FLY_VERTICAL = 6,
   AI_FLY_HORIZONTAL = 7,
+  AI_FLY_VERTICAL_UNDULATE = 8,
+  AI_FLY_HORIZONTAL_UNDULATE = 9,
 };
 
 typedef void (*inputFnPtr)(ENTITY*);
@@ -120,6 +122,10 @@ static inputFnPtr inputFunc(const INPUT_FUNCTION i)
     return ai_fly_vertical;
   case AI_FLY_HORIZONTAL:
     return ai_fly_horizontal;
+  case AI_FLY_VERTICAL_UNDULATE:
+    return ai_fly_vertical_undulate;
+  case AI_FLY_HORIZONTAL_UNDULATE:
+    return ai_fly_horizontal_undulate;
   default: // NULL_INPUT
     return null_input;
   }
@@ -259,6 +265,9 @@ const uint8_t levelData[] PROGMEM = {
 
 #include "data/levels/0090-must_jump_higher_level.inc"
 #include "editor/levels/0090-must_jump_higher_level.xcf.png.inc"
+
+/* #include "data/levels/0100-spiders_level.inc" */
+/* #include "editor/levels/0100-spiders_level.xcf.png.inc" */
 
   // Victory screen
 #include "data/levels/9999-victory_level.inc"
@@ -981,7 +990,7 @@ int main()
 
       // Display debugging information
       /* uint16_t sc = StackCount(); */
-      /* DisplayNumber(SCREEN_TILES_H - 3, 1, sc, 4, theme); */
+      /* DisplayNumber(SCREEN_TILES_H - 3, 1, sc, 4); */
       /* DisplayNumber(2, 0, globalFrameCounter, 3); */
       /* DisplayNumber(6, 0, localFrameCounter++, 3); */
       /* DisplayNumber(4, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */

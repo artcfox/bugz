@@ -240,6 +240,8 @@ void ai_walk_until_blocked_or_ledge(ENTITY* const e);
 void ai_hop_until_blocked_or_ledge(ENTITY* const e); // impulse and maxdx should be small enough so ledge detection doesn't trigger while jumping, and it doesn't jump off the ledge
 void ai_fly_vertical(ENTITY* const e);
 void ai_fly_horizontal(ENTITY* const e);
+void ai_fly_vertical_undulate(ENTITY* const e);
+void ai_fly_horizontal_undulate(ENTITY* const e);
 
 void entity_update(ENTITY* const e);
 void entity_update_dying(ENTITY* const e);

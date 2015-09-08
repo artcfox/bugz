@@ -194,6 +194,23 @@ void ai_fly_horizontal(ENTITY* const e)
   }
 }
 
+const uint8_t undulate_sm[] PROGMEM = { 2,2,3,3,3,4,4,4,4,4,4,4,3,3,3,2,2,2,1,1,1,0,0,0,0,0,0,0,1,1,1,2, };
+const uint8_t undulate[] PROGMEM = { 4,5,6,6,7,7,8,8,8,8,8,7,7,6,6,5,4,3,2,2,1,1,0,0,0,0,0,1,1,2,2,3, };
+
+void ai_fly_vertical_undulate(ENTITY* const e)
+{
+  ai_fly_vertical(e);
+  // Since e->framesFalling is not used for flying entities, we repurpose it here
+  e->x -= pgm_read_byte(&undulate_sm[e->framesFalling++ % NELEMS(undulate_sm)]) - 2;
+}
+
+void ai_fly_horizontal_undulate(ENTITY* const e)
+{
+  ai_fly_horizontal(e);
+  // Since e->framesFalling is not used for flying entities, we repurpose it here
+  e->y -= pgm_read_byte(&undulate[e->framesFalling++ % NELEMS(undulate)]) - 4;
+}
+
 /* struct horiz { */
 /*   unsigned int left : 1; */
 /*   unsigned int wasLeft : 1; */
