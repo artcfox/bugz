@@ -182,6 +182,8 @@ struct ENTITY {
   void (*input)(ENTITY*);
   void (*update)(ENTITY*);
   void (*render)(ENTITY*);
+  int16_t initialX;
+  int16_t initialY;
   uint8_t tag;
   int16_t x;
   int16_t y;
@@ -230,8 +232,8 @@ void null_input(ENTITY* const e);
 #define null_update null_input
 void null_render(ENTITY* const e);
 
-void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse);
-void player_init(PLAYER* const p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse);
+void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint8_t x, const uint8_t y, const int16_t maxdx, const int16_t impulse);
+void player_init(PLAYER* const p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint8_t x, const uint8_t y, const int16_t maxdx, const int16_t impulse);
 
 void player_input(ENTITY* const e);
 void ai_walk_until_blocked(ENTITY* const e);

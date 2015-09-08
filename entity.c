@@ -62,15 +62,15 @@
 void null_input(ENTITY* const e) { (void)e; }
 void null_render(ENTITY* const e) { sprites[e->tag].x = OFF_SCREEN; }
 
-void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse)
+void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint8_t x, const uint8_t y, const int16_t maxdx, const int16_t impulse)
 {
   memset(e, 0, sizeof(ENTITY));
   e->input = input;
   e->update = update;
   e->render = render;
   e->tag = tag;
-  e->x = x;
-  e->y = y;
+  e->initialX = e->x = ((int16_t)x * (TILE_WIDTH << FP_SHIFT));
+  e->initialY = e->y = ((int16_t)y * (TILE_HEIGHT << FP_SHIFT));
   e->maxdx = maxdx;
   e->impulse = impulse;
   e->visible = true;
@@ -194,21 +194,23 @@ void ai_fly_horizontal(ENTITY* const e)
   }
 }
 
-const uint8_t undulate_sm[] PROGMEM = { 2,2,3,3,3,4,4,4,4,4,4,4,3,3,3,2,2,2,1,1,1,0,0,0,0,0,0,0,1,1,1,2, };
-const uint8_t undulate[] PROGMEM = { 4,5,6,6,7,7,8,8,8,8,8,7,7,6,6,5,4,3,2,2,1,1,0,0,0,0,0,1,1,2,2,3, };
+/* const uint8_t undulate_sm[] PROGMEM = { 2,2,3,3,3,4,4,4,4,4,4,4,3,3,3,2,2,2,1,1,1,0,0,0,0,0,0,0,1,1,1,2, }; */
+/* const uint8_t undulate[] PROGMEM = { 4,5,6,6,7,7,8,8,8,8,8,7,7,6,6,5,4,3,2,2,1,1,0,0,0,0,0,1,1,2,2,3, }; */
+const uint8_t undulate_sm[] PROGMEM = { 8,10,11,12,14,15,15,16,16,16,15,15,14,12,11,10,8,6,5,4,2,1,1,0,0,0,1,1,2,4,5,6, };
+const uint8_t undulate[] PROGMEM = { 16,19,22,25,27,29,31,32,32,32,31,29,27,25,22,19,16,13,10,7,5,3,1,0,0,0,1,3,5,7,10,13, };
 
 void ai_fly_vertical_undulate(ENTITY* const e)
 {
   ai_fly_vertical(e);
   // Since e->framesFalling is not used for flying entities, we repurpose it here
-  e->x -= pgm_read_byte(&undulate_sm[e->framesFalling++ % NELEMS(undulate_sm)]) - 2;
+  e->x = e->initialX + pgm_read_byte(&undulate_sm[e->framesFalling++ % NELEMS(undulate_sm)]) - 8;
 }
 
 void ai_fly_horizontal_undulate(ENTITY* const e)
 {
   ai_fly_horizontal(e);
   // Since e->framesFalling is not used for flying entities, we repurpose it here
-  e->y -= pgm_read_byte(&undulate[e->framesFalling++ % NELEMS(undulate)]) - 4;
+  e->y = e->initialY + pgm_read_byte(&undulate[e->framesFalling++ % NELEMS(undulate)]) - 16;
 }
 
 /* struct horiz { */
@@ -735,7 +737,7 @@ void spider_render(ENTITY* const e)
 
 // ---------- PLAYER
 
-void player_init(PLAYER* const p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint16_t x, const uint16_t y, const int16_t maxdx, const int16_t impulse)
+void player_init(PLAYER* const p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint8_t x, const uint8_t y, const int16_t maxdx, const int16_t impulse)
 {
   memset(&(p->buttons), 0, sizeof(BUTTON_INFO));
   entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx, impulse);

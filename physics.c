@@ -619,8 +619,7 @@ static void spawnMonster(ENTITY* const e, const uint16_t levelOffset, const uint
               updateFunc(update),
               renderFunc(render),
               PLAYERS + i + 4, // offset by 4, so the EXIT sign is between the players and monsters
-              (int16_t)(tx * (TILE_WIDTH << FP_SHIFT)),
-              (int16_t)(ty * (TILE_HEIGHT << FP_SHIFT)),
+              tx, ty,
               (int16_t)(monsterMaxDX(levelOffset, i)),
               (int16_t)(monsterImpulse(levelOffset, i)));
   // The cast to bool is necessary to properly set bit flags
@@ -655,8 +654,7 @@ static void spawnPlayer(PLAYER* const p, const uint16_t levelOffset, const uint8
               inputFunc(input),
               updateFunc(update),
               renderFunc(render), i,
-              (int16_t)(tx * (TILE_WIDTH << FP_SHIFT)),
-              (int16_t)(ty * (TILE_HEIGHT << FP_SHIFT)),
+              tx, ty,
               (int16_t)(playerMaxDX(levelOffset, i)),
               (int16_t)(playerImpulse(levelOffset, i)));
   ENTITY* const e = (ENTITY*)p;
