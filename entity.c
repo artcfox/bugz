@@ -196,8 +196,6 @@ void ai_fly_horizontal(ENTITY* const e)
   }
 }
 
-/* const uint8_t undulate_sm[] PROGMEM = { 2,2,3,3,3,4,4,4,4,4,4,4,3,3,3,2,2,2,1,1,1,0,0,0,0,0,0,0,1,1,1,2, }; */
-/* const uint8_t undulate[] PROGMEM = { 4,5,6,6,7,7,8,8,8,8,8,7,7,6,6,5,4,3,2,2,1,1,0,0,0,0,0,1,1,2,2,3, }; */
 const uint8_t undulate_sm[] PROGMEM = { 8,10,11,12,14,15,15,16,16,16,15,15,14,12,11,10,8,6,5,4,2,1,1,0,0,0,1,1,2,4,5,6, };
 const uint8_t undulate[] PROGMEM = { 16,19,22,25,27,29,31,32,32,32,31,29,27,25,22,19,16,13,10,7,5,3,1,0,0,0,1,3,5,7,10,13, };
 
@@ -214,34 +212,6 @@ void ai_fly_horizontal_undulate(ENTITY* const e)
   // Since e->framesFalling is not used for flying entities, we repurpose it here
   e->y = vt2p(e->initialY) + pgm_read_byte(&undulate[e->framesFalling++ % NELEMS(undulate)]) - 16;
 }
-
-/* struct horiz { */
-/*   unsigned int left : 1; */
-/*   unsigned int wasLeft : 1; */
-/*   unsigned int right : 1; */
-/*   unsigned int wasRight : 1; */
-/*   unsigned int reserved : 4; */
-/* } __attribute__ ((packed)); */
-
-/* // e->wasRight, e->right, e->wasLeft, e->left */
-/* uint16_t ddx_table[] = { */
-/*   0, // 0 0 0 0 */
-/*   -WORLD_ACCEL / WORLD_FPS,   // 0 0 0 1 */
-/*   WORLD_FRICTION / WORLD_FPS,   // 0 0 1 0 */
-/*   -WORLD_ACCEL / WORLD_FPS,  // 0 0 1 1 */
-/*   WORLD_ACCEL / WORLD_FPS,   // 0 1 0 0 */
-/*   0,   // 0 1 0 1 */
-/*   (WORLD_FRICTION + WORLD_ACCEL) / WORLD_FPS,  // 0 1 1 0 */
-/*   0,   // 0 1 1 1 */
-/*   -WORLD_FRICTION / WORLD_FPS,   // 1 0 0 0 */
-/*   (-WORLD_ACCEL - WORLD_FRICTION) / WORLD_FPS,  // 1 0 0 1 */
-/*   0,   // 1 0 1 0 (impossible) */
-/*   0,   // 1 0 1 1 (impossible) */
-/*   WORLD_ACCEL / WORLD_FPS,   // 1 1 0 0 */
-/*   0,   // 1 1 0 1 */
-/*   0,   // 1 1 1 0 (impossible) */
-/*   0,   // 1 1 1 1 (impossible) */
-/* }; */
 
 void entity_update(ENTITY* const e)
 {
@@ -263,8 +233,6 @@ void entity_update(ENTITY* const e)
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
   e->dx += (ddx / WORLD_FPS);
-  /* struct horiz h = { e->left, wasLeft, e->right, wasRight, 0 }; */
-  /* e->dx += ddx_table[*((uint8_t*)&h)]; */
   if (e->turbo) {
     if (e->dx < -(e->maxdx + WORLD_METER))
       e->dx = -(e->maxdx + WORLD_METER);
