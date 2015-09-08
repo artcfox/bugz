@@ -69,8 +69,10 @@ void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*
   e->update = update;
   e->render = render;
   e->tag = tag;
-  e->initialX = e->x = ((int16_t)x * (TILE_WIDTH << FP_SHIFT));
-  e->initialY = e->y = ((int16_t)y * (TILE_HEIGHT << FP_SHIFT));
+  e->initialX = x;
+  e->initialY = y;
+  e->x = ((int16_t)x * (TILE_WIDTH << FP_SHIFT));
+  e->y = ((int16_t)y * (TILE_HEIGHT << FP_SHIFT));
   e->maxdx = maxdx;
   e->impulse = impulse;
   e->visible = true;
@@ -203,14 +205,14 @@ void ai_fly_vertical_undulate(ENTITY* const e)
 {
   ai_fly_vertical(e);
   // Since e->framesFalling is not used for flying entities, we repurpose it here
-  e->x = e->initialX + pgm_read_byte(&undulate_sm[e->framesFalling++ % NELEMS(undulate_sm)]) - 8;
+  e->x = ht2p(e->initialX) + pgm_read_byte(&undulate_sm[e->framesFalling++ % NELEMS(undulate_sm)]) - 8;
 }
 
 void ai_fly_horizontal_undulate(ENTITY* const e)
 {
   ai_fly_horizontal(e);
   // Since e->framesFalling is not used for flying entities, we repurpose it here
-  e->y = e->initialY + pgm_read_byte(&undulate[e->framesFalling++ % NELEMS(undulate)]) - 16;
+  e->y = vt2p(e->initialY) + pgm_read_byte(&undulate[e->framesFalling++ % NELEMS(undulate)]) - 16;
 }
 
 /* struct horiz { */

@@ -182,8 +182,8 @@ struct ENTITY {
   void (*input)(ENTITY*);
   void (*update)(ENTITY*);
   void (*render)(ENTITY*);
-  int16_t initialX;
-  int16_t initialY;
+  uint8_t initialX;
+  uint8_t initialY;
   uint8_t tag;
   int16_t x;
   int16_t y;
