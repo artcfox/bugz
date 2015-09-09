@@ -284,6 +284,9 @@ void entity_update(ENTITY* const e)
     }
   }
 
+  // If horizontal velocity is zero, then round the x value to the nearest whole pixel
+  if (e->dx == 0)
+    e->x = ((e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT) << FP_SHIFT;
 
   int16_t ddy = WORLD_GRAVITY;
 
@@ -491,6 +494,9 @@ void entity_update_flying(ENTITY* const e)
     e->dx = 0;
   }
 
+  // If horizontal velocity is zero, then round the x value to the nearest whole pixel
+  if (e->dx == 0)
+    e->x = ((e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT) << FP_SHIFT;
 
   bool wasUp = (e->dy < 0);
   bool wasDown = (e->dy > 0);
