@@ -177,6 +177,7 @@ enum RENDER_FUNCTION {
   BEE_RENDER = 7,
   SPIDER_RENDER = 8,
   MOTH_RENDER = 9,
+  BUTTERFLY_RENDER = 10,
 };
 
 typedef void (*renderFnPtr)(ENTITY*);
@@ -200,6 +201,8 @@ static renderFnPtr renderFunc(const RENDER_FUNCTION r)
     return bee_render;
   case MOTH_RENDER:
     return moth_render;
+  case BUTTERFLY_RENDER:
+    return butterfly_render;
   case SPIDER_RENDER:
     return spider_render;
   default: // NULL_RENDER:

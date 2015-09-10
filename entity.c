@@ -752,7 +752,14 @@ void moth_render(ENTITY* const e)
   generic_flying_render(e, MOTH_ANIMATION_START);
 }
 
-#define SPIDER_ANIMATION_START 62
+#define BUTTERFLY_ANIMATION_START 62
+
+void butterfly_render(ENTITY* const e)
+{
+  generic_flying_render(e, BUTTERFLY_ANIMATION_START);
+}
+
+#define SPIDER_ANIMATION_START 67
 #define SPIDER_DEAD (SPIDER_ANIMATION_START - 1)
 #define SPIDER_ANIMATION_FRAME_SKIP 8
 const uint8_t spiderAnimation[] PROGMEM = { 0, 1 };
@@ -886,7 +893,7 @@ void player_render(ENTITY* const e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define EXIT_SIGN_START 64
+#define EXIT_SIGN_START 69
 
 void show_exit_sign(const uint8_t tx, const uint8_t ty)
 {
