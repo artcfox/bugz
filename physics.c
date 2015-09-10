@@ -101,6 +101,7 @@ enum INPUT_FUNCTION {
   AI_FLY_HORIZONTAL = 7,
   AI_FLY_VERTICAL_UNDULATE = 8,
   AI_FLY_HORIZONTAL_UNDULATE = 9,
+  AI_FLY_CIRCLE = 10,
 };
 
 typedef void (*inputFnPtr)(ENTITY*);
@@ -126,6 +127,8 @@ static inputFnPtr inputFunc(const INPUT_FUNCTION i)
     return ai_fly_vertical_undulate;
   case AI_FLY_HORIZONTAL_UNDULATE:
     return ai_fly_horizontal_undulate;
+  case AI_FLY_CIRCLE:
+    return ai_fly_circle;
   default: // NULL_INPUT
     return null_input;
   }
@@ -271,6 +274,9 @@ const uint8_t levelData[] PROGMEM = {
 
 #include "data/levels/0110-only_ladders_level.inc"
 #include "editor/levels/0110-only_ladders_level.xcf.png.inc"
+
+#include "data/levels/0120-smaller_platforms_level.inc"
+#include "editor/levels/0120-smaller_platforms_level.xcf.png.inc"
 
   // Victory screen
 #include "data/levels/9999-victory_level.inc"
@@ -1003,19 +1009,15 @@ int main()
       /* DisplayNumber(23, 0, currentLevel, 3); */
       /* //DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, levelOffset, 5); */
 
-      // Get the inputs for every entity
-      for (uint8_t i = 0; i < PLAYERS; ++i)
-        ((ENTITY*)(&player[i]))->input((ENTITY*)(&player[i]));
-      for (uint8_t i = 0; i < MONSTERS; ++i)
-        monster[i].input(&monster[i]);
-
       // Proper kill detection requires the previous Y value for each entity
       int16_t playerPrevY[PLAYERS];
 
-      // Update the state of the players
+      // Get inputs/update the state of the players
       for (uint8_t i = 0; i < PLAYERS; ++i) {
-        playerPrevY[i] = ((ENTITY*)(&player[i]))->y; // cache the previous Y value to use for kill detection below
-        ((ENTITY*)(&player[i]))->update((ENTITY*)(&player[i]));
+        ENTITY* e = (ENTITY*)(&player[i]);
+        playerPrevY[i] = e->y; // cache the previous Y value to use for kill detection below
+        e->input(e);
+        e->update(e);
       }
 
 #if (PLAYERS == 2)
@@ -1040,9 +1042,10 @@ int main()
       }
 #endif // (PLAYERS == 2)
 
-      // Update the state of the monsters, and perform collision detection with each player
+      // Get inputs/update the state of the monsters, and perform collision detection with each player
       for (uint8_t i = 0; i < MONSTERS; ++i) {
         int16_t monsterPrevY = monster[i].y; // cache the previous Y value to use for kill detection below
+        monster[i].input(&monster[i]);
         monster[i].update(&monster[i]);
 
         // Collision detection (calculation assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster)

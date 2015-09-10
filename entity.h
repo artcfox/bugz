@@ -244,6 +244,7 @@ void ai_fly_vertical(ENTITY* const e);
 void ai_fly_horizontal(ENTITY* const e);
 void ai_fly_vertical_undulate(ENTITY* const e);
 void ai_fly_horizontal_undulate(ENTITY* const e);
+void ai_fly_circle(ENTITY* const e);
 
 void entity_update(ENTITY* const e);
 void entity_update_dying(ENTITY* const e);

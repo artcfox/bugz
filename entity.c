@@ -196,21 +196,32 @@ void ai_fly_horizontal(ENTITY* const e)
   }
 }
 
-const uint8_t undulate_sm[] PROGMEM = { 8,10,11,12,14,15,15,16,16,16,15,15,14,12,11,10,8,6,5,4,2,1,1,0,0,0,1,1,2,4,5,6, };
-const uint8_t undulate[] PROGMEM = { 16,19,22,25,27,29,31,32,32,32,31,29,27,25,22,19,16,13,10,7,5,3,1,0,0,0,1,3,5,7,10,13, };
+const uint8_t undulate[] PROGMEM = { 8,10,11,12,14,15,15,16,16,16,15,15,14,12,11,10,8,6,5,4,2,1,1,0,0,0,1,1,2,4,5,6, };
+const uint8_t undulate2[] PROGMEM = { 16,19,22,25,27,29,31,32,32,32,31,29,27,25,22,19,16,13,10,7,5,3,1,0,0,0,1,3,5,7,10,13, };
 
 void ai_fly_vertical_undulate(ENTITY* const e)
 {
   ai_fly_vertical(e);
   // Since e->framesFalling is not used for flying entities, we repurpose it here
-  e->x = ht2p(e->initialX) + pgm_read_byte(&undulate_sm[e->framesFalling++ % NELEMS(undulate_sm)]) - 8;
+  e->x = ht2p(e->initialX) + pgm_read_byte(&undulate[e->framesFalling++ % NELEMS(undulate)]) - 8;
 }
 
 void ai_fly_horizontal_undulate(ENTITY* const e)
 {
   ai_fly_horizontal(e);
   // Since e->framesFalling is not used for flying entities, we repurpose it here
-  e->y = vt2p(e->initialY) + pgm_read_byte(&undulate[e->framesFalling++ % NELEMS(undulate)]) - 16;
+  e->y = vt2p(e->initialY) + pgm_read_byte(&undulate2[e->framesFalling++ % NELEMS(undulate)]) - 16;
+}
+
+void ai_fly_circle(ENTITY* const e)
+{
+  e->x = ht2p(e->initialX) + (pgm_read_byte(&undulate2[((NELEMS(undulate) / 4) + (e->framesFalling / 2)) % NELEMS(undulate2)]) << 2) - 64;
+  e->y = vt2p(e->initialY) + (pgm_read_byte(&undulate2[(e->framesFalling / 2) % NELEMS(undulate2)]) << 2) - 64;
+  if (e->framesFalling == 0)
+    sprites[e->tag].flags = 0;
+  else if (e->framesFalling == NELEMS(undulate2))
+    sprites[e->tag].flags = SPRITE_FLIP_X;
+  e->framesFalling = (e->framesFalling + 1) & (NELEMS(undulate2) * 2 - 1);
 }
 
 void entity_update(ENTITY* const e)
