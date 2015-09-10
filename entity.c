@@ -197,7 +197,11 @@ void ai_fly_horizontal(ENTITY* const e)
 }
 
 const uint8_t undulate[] PROGMEM = { 8,10,11,12,14,15,15,16,16,16,15,15,14,12,11,10,8,6,5,4,2,1,1,0,0,0,1,1,2,4,5,6, };
-const uint8_t undulate2[] PROGMEM = { 16,19,22,25,27,29,31,32,32,32,31,29,27,25,22,19,16,13,10,7,5,3,1,0,0,0,1,3,5,7,10,13, };
+/* const uint8_t undulate2[] PROGMEM = { 16,19,22,25,27,29,31,32,32,32,31,29,27,25,22,19,16,13,10,7,5,3,1,0,0,0,1,3,5,7,10,13, }; */
+const uint8_t undulate3[] PROGMEM = {
+  16,18,19,21,22,24,25,26,27,28,29,30,31,31,32,32,32,32,32,31,31,30,29,28,27,26,25,24,22,21,19,18,
+  16,14,13,11,10,8,7,6,5,4,3,2,1,1,0,0,0,0,0,1,1,2,3,4,5,6,7,8,10,11,13,14,
+};
 
 void ai_fly_vertical_undulate(ENTITY* const e)
 {
@@ -210,18 +214,43 @@ void ai_fly_horizontal_undulate(ENTITY* const e)
 {
   ai_fly_horizontal(e);
   // Since e->framesFalling is not used for flying entities, we repurpose it here
-  e->y = vt2p(e->initialY) + pgm_read_byte(&undulate2[e->framesFalling++ % NELEMS(undulate)]) - 16;
+  e->y = vt2p(e->initialY) + pgm_read_byte(&undulate3[e->framesFalling % NELEMS(undulate3)]) - 16;
+  e->framesFalling += 2;
 }
 
-void ai_fly_circle(ENTITY* const e)
+static void ai_fly_circle(ENTITY* const e, const bool clockwise)
 {
-  e->x = ht2p(e->initialX) + (pgm_read_byte(&undulate2[((NELEMS(undulate) / 4) + (e->framesFalling / 2)) % NELEMS(undulate2)]) << 2) - 64;
-  e->y = vt2p(e->initialY) + (pgm_read_byte(&undulate2[(e->framesFalling / 2) % NELEMS(undulate2)]) << 2) - 64;
-  if (e->framesFalling == 0)
-    sprites[e->tag].flags = 0;
-  else if (e->framesFalling == NELEMS(undulate2))
-    sprites[e->tag].flags = SPRITE_FLIP_X;
-  e->framesFalling = (e->framesFalling + 1) & (NELEMS(undulate2) * 2 - 1);
+  uint8_t phase = (uint8_t)e->impulse; // low byte
+  // The speed should be set to either 1 (fast) or 2 (slow)
+  uint8_t speed = (uint8_t)(((uint16_t)e->impulse) >> 8); // high byte, e->impulse is originally signed, so cast before shift
+
+  // Since e->framesFalling is not used for flying entities, we repurpose it here
+  // Since e->impulse is not used for "fly circle" entities, we repurpose it here to use as a starting offset for the angle
+  int16_t x = e->x;
+  e->x = ht2p(e->initialX) + (pgm_read_byte(&undulate3[((clockwise ? (NELEMS(undulate3) / 4) : 0) + (e->framesFalling / speed) + phase) % NELEMS(undulate3)]) << 2) - 64;
+  e->y = vt2p(e->initialY) + (pgm_read_byte(&undulate3[((clockwise ? 0 : (NELEMS(undulate3) / 4)) + (e->framesFalling / speed) + phase) % NELEMS(undulate3)]) << 2) - 64;
+  e->framesFalling++;
+
+  // The following code block is for rendering purposes only, and it assumes the entity's update function is null_update, or ignores left/right
+  if (e->x > x) {
+    e->left = false;
+    e->right = true;
+  } else if (e->x < x) {
+    e->right = false;
+    e->left = true;
+  }
+}
+
+void ai_fly_circle_cw(ENTITY* e)
+{
+  ai_fly_circle(e, true);
+  e->update = null_update; // ensure ai_fly_circle behaves correctly
+}
+
+void ai_fly_circle_ccw(ENTITY* e)
+{
+  ai_fly_circle(e, false);
+  e->update = null_update; // ensure ai_fly_circle behaves correctly
 }
 
 void entity_update(ENTITY* const e)
@@ -693,7 +722,14 @@ void bee_render(ENTITY* const e)
   generic_flying_render(e, BEE_ANIMATION_START);
 }
 
-#define SPIDER_ANIMATION_START 57
+#define MOTH_ANIMATION_START 57
+
+void moth_render(ENTITY* const e)
+{
+  generic_flying_render(e, MOTH_ANIMATION_START);
+}
+
+#define SPIDER_ANIMATION_START 62
 #define SPIDER_DEAD (SPIDER_ANIMATION_START - 1)
 #define SPIDER_ANIMATION_FRAME_SKIP 8
 const uint8_t spiderAnimation[] PROGMEM = { 0, 1 };
@@ -827,7 +863,7 @@ void player_render(ENTITY* const e)
   sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
 }
 
-#define EXIT_SIGN_START 59
+#define EXIT_SIGN_START 64
 
 void show_exit_sign(const uint8_t tx, const uint8_t ty)
 {

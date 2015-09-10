@@ -101,7 +101,8 @@ enum INPUT_FUNCTION {
   AI_FLY_HORIZONTAL = 7,
   AI_FLY_VERTICAL_UNDULATE = 8,
   AI_FLY_HORIZONTAL_UNDULATE = 9,
-  AI_FLY_CIRCLE = 10,
+  AI_FLY_CIRCLE_CW = 10,
+  AI_FLY_CIRCLE_CCW = 11,
 };
 
 typedef void (*inputFnPtr)(ENTITY*);
@@ -127,8 +128,10 @@ static inputFnPtr inputFunc(const INPUT_FUNCTION i)
     return ai_fly_vertical_undulate;
   case AI_FLY_HORIZONTAL_UNDULATE:
     return ai_fly_horizontal_undulate;
-  case AI_FLY_CIRCLE:
-    return ai_fly_circle;
+  case AI_FLY_CIRCLE_CW:
+    return ai_fly_circle_cw;
+  case AI_FLY_CIRCLE_CCW:
+    return ai_fly_circle_ccw;    
   default: // NULL_INPUT
     return null_input;
   }
@@ -173,6 +176,7 @@ enum RENDER_FUNCTION {
   FRUITFLY_RENDER = 6,
   BEE_RENDER = 7,
   SPIDER_RENDER = 8,
+  MOTH_RENDER = 9,
 };
 
 typedef void (*renderFnPtr)(ENTITY*);
@@ -194,6 +198,8 @@ static renderFnPtr renderFunc(const RENDER_FUNCTION r)
     return fruitfly_render;
   case BEE_RENDER:
     return bee_render;
+  case MOTH_RENDER:
+    return moth_render;
   case SPIDER_RENDER:
     return spider_render;
   default: // NULL_RENDER:
@@ -640,6 +646,8 @@ static void spawnMonster(ENTITY* const e, const uint16_t levelOffset, const uint
   e->interacts = (bool)!(monsterFlags & IFLAG_NOINTERACT);
   e->invincible = (bool)(monsterFlags & IFLAG_INVINCIBLE);
   sprites[e->tag].flags = (monsterFlags & IFLAG_SPRITE_FLIP_X) ? SPRITE_FLIP_X : 0;
+  if (input >= AI_FLY_VERTICAL_UNDULATE) // these AI functions directly manipulate the X and Y values,
+    e->input(e);                         // so call input before rendering, so the initial render happens at the proper X,Y
   e->render(e);
 }
 

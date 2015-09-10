@@ -1,4 +1,4 @@
-  THEME_DIRT, // uint8_t theme
+  THEME_SPACE, // uint8_t theme
   LE(150), // uint16_t timeBonus
   IFLAG_SPRITE_FLIP_X, IFLAG_SPRITE_FLIP_X, // uint8_t playerFlags[2]
   LE(WORLD_MAXDX), LE(WORLD_MAXDX), // int16_t playerMaxDX[2]
