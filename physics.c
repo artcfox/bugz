@@ -287,6 +287,9 @@ const uint8_t levelData[] PROGMEM = {
 #include "data/levels/0120-smaller_platforms_level.inc"
 #include "editor/levels/0120-smaller_platforms_level.xcf.png.inc"
 
+#include "data/levels/0130-underground_moth_level.inc"
+#include "editor/levels/0130-underground_moth_level.xcf.png.inc"
+
   // Victory screen
 #include "data/levels/9999-victory_level.inc"
 #include "editor/levels/9999-victory_level.xcf.png.inc"
