@@ -244,6 +244,8 @@ void ai_fly_vertical(ENTITY* const e);
 void ai_fly_horizontal(ENTITY* const e);
 void ai_fly_vertical_undulate(ENTITY* const e);
 void ai_fly_horizontal_undulate(ENTITY* const e);
+void ai_fly_vertical_erratic(ENTITY* const e);
+void ai_fly_horizontal_erratic(ENTITY* const e);
 void ai_fly_circle_cw(ENTITY* const e);
 void ai_fly_circle_ccw(ENTITY* const e);
 

@@ -101,8 +101,10 @@ enum INPUT_FUNCTION {
   AI_FLY_HORIZONTAL = 7,
   AI_FLY_VERTICAL_UNDULATE = 8,
   AI_FLY_HORIZONTAL_UNDULATE = 9,
-  AI_FLY_CIRCLE_CW = 10,
-  AI_FLY_CIRCLE_CCW = 11,
+  AI_FLY_VERTICAL_ERRATIC = 10,
+  AI_FLY_HORIZONTAL_ERRATIC = 11,
+  AI_FLY_CIRCLE_CW = 12,
+  AI_FLY_CIRCLE_CCW = 13,
 };
 
 typedef void (*inputFnPtr)(ENTITY*);
@@ -128,6 +130,10 @@ static inputFnPtr inputFunc(const INPUT_FUNCTION i)
     return ai_fly_vertical_undulate;
   case AI_FLY_HORIZONTAL_UNDULATE:
     return ai_fly_horizontal_undulate;
+  case AI_FLY_VERTICAL_ERRATIC:
+    return ai_fly_vertical_erratic;
+  case AI_FLY_HORIZONTAL_ERRATIC:
+    return ai_fly_horizontal_erratic;
   case AI_FLY_CIRCLE_CW:
     return ai_fly_circle_cw;
   case AI_FLY_CIRCLE_CCW:
@@ -289,6 +295,9 @@ const uint8_t levelData[] PROGMEM = {
 
 #include "data/levels/0130-underground_moth_level.inc"
 #include "editor/levels/0130-underground_moth_level.xcf.png.inc"
+
+#include "data/levels/0140-butterflies_level.inc"
+#include "editor/levels/0140-butterflies_level.xcf.png.inc"
 
   // Victory screen
 #include "data/levels/9999-victory_level.inc"

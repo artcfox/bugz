@@ -225,6 +225,30 @@ void ai_fly_horizontal_undulate(ENTITY* const e)
   e->framesFalling += 4;
 }
 
+void ai_fly_vertical_erratic(ENTITY* const e)
+{
+  ai_fly_vertical(e);
+  // Try to set the phase to something unique to this entity
+  uint8_t phase = (e->tag + e->initialX + e->initialY) * 16;
+  // Since e->framesFalling is not used for flying entities, we repurpose it here
+  e->x = ht2p(e->initialX) + (pgm_read_byte(&undulate4[(phase + e->framesFalling) % NELEMS(undulate4)])) - 16 +
+                              (pgm_read_byte(&undulate4[(phase + 64 + ((e->framesFalling << 1) << 1)) % NELEMS(undulate4)]) >> 1) - 8 +
+                              (pgm_read_byte(&undulate4[(phase + 8 + ((e->framesFalling << 2) << 1)) % NELEMS(undulate4)]) >> 2) - 4;
+  e->framesFalling++;
+}
+
+void ai_fly_horizontal_erratic(ENTITY* const e)
+{
+  ai_fly_horizontal(e);
+  // Try to set the phase to something unique to this entity
+  uint8_t phase = (e->tag + e->initialX + e->initialY) * 16;
+  // Since e->framesFalling is not used for flying entities, we repurpose it here
+  e->y = vt2p(e->initialY) + (pgm_read_byte(&undulate4[(phase + e->framesFalling) % NELEMS(undulate4)]) << 1) - 32 +
+                              (pgm_read_byte(&undulate4[(phase + 64 + ((e->framesFalling << 1) << 1)) % NELEMS(undulate4)])) - 16 +
+                              (pgm_read_byte(&undulate4[(phase + 8 + ((e->framesFalling << 2) << 1)) % NELEMS(undulate4)]) >> 1) - 8;
+  e->framesFalling++;
+}
+
 static void ai_fly_circle(ENTITY* const e, const bool clockwise)
 {
   uint8_t speed = ((uint8_t)e->impulse) & 0x0F; // low nibble of low byte
