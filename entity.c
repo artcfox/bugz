@@ -255,9 +255,8 @@ static void ai_fly_circle(ENTITY* const e, const bool clockwise)
   uint8_t radius = (((uint8_t)e->impulse) & 0xF0) >> 4; // high nibble of low byte
   uint8_t phase = (uint8_t)(((uint16_t)e->impulse) >> 8); // high byte, e->impulse is originally signed, so cast before shift
 
-  // Since e->framesFalling is not used for flying entities, we repurpose it here
-  // Since e->impulse is not used for "fly circle" entities, we repurpose it here to use as a starting offset for the angle
-  int16_t x = e->x;
+  // Since e->framesFalling is not used for flying entities, we repurpose it here, along with e->impulse
+  int16_t x = e->x; // cache the previous x value so we can tell which way the entity is facing after modification
   e->x = ht2p(e->initialX) +
     (pgm_read_byte(&undulate4[((clockwise ? (NELEMS(undulate4) >> 2) : 0) + (e->framesFalling * speed) + phase) % NELEMS(undulate4)]) << radius) - (1 << (4 + radius));
   e->y = vt2p(e->initialY) +
