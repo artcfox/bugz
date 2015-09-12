@@ -622,6 +622,7 @@ void entity_update_flying(ENTITY* const e)
   if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
     e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
     e->dy = 0;
+    //TriggerFx(3, 128, true); // uncomment this line to debug level designs, will make a sound if the entity clips
   } else if (e->y < 0) {
     e->y = 0;
     e->dy = 0;
