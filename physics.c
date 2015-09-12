@@ -963,13 +963,13 @@ int main()
 
       continue;
     } else {
+      if (currentLevel == LEVELS - 1)
+        timer = 0; // don't display the timer or level number on the victory screen
+      else
+        DisplayNumber(3, 0, currentLevel, 2); // display the level number
+
       FadeIn(1, true);
     }
-
-    if (currentLevel == LEVELS - 1)
-      timer = 0; // don't display the timer or level number on the victory screen
-    else
-      DisplayNumber(3, 0, currentLevel, 2); // display the level number
 
     // Display the player numbers
     uint16_t offset = 0 * SCREEN_TILES_H + 11;
@@ -1004,7 +1004,7 @@ int main()
                      (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
         //        SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
         if (timer != 0)
-          DisplayNumber(8, 0, --timer, 3); // increment the in-game time display
+          DisplayNumber(8, 0, --timer, 3); // decrement the in-game time display
       }
       // Compile-time assert that we are working with a power of 2
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
