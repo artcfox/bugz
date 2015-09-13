@@ -195,25 +195,24 @@ void ai_fly_horizontal(ENTITY* const e)
     }
   }
 }
-
-//const uint8_t undulate[] PROGMEM = { 8,10,11,12,14,15,15,16,16,16,15,15,14,12,11,10,8,6,5,4,2,1,1,0,0,0,1,1,2,4,5,6, };
-/* const uint8_t undulate2[] PROGMEM = { 16,19,22,25,27,29,31,32,32,32,31,29,27,25,22,19,16,13,10,7,5,3,1,0,0,0,1,3,5,7,10,13, }; */
-//const uint8_t undulate3[] PROGMEM = {
-//  16,18,19,21,22,24,25,26,27,28,29,30,31,31,32,32,32,32,32,31,31,30,29,28,27,26,25,24,22,21,19,18,
-//  16,14,13,11,10,8,7,6,5,4,3,2,1,1,0,0,0,0,0,1,1,2,3,4,5,6,7,8,10,11,13,14,
-//};
-const uint8_t undulate4[] PROGMEM = {
-16,17,18,18,19,20,21,21,22,23,24,24,25,26,26,27,27,28,28,29,29,30,30,30,31,31,31,32,32,32,32,32,
-32,32,32,32,32,32,31,31,31,30,30,30,29,29,28,28,27,27,26,26,25,24,24,23,22,21,21,20,19,18,18,17,
-16,15,14,14,13,12,11,11,10,9,8,8,7,6,6,5,5,4,4,3,3,2,2,2,1,1,1,0,0,0,0,0,
-0,0,0,0,0,0,1,1,1,2,2,2,3,3,4,4,5,5,6,6,7,8,8,9,10,11,11,12,13,14,14,15,
+ 
+const uint8_t undulate[] PROGMEM = {
+  0x10,0x11,0x12,0x12,0x13,0x14,0x15,0x15,0x16,0x17,0x18,0x18,0x19,0x1a,0x1a,0x1b,
+  0x1b,0x1c,0x1c,0x1d,0x1d,0x1e,0x1e,0x1e,0x1f,0x1f,0x1f,0x20,0x20,0x20,0x20,0x20,
+  0x20,0x20,0x20,0x20,0x20,0x20,0x1f,0x1f,0x1f,0x1e,0x1e,0x1e,0x1d,0x1d,0x1c,0x1c,
+  0x1b,0x1b,0x1a,0x1a,0x19,0x18,0x18,0x17,0x16,0x15,0x15,0x14,0x13,0x12,0x12,0x11,
+  0x10,0x0f,0x0e,0x0e,0x0d,0x0c,0x0b,0x0b,0x0a,0x09,0x08,0x08,0x07,0x06,0x06,0x05,
+  0x05,0x04,0x04,0x03,0x03,0x02,0x02,0x02,0x01,0x01,0x01,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x01,0x01,0x02,0x02,0x02,0x03,0x03,0x04,0x04,
+  0x05,0x05,0x06,0x06,0x07,0x08,0x08,0x09,0x0a,0x0b,0x0b,0x0c,0x0d,0x0e,0x0e,0x0f,
 };
+
 
 void ai_fly_vertical_undulate(ENTITY* const e)
 {
   ai_fly_vertical(e);
   // Since e->framesFalling is not used for flying entities, we repurpose it here
-  e->x = ht2p(e->initialX) + (pgm_read_byte(&undulate4[e->framesFalling % NELEMS(undulate4)]) >> 1) - 8;
+  e->x = ht2p(e->initialX) + (pgm_read_byte(&undulate[e->framesFalling % NELEMS(undulate)]) >> 1) - 8;
   e->framesFalling += 4;
 }
 
@@ -221,7 +220,7 @@ void ai_fly_horizontal_undulate(ENTITY* const e)
 {
   ai_fly_horizontal(e);
   // Since e->framesFalling is not used for flying entities, we repurpose it here
-  e->y = vt2p(e->initialY) + pgm_read_byte(&undulate4[e->framesFalling % NELEMS(undulate4)]) - 16;
+  e->y = vt2p(e->initialY) + pgm_read_byte(&undulate[e->framesFalling % NELEMS(undulate)]) - 16;
   e->framesFalling += 4;
 }
 
@@ -231,9 +230,9 @@ void ai_fly_vertical_erratic(ENTITY* const e)
   // Try to set the phase to something unique to this entity
   uint8_t phase = (e->tag + e->initialX + e->initialY) * 16;
   // Since e->framesFalling is not used for flying entities, we repurpose it here
-  e->x = ht2p(e->initialX) + (pgm_read_byte(&undulate4[(phase + e->framesFalling) % NELEMS(undulate4)])) - 16 +
-                              (pgm_read_byte(&undulate4[(phase + 64 + ((e->framesFalling << 1) << 1)) % NELEMS(undulate4)]) >> 1) - 8 +
-                              (pgm_read_byte(&undulate4[(phase + 8 + ((e->framesFalling << 2) << 1)) % NELEMS(undulate4)]) >> 2) - 4;
+  e->x = ht2p(e->initialX) + (pgm_read_byte(&undulate[(phase + e->framesFalling) % NELEMS(undulate)])) - 16 +
+                              (pgm_read_byte(&undulate[(phase + 64 + ((e->framesFalling << 1) << 1)) % NELEMS(undulate)]) >> 1) - 8 +
+                              (pgm_read_byte(&undulate[(phase + 8 + ((e->framesFalling << 2) << 1)) % NELEMS(undulate)]) >> 2) - 4;
   e->framesFalling++;
 }
 
@@ -243,9 +242,9 @@ void ai_fly_horizontal_erratic(ENTITY* const e)
   // Try to set the phase to something unique to this entity
   uint8_t phase = (e->tag + e->initialX + e->initialY) * 16;
   // Since e->framesFalling is not used for flying entities, we repurpose it here
-  e->y = vt2p(e->initialY) + (pgm_read_byte(&undulate4[(phase + e->framesFalling) % NELEMS(undulate4)]) << 1) - 32 +
-                              (pgm_read_byte(&undulate4[(phase + 64 + ((e->framesFalling << 1) << 1)) % NELEMS(undulate4)])) - 16 +
-                              (pgm_read_byte(&undulate4[(phase + 8 + ((e->framesFalling << 2) << 1)) % NELEMS(undulate4)]) >> 1) - 8;
+  e->y = vt2p(e->initialY) + (pgm_read_byte(&undulate[(phase + e->framesFalling) % NELEMS(undulate)]) << 1) - 32 +
+                              (pgm_read_byte(&undulate[(phase + 64 + ((e->framesFalling << 1) << 1)) % NELEMS(undulate)])) - 16 +
+                              (pgm_read_byte(&undulate[(phase + 8 + ((e->framesFalling << 2) << 1)) % NELEMS(undulate)]) >> 1) - 8;
   e->framesFalling++;
 }
 
@@ -258,9 +257,9 @@ static void ai_fly_circle(ENTITY* const e, const bool clockwise)
   // Since e->framesFalling is not used for flying entities, we repurpose it here, along with e->impulse
   int16_t x = e->x; // cache the previous x value so we can tell which way the entity is facing after modification
   e->x = ht2p(e->initialX) +
-    (pgm_read_byte(&undulate4[((clockwise ? (NELEMS(undulate4) >> 2) : 0) + (e->framesFalling * speed) + phase) % NELEMS(undulate4)]) << radius) - (1 << (4 + radius));
+    (pgm_read_byte(&undulate[((clockwise ? (NELEMS(undulate) >> 2) : 0) + (e->framesFalling * speed) + phase) % NELEMS(undulate)]) << radius) - (1 << (4 + radius));
   e->y = vt2p(e->initialY) +
-    (pgm_read_byte(&undulate4[((clockwise ? 0 : (NELEMS(undulate4) >> 2)) + (e->framesFalling * speed) + phase) % NELEMS(undulate4)]) << radius) - (1 << (4 + radius));
+    (pgm_read_byte(&undulate[((clockwise ? 0 : (NELEMS(undulate) >> 2)) + (e->framesFalling * speed) + phase) % NELEMS(undulate)]) << radius) - (1 << (4 + radius));
   e->framesFalling++;
 
   // Clamp X to within screen bounds
