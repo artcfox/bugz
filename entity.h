@@ -55,6 +55,8 @@
 #define nv(p) ((p) % (TILE_HEIGHT << FP_SHIFT))
 #define nh(p) ((p) % (TILE_WIDTH << FP_SHIFT))
 
+#define nearestScreenPixel(p) (((p) + (1 << (FP_SHIFT - 1))) >> FP_SHIFT)
+
 #define PLAYERS 2
 #define MONSTERS 6
 

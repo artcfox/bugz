@@ -370,10 +370,6 @@ void entity_update(ENTITY* const e)
     }
   }
 
-  // If horizontal velocity is zero, then round the x value to the nearest whole pixel
-  if (e->dx == 0)
-    e->x = ((e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT) << FP_SHIFT;
-
   int16_t ddy = WORLD_GRAVITY;
 
   // Bounce a bit when you stomp a monster
@@ -423,10 +419,11 @@ void entity_update(ENTITY* const e)
     e->dy = 0;
   }
 
-  // Collision Detection for Y
-  tx = p2ht(e->x);
+  // Collision Detection for Y (uses rounded X so if it looks like the entity should fall through a one-tile-wide hole, it will)
+  int16_t roundedX = (e->dx == 0) ? nearestScreenPixel(e->x) << FP_SHIFT : e->x;
+  tx = p2ht(roundedX);
   ty = p2vt(e->y);
-  bool nx = (bool)nh(e->x);  // true if entity overlaps right
+  bool nx = (bool)nh(roundedX);  // true if entity overlaps right
   offset = ty * SCREEN_TILES_H + tx;
   cell      = isSolidForEntity(offset,                      ty,     prevY, WORLD_METER, e->down); // equiv. ... tx,     ty
   cellright = isSolidForEntity(offset + 1,                  ty,     prevY, WORLD_METER, e->down); // equiv. ... tx + 1, ty
@@ -580,10 +577,6 @@ void entity_update_flying(ENTITY* const e)
     e->dx = 0;
   }
 
-  // If horizontal velocity is zero, then round the x value to the nearest whole pixel
-  if (e->dx == 0)
-    e->x = ((e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT) << FP_SHIFT;
-
   bool wasUp = (e->dy < 0);
   bool wasDown = (e->dy > 0);
 
@@ -698,8 +691,8 @@ static void generic_render(ENTITY* const e, const uint8_t animationStart)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
   // Round x and y to the nearest whole pixel for rendering purposes only
-  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].x = nearestScreenPixel(e->x);
+  sprites[e->tag].y = nearestScreenPixel(e->y);
 }
 
 #define LADYBUG_ANIMATION_START 25
@@ -751,8 +744,8 @@ static void generic_flying_render(ENTITY* const e, const uint8_t animationStart)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
   // Round x and y to the nearest whole pixel for rendering purposes only
-  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].x = nearestScreenPixel(e->x);
+  sprites[e->tag].y = nearestScreenPixel(e->y);
 }
 
 #define FRUITFLY_ANIMATION_START 47
@@ -808,8 +801,8 @@ void spider_render(ENTITY* const e)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
   // Round x and y to the nearest whole pixel for rendering purposes only
-  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].x = nearestScreenPixel(e->x);
+  sprites[e->tag].y = nearestScreenPixel(e->y);
 }
 
 // ---------- PLAYER
@@ -843,11 +836,12 @@ void player_input(ENTITY* const e)
     if (e->jump && e->update == entity_update) {
       // Look at the tile(s) above the player's head. If the jump would not be allowed, then don't set jump to true until they can actually jump
       // This allows the player to hold the jump button early while jump-restricted, but still make the jump as soon as it is allowed
-      uint8_t tx = p2ht(e->x);
+      int16_t roundedX = nearestScreenPixel(e->x) << FP_SHIFT; // ignore subpixels for this calculation
+      uint8_t tx = p2ht(roundedX);
       uint8_t ty = p2vt(e->y - 1);
       uint16_t offset = ty * SCREEN_TILES_H + tx;
-      if (                   isSolid(vram[offset    ] - RAM_TILES_COUNT) || // cellup,     equiv. ... GetTile(tx,     ty) ...
-          ((bool)nh(e->x) && isSolid(vram[offset + 1] - RAM_TILES_COUNT)))  // cellupdiag, equiv. ... GetTile(tx + 1, ty) ...
+      if (                       isSolid(vram[offset    ] - RAM_TILES_COUNT) || // cellup,     equiv. ... GetTile(tx,     ty) ...
+          ((bool)nh(roundedX) && isSolid(vram[offset + 1] - RAM_TILES_COUNT)))  // cellupdiag, equiv. ... GetTile(tx + 1, ty) ...
         e->jump = false;
     }
 
@@ -913,8 +907,8 @@ void player_render(ENTITY* const e)
     sprites[e->tag].flags = SPRITE_FLIP_X;
 
   // Round x and y to the nearest whole pixel for rendering purposes only
-  sprites[e->tag].x = (e->x + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
-  sprites[e->tag].y = (e->y + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
+  sprites[e->tag].x = nearestScreenPixel(e->x);
+  sprites[e->tag].y = nearestScreenPixel(e->y);
 }
 
 #define EXIT_SIGN_START 69
