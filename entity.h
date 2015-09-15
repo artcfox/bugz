@@ -66,31 +66,29 @@
 // Fixed point shift
 #define FP_SHIFT 2
 
-// 1/30th of a second per frame
+// 1/32th of a second per frame (not really, but it makes the math faster, and the constants below have been adjusted to compensate)
 #define WORLD_FPS 32
-// arbitrary choice for 1m
+// Arbitrary choice for 1m
 #define WORLD_METER (8 << FP_SHIFT)
-// very exagerated gravity (6x)
+// Very exagerated gravity
 #define WORLD_GRAVITY 615
 //(WORLD_METER * 18)
-// max horizontal speed (20 tiles per second)
-#define WORLD_MAXDX 128
-//(WORLD_METER * 3)
-// max vertical speed (60 tiles per second). If the jump impulse is increased, this should be increased as well.
-#define WORLD_MAXDY 512
-//(WORLD_METER * 15)
-// horizontal acceleration - take 1/2 second to reach maxdx
+// Max horizontal speed
+#define WORLD_MAXDX (WORLD_METER * 4)
+// Max vertical speed
+#define WORLD_MAXDY (WORLD_METER * 16)
+// Horizontal acceleration - take 1/2 second to reach maxdx
 #define WORLD_ACCEL 655
 //(WORLD_MAXDX * 6)
-// horizontal friction - take 1/6 second to stop from maxdx
+// Horizontal friction - take 1/6 second to stop from maxdx
 #define WORLD_FRICTION 437
 //(WORLD_MAXDX * 4)
-// (a large) instantaneous jump impulse
+// (A large) instantaneous jump impulse
 #define WORLD_JUMP 13500
 //(WORLD_METER * 382)
-// how many frames you can be falling and still jump
+// How many frames you can be falling and still jump
 #define WORLD_FALLING_GRACE_FRAMES 6
-// parameter used for variable jumping (gravity / 10 is a good default)
+// Parameter used for variable jumping (gravity / 10 is a good default)
 #define WORLD_CUT_JUMP_SPEED_LIMIT (WORLD_GRAVITY / 10)
 
 #define THEMES_N 3

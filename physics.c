@@ -1330,7 +1330,7 @@ int main()
             sprites[i].x = OFF_SCREEN;
           if (++currentLevel == LEVELS)
             currentLevel = 0;
-          break; // since levelEndTimer is not zero (this is a legit level complete), the instant fade out at the top of the for loop will be skipped
+          break; // since levelEndTimer is not zero (this is a legit level complete, not a skip), the instant fade out at the top of the for loop will be skipped
         }
       }
 
