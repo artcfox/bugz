@@ -315,6 +315,9 @@ void entity_update(ENTITY* const e)
   else if (wasRight)
     ddx -= WORLD_FRICTION; // entity was going right, but not anymore
 
+  // Compile-time assert that we are working with a power of 2
+  BUILD_BUG_ON(isNotPowerOf2(WORLD_FPS));
+
   // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
   e->x += (e->dx / WORLD_FPS);
   e->dx += (ddx / WORLD_FPS);
