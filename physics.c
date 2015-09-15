@@ -42,6 +42,11 @@
 extern const char mysprites[] PROGMEM;
 extern const struct PatchStruct patches[] PROGMEM;
 
+#define SCORE_DIGITS 5
+#define TIMER_DIGITS 3
+#define COLLECT_TREASURE_POINTS 5
+#define KILL_MONSTER_POINTS 25
+
 static void BCD_zero(uint8_t* const num, uint8_t digits)
 {
   while (digits--)
@@ -127,6 +132,13 @@ static void BCD_decrement(uint8_t* const num, uint8_t digits)
       break;
     }
   }
+}
+
+__attribute__(( always_inline ))
+static inline void BCD_copy(uint8_t* const dst, const uint8_t* const src, const uint8_t digits)
+{
+  for (uint8_t i = 0; i < digits; ++i)
+    dst[i] = src[i];
 }
 
 __attribute__(( always_inline ))
@@ -813,8 +825,8 @@ typedef struct EEPROM_SAVEGAME EEPROM_SAVEGAME;
 struct EEPROM_SAVEGAME {
   uint16_t id;
   uint16_t version;
-  uint8_t score[5];
-  char reserved[23];
+  uint8_t score[SCORE_DIGITS];
+  char reserved[32 - 4 - SCORE_DIGITS];
 } __attribute__ ((packed));
 
 __attribute__(( optimize("Os") ))
@@ -827,7 +839,7 @@ static void LoadHighScore(uint8_t* const highScore)
     save.version = EEPROM_SAVEGAME_VERSION;
     EepromWriteBlock((struct EepromBlockStruct*)&save);
   }
-  uint8_t digits = 5;
+  uint8_t digits = SCORE_DIGITS;
   while (digits--)
     highScore[digits] = save.score[digits];
 }
@@ -838,7 +850,7 @@ static void SaveHighScore(const uint8_t* score)
   EEPROM_SAVEGAME save = {0};
   save.id = EEPROM_ID;
   save.version = EEPROM_SAVEGAME_VERSION;
-  uint8_t digits = 5;
+  uint8_t digits = SCORE_DIGITS;
   while (digits--)
     save.score[digits] = score[digits];
   EepromWriteBlock((struct EepromBlockStruct*)&save);
@@ -913,7 +925,7 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint8_t* highScore)
       // Using SetTile here results in smaller code
       SetTile(11, 24, LAST_FIRE_TILE + 10);
       SetTile(12, 24, LAST_FIRE_TILE + 8);
-      BCD_display(14, 24, highScore, 5);
+      BCD_display(14, 24, highScore, SCORE_DIGITS);
     } else {
       // erase the display of the high score
       offset = 24 * SCREEN_TILES_H + 11;
@@ -987,14 +999,14 @@ int main()
 {
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
-  uint8_t gameScore[5 * PLAYERS] = {0};
-  uint8_t levelScore[5 * PLAYERS];
-  uint8_t highScore[5] = {0};
+  uint8_t gameScore[SCORE_DIGITS * PLAYERS] = {0};
+  uint8_t levelScore[SCORE_DIGITS * PLAYERS];
+  uint8_t highScore[SCORE_DIGITS] = {0};
   uint8_t currentLevel;
   uint16_t levelOffset;
   uint8_t theme;
   uint8_t backgroundFrameCounter;
-  uint8_t timer[3];
+  uint8_t timer[TIMER_DIGITS];
   uint8_t gameType;
   uint8_t treasuresLeft;
   uint8_t levelEndTimer;
@@ -1022,11 +1034,11 @@ int main()
     // Convert timeBonus into unpacked BCD and store in timer[3] array (not time critical)
     BCD_zero(timer, 3);
     while (timeBonus > 255) {
-      BCD_addConstant(timer, 3, 255);
+      BCD_addConstant(timer, TIMER_DIGITS, 255);
       timeBonus -= 255;
     }
     if (timeBonus > 0)
-      BCD_addConstant(timer, 3, timeBonus);
+      BCD_addConstant(timer, TIMER_DIGITS, timeBonus);
   /* __asm__ __volatile__ ("wdr"); */
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
@@ -1046,13 +1058,12 @@ int main()
       spawnMonster(&monster[i], levelOffset, i);
 
     levelEndTimer = 0;
-    for (uint8_t i = 0; i < 5 * PLAYERS; ++i)
-      levelScore[i] = gameScore[i];
+    BCD_copy(levelScore, gameScore, SCORE_DIGITS * PLAYERS);
 
     if (currentLevel == 0) {
       gameType = doTitleScreen(monster, highScore);
       currentLevel = 1;
-      BCD_zero(gameScore, 5 * PLAYERS);
+      BCD_zero(gameScore, SCORE_DIGITS * PLAYERS);
       continue;
     } else {
       if (currentLevel == LEVELS - 1) {
@@ -1088,8 +1099,6 @@ int main()
       /* ramTile[27] = 0x07; */
       /* vram[0] = 0; */
 
-      /* __asm__ __volatile__ ("wdr"); */
-
       // Animate all background tiles at once by modifying the tileset pointer
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
         SetTileTable((tileset + (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * theme) + 
@@ -1107,10 +1116,10 @@ int main()
       backgroundFrameCounter = (backgroundFrameCounter + 1) & (BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation) - 1);
 
       // Update the score
-      BCD_display(14, 0, &levelScore[0], 5);
+      BCD_display(14, 0, &levelScore[0], SCORE_DIGITS);
 #if (PLAYERS == 2)
       if (!(gameType & GFLAG_1P))
-        BCD_display(23, 0, &levelScore[5], 5);
+        BCD_display(23, 0, &levelScore[SCORE_DIGITS], SCORE_DIGITS);
 #endif // (PLAYERS == 2)
 
       /* __asm__ __volatile__ ("wdr"); */
@@ -1180,7 +1189,7 @@ int main()
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
-              BCD_addConstant(&levelScore[5 * p], 5, 25);
+              BCD_addConstant(&levelScore[SCORE_DIGITS * p], SCORE_DIGITS, KILL_MONSTER_POINTS);
               if (e->update == entity_update)
                 e->monsterhop = true; // player should now do the monster hop, but only if gravity applies
             } else {
@@ -1281,7 +1290,7 @@ int main()
           if (treasureCollected) {
             TriggerFx(2, 128, true);
             treasuresLeft -= treasureCollected;
-            BCD_addConstant(&levelScore[5 * i], 5, treasureCollected * 5); // each treasure is worth 5 points
+            BCD_addConstant(&levelScore[SCORE_DIGITS * i], SCORE_DIGITS, treasureCollected * COLLECT_TREASURE_POINTS);
 
             // Check to see if the last treasure has just been collected
             if (treasuresLeft == 0) {
@@ -1310,13 +1319,16 @@ int main()
               e->interacts = false;
               e->invincible = true;
             }
-            for (uint8_t i = 0; i < PLAYERS; ++i) {
-              for (uint8_t j = 0; j < 5; ++j)
-                gameScore[j + (5 * i)] = levelScore[j + (5 * i)];
-              BCD_addBCD(&gameScore[5 * i], 5, timer, 3); // add time bonus
-            }
 
-            BCD_zero(timer, 3);
+
+            BCD_copy(gameScore, levelScore, SCORE_DIGITS * PLAYERS);
+            BCD_addBCD(&gameScore[0], SCORE_DIGITS, timer, TIMER_DIGITS); // add time bonus
+#if (PLAYERS == 2)
+            BCD_addBCD(&gameScore[SCORE_DIGITS], SCORE_DIGITS, timer, TIMER_DIGITS); // add time bonus
+#endif // (PLAYERS == 2)
+              
+
+            BCD_zero(timer, TIMER_DIGITS);
             ++levelEndTimer; // initiate level end sequence
           }
         } else if (levelEndTimer++ == WORLD_FALLING_GRACE_FRAMES + 1) { // ensure portal is shown (albiet briefly) if a player overlaps it before it is displayed
@@ -1324,7 +1336,7 @@ int main()
           hide_exit_sign();
           FadeOut(1, false); // asynchronous fade to black
         } else if (levelEndTimer == 60) {
-          if ((gameType & GFLAG_1P) && (BCD_compare(gameScore, highScore, 5) > 0))
+          if ((gameType & GFLAG_1P) && (BCD_compare(gameScore, highScore, SCORE_DIGITS) > 0))
             SaveHighScore(gameScore);
           for (uint8_t i = 0; i < MAX_SPRITES; ++i)
             sprites[i].x = OFF_SCREEN;
@@ -1340,12 +1352,12 @@ int main()
 
       if (held & BTN_SELECT) {
         if (pressed & BTN_SL) {
-          BCD_zero(gameScore, 5 * PLAYERS);
+          BCD_zero(gameScore, SCORE_DIGITS * PLAYERS);
           if (--currentLevel == 0)
             currentLevel = LEVELS - 2;
           break; // load previous level
         } else if (pressed & BTN_SR) {
-          BCD_zero(gameScore, 5 * PLAYERS);
+          BCD_zero(gameScore, SCORE_DIGITS * PLAYERS);
           if (++currentLevel == LEVELS - 1)
             currentLevel = 1;
           break; // load next level
@@ -1378,8 +1390,8 @@ int main()
         for (uint8_t i = 0; i < PLAYERS; ++i) {
           ENTITY* e = (ENTITY*)&player[i];
           if (e->dead && (e->render == null_render) && (player[i].buttons.held && (player[i].buttons.held & ~BTN_START))) {
-            for (uint8_t j = 0; j < 5; ++j)
-              levelScore[j + (5 * i)] = gameScore[j + (5 * i)]; // respawning in multiplayer mode resets your score for that level
+            // Respawning in multiplayer mode resets your score for that level
+            BCD_copy(&levelScore[SCORE_DIGITS * i], &gameScore[SCORE_DIGITS * i], SCORE_DIGITS); 
             spawnPlayer((PLAYER*)e, levelOffset, i, gameType);
           }
         }
