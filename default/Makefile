@@ -86,10 +86,10 @@ uzeboxVideoEngine.o: $(KERNEL_DIR)/uzeboxVideoEngine.c
 
 ## Compile game sources
 $(GAME).o: ../physics.c
-	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+	$(CC) $(INCLUDES) $(CFLAGS) -O2 -c  $<
 
 entity.o: ../entity.c
-	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+	$(CC) $(INCLUDES) $(CFLAGS) -O2 -c  $<
 
 stackmon.o: ../stackmon.c
 	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
