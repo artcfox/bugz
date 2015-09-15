@@ -1092,7 +1092,7 @@ int main()
     for (;;) {
       /* static uint8_t localFrameCounter; */
       WaitVsync(1);
-      /* __asm__ __volatile__ ("wdr"); */
+/* __asm__ __volatile__ ("wdr"); */
 
       /* uint8_t* ramTile = GetUserRamTile(0); */
       /* CopyFlashTile(0, 0); */
@@ -1360,6 +1360,7 @@ int main()
           BCD_zero(gameScore, SCORE_DIGITS * PLAYERS);
           if (++currentLevel == LEVELS - 1)
             currentLevel = 1;
+/* __asm__ __volatile__ ("wdr"); */
           break; // load next level
         } else if (pressed & BTN_START) {
           currentLevel = 0;
@@ -1397,7 +1398,7 @@ int main()
         }
       }
 
-      /* __asm__ __volatile__ ("wdr"); */
+/* __asm__ __volatile__ ("wdr"); */
 
     }
   }

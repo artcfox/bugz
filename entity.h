@@ -57,7 +57,7 @@
 
 #define nearestScreenPixel(p) (((p) + (1 << (FP_SHIFT - 1))) >> FP_SHIFT)
 
-#define PLAYERS 2
+#define PLAYERS 1
 #define MONSTERS 6
 
 // Include the auto-generated definition for LEVELS
