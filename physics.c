@@ -42,6 +42,103 @@
 extern const char mysprites[] PROGMEM;
 extern const struct PatchStruct patches[] PROGMEM;
 
+static void BCD_zero(uint8_t* const num, uint8_t digits)
+{
+  while (digits--)
+    num[digits] = 0;
+}
+
+// Returns < 0 if num1 < num2, 0 if num1 == num2, and > 0 if num1 > num2
+int8_t BCD_compare(uint8_t* const num1, uint8_t* const num2, uint8_t digits)
+{
+  while (digits--) {
+    if (num1[digits] < num2[digits])
+      return -1;
+    else if (num1[digits] > num2[digits])
+      return 1;
+  }
+  
+  return 0;
+}
+
+static uint8_t BCD_addConstant(uint8_t* const num, uint8_t digits, uint8_t x)
+{
+  for (uint8_t i = 0; i < digits; ++i) {
+    uint16_t val = (uint16_t)num[i] + x;
+    if (val < 10) { // speed up the common cases
+      num[i] = val;
+      x = 0;
+      break;
+    } else if (val < 20) {
+      num[i] = val - 10;
+      x = 1;
+    } else if (val < 30) {
+      num[i] = val - 20;
+      x = 2;
+    } else if (val < 40) {
+      num[i] = val - 30;
+      x = 3;
+    } else { // handle the rest of the cases (up to 255) with a loop
+      for (uint8_t j = 5; j < 28; ++j) {
+        if (val < (j * 10)) {
+          num[i] = val - ((j - 1) * 10);
+          x = (j - 1);
+          break;
+        }
+      }
+    }
+  }
+
+  if (x > 0) {
+    while (digits--)
+      num[digits] = 9;
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+static void BCD_addBCD(uint8_t* const accumulator, uint8_t digits, uint8_t* const x, const uint8_t xdigits)
+{
+  uint8_t retval = 0;
+  for (uint8_t i = 0; i < xdigits; ++i)
+    retval |= BCD_addConstant(accumulator + i, digits - i, x[i]);
+
+  if (retval)
+    while (digits--)
+      accumulator[digits] = 9;
+}
+
+static void BCD_decrement(uint8_t* const num, uint8_t digits)
+{
+  // Check to make sure the entire number is greater than zero first
+  for (uint8_t i = 0; i < digits; ++i)
+    if (num[i] > 0)
+      goto skip;
+  return;
+
+ skip:
+  for (uint8_t i = 0; i < digits; ++i) {
+    uint8_t val = num[i] - 1;
+    if (val == 255) {
+      num[i] = 9;
+    } else {
+      num[i] = val;
+      break;
+    }
+  }
+}
+
+__attribute__(( always_inline ))
+static inline void BCD_display(uint8_t x, const uint8_t y, const uint8_t* const num, uint8_t digits)
+{
+  /* __asm__ __volatile__ ("wdr"); */
+  uint16_t offset = y * SCREEN_TILES_H + x;
+  while (digits--)
+    vram[offset++] = num[digits] + FIRST_DIGIT_TILE + RAM_TILES_COUNT; // get next digit
+  /* __asm__ __volatile__ ("wdr"); */
+}
+
 __attribute__(( optimize("Os") ))
 static bool PgmBitArray_readBit(const uint8_t* const array, const uint16_t index)
 {
@@ -495,15 +592,6 @@ static inline void entityInitialXY(const uint16_t levelOffset, const uint8_t i, 
   *y = PgmPacked5Bit_read(packedCoordinatesStart, i * 2 + 1);
 }
 
-static void DisplayNumber(uint8_t x, const uint8_t y, uint16_t n, const uint8_t pad)
-{
-  uint16_t offset = y * SCREEN_TILES_H + x;
-  for (uint8_t i = 0; x != 255 && i < pad; ++i, n /= 10)
-    vram[offset--] = (n % 10) + FIRST_DIGIT_TILE + RAM_TILES_COUNT; // get next digit
-    //SetTile(x--, y, (n % 10) + FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME);  // get next digit
-}
-
-
 // Returns offset into levelData PROGMEM array
 __attribute__(( optimize("Os") ))
 static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* const treasures, uint16_t* const timeBonus)
@@ -524,7 +612,7 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
 
   *timeBonus = timeBonus(levelOffset) + 1;
   if (*timeBonus > 999)
-    *timeBonus = 1000;
+    *timeBonus = 999;
 
   const uint8_t* const map = &levelData[levelOffset + LEVEL_MAP_START];
 
@@ -535,15 +623,12 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
       if (BaseMapIsSolid(map, offset/* x, y */)) {
         if (y == 0 || BaseMapIsSolid(map, offset - SCREEN_TILES_H/* x, y - 1 */)) { // if we are the top tile, or there is a solid tile above us
           vram[offset] = FIRST_UNDERGROUND_TILE + RAM_TILES_COUNT; // underground tile
-          //SetTile(x, y, 0 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // underground tile
         } else {
           vram[offset] = FIRST_ABOVEGROUND_TILE + RAM_TILES_COUNT; // aboveground tile
-          //SetTile(x, y, 1 + FIRST_SOLID_TILE + (*theme * SOLID_TILES_IN_THEME)); // aboveground tile
         }
       } else { // we are a sky tile
         if (y == SCREEN_TILES_V - 1) { // holes in the bottom border are always full sky tiles
           vram[offset] = FIRST_SKY_TILE + RAM_TILES_COUNT; // full sky tile
-          //SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME)); // full sky tile
         } else { // interior tile
           bool solidLDiag = (bool)((x == 0) || BaseMapIsSolid(map, offset + SCREEN_TILES_H - 1/* x - 1, y + 1 */));
           bool solidRDiag = (bool)((x == SCREEN_TILES_H - 1) || BaseMapIsSolid(map, offset + SCREEN_TILES_H + 1/* x + 1, y + 1 */));
@@ -551,19 +636,14 @@ static uint16_t LoadLevel(const uint8_t level, uint8_t* const theme, uint8_t* co
 
           if (!solidLDiag && !solidRDiag && solidBelow) // island
             vram[offset] = 1 + FIRST_SKY_TILE + RAM_TILES_COUNT;
-            //SetTile(x, y, 1 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (!solidLDiag && solidRDiag && solidBelow) // clear on the left
             vram[offset] = 2 + FIRST_SKY_TILE + RAM_TILES_COUNT;
-            //SetTile(x, y, 2 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (solidLDiag && solidRDiag && solidBelow) // tiles left, below, and right
             vram[offset] = 3 + FIRST_SKY_TILE + RAM_TILES_COUNT;
-            //SetTile(x, y, 3 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else if (solidLDiag && !solidRDiag && solidBelow) // clear on the right
             vram[offset] = 4 + FIRST_SKY_TILE + RAM_TILES_COUNT;
-            //SetTile(x, y, 4 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
           else // clear all around
             vram[offset] = FIRST_SKY_TILE + RAM_TILES_COUNT;
-            //SetTile(x, y, 0 + FIRST_TREASURE_TILE + (THEMES_N * TREASURE_TILES_IN_THEME) + (*theme * SKY_TILES_IN_THEME));
         }
       }
     }
@@ -725,7 +805,7 @@ static inline bool overlap(const int16_t x1, const int16_t y1, const uint8_t w1,
 /* } */
 
 #define EEPROM_ID 0x0089
-#define EEPROM_SAVEGAME_VERSION 0x0000
+#define EEPROM_SAVEGAME_VERSION 0x0001
 
 struct EEPROM_SAVEGAME;
 typedef struct EEPROM_SAVEGAME EEPROM_SAVEGAME;
@@ -733,12 +813,12 @@ typedef struct EEPROM_SAVEGAME EEPROM_SAVEGAME;
 struct EEPROM_SAVEGAME {
   uint16_t id;
   uint16_t version;
-  uint16_t score;
-  char reserved[26];
+  uint8_t score[5];
+  char reserved[23];
 } __attribute__ ((packed));
 
 __attribute__(( optimize("Os") ))
-static uint16_t LoadHighScore(void)
+static void LoadHighScore(uint8_t* const highScore)
 {
   EEPROM_SAVEGAME save = {0};
   uint8_t retval = EepromReadBlock(EEPROM_ID, (struct EepromBlockStruct*)&save);
@@ -747,16 +827,20 @@ static uint16_t LoadHighScore(void)
     save.version = EEPROM_SAVEGAME_VERSION;
     EepromWriteBlock((struct EepromBlockStruct*)&save);
   }
-  return save.score;
+  uint8_t digits = 5;
+  while (digits--)
+    highScore[digits] = save.score[digits];
 }
 
 __attribute__(( optimize("Os") ))
-static void SaveHighScore(const uint16_t score)
+static void SaveHighScore(const uint8_t* score)
 {
   EEPROM_SAVEGAME save = {0};
   save.id = EEPROM_ID;
   save.version = EEPROM_SAVEGAME_VERSION;
-  save.score = score;
+  uint8_t digits = 5;
+  while (digits--)
+    save.score[digits] = score[digits];
   EepromWriteBlock((struct EepromBlockStruct*)&save);
 }
 
@@ -788,23 +872,20 @@ const uint8_t p1_vs_p2[] PROGMEM = {
 #endif // (PLAYERS == 2)
 
 __attribute__(( optimize("Os") ))
-static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
+static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint8_t* highScore)
 {
   // Switch to the last animation row, where the title screen tiles are
-  //SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / 3) * 2);
   SetTileTable((tileset + (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * 2) + 
-               (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * 2/*pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP])*/);
+               (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * 2);
 
   uint16_t offset = 13 * SCREEN_TILES_H + 5;
   for (uint8_t i = 0; i < NELEMS(copyright); ++i)
     vram[offset + i] = pgm_read_byte(&copyright[i]) + RAM_TILES_COUNT;
-  //SetTile(5 + i, 13, pgm_read_byte(&copyright[i]));
 
 #if (PLAYERS == 2)
   offset = 21 * SCREEN_TILES_H + 11;
   for (uint8_t i = 0; i < NELEMS(p1_vs_p2); ++i)
     vram[offset + i] = pgm_read_byte(&p1_vs_p2[i]) + RAM_TILES_COUNT;
-    //SetTile(11 + i, 21, pgm_read_byte(&p1_vs_p2[i]));
 #endif // (PLAYERS == 2)
 
   offset = 17 * SCREEN_TILES_H + 11;
@@ -812,9 +893,6 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
     vram[offset + (SCREEN_TILES_H * 2 * i)] = FIRST_DIGIT_TILE + 1 + i + RAM_TILES_COUNT;
     for (uint8_t j = 0; j < NELEMS(x_player); ++j)
       vram[offset + (SCREEN_TILES_H * 2 * i) + 2 + j] = pgm_read_byte(&x_player[j]) + RAM_TILES_COUNT;
-    /* vram[offset + (SCREEN_TILES_H * 2 * i) + 1] = FIRST_DIGIT_TILE + 10 + RAM_TILES_COUNT; */
-    //SetTile(11, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 1 + i);
-    //SetTile(12, 17 + i * 2, FIRST_DIGIT_TILE + DIGIT_TILES_IN_THEME + 10);
   }
 
   // Set pointer to 1P
@@ -826,22 +904,21 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
   bool fadedIn = false;
   bool wasReleased = false;
 
-  *highScore = LoadHighScore();
+  LoadHighScore(highScore);
 
   sprites[0].x -= 4;
 
   for (;;) {
-    if (selection == 0 && *highScore != 0) { // 1P
+    if (selection == 0 && (highScore[4] || highScore[3] || highScore[2] || highScore[1] || highScore[0])) { // 1P
       // Using SetTile here results in smaller code
       SetTile(11, 24, LAST_FIRE_TILE + 10);
       SetTile(12, 24, LAST_FIRE_TILE + 8);
-      DisplayNumber(18, 24, *highScore, 5);
+      BCD_display(14, 24, highScore, 5);
     } else {
       // erase the display of the high score
       offset = 24 * SCREEN_TILES_H + 11;
       for (uint8_t i = 0; i < 8; ++i)
         vram[offset + i] = FIRST_SKY_TILE + RAM_TILES_COUNT;
-        //SetTile(i, 17 + j * 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME);
     }
 
     sprites[0].y = (vt2p((17 + selection * 2)) + (1 << (FP_SHIFT - 1))) >> FP_SHIFT;
@@ -887,7 +964,6 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint16_t* highScore)
           offset = (17 + (2 * j)) * SCREEN_TILES_H + 11;
           for (uint8_t i = 0; i < 8; ++i)
             vram[offset + i] = FIRST_SKY_TILE + RAM_TILES_COUNT;
-            //SetTile(i, 17 + j * 2, FIRST_SKY_TILE + SKY_TILES_IN_THEME);
         }
       }
 #endif // (PLAYERS == 2)
@@ -911,14 +987,14 @@ int main()
 {
   PLAYER player[PLAYERS];
   ENTITY monster[MONSTERS];
-  uint16_t gameScore[PLAYERS] = {0};
-  uint16_t levelScore[PLAYERS];
-  uint16_t highScore = 0;
+  uint8_t gameScore[5 * PLAYERS] = {0};
+  uint8_t levelScore[5 * PLAYERS];
+  uint8_t highScore[5] = {0};
   uint8_t currentLevel;
   uint16_t levelOffset;
   uint8_t theme;
   uint8_t backgroundFrameCounter;
-  uint16_t timer = 0;
+  uint8_t timer[3];
   uint8_t gameType;
   uint8_t treasuresLeft;
   uint8_t levelEndTimer;
@@ -928,7 +1004,7 @@ int main()
   InitMusicPlayer(patches);
 
  title_screen:
-  currentLevel = levelOffset = theme = levelEndTimer = 0;
+  currentLevel = levelOffset = theme = levelEndTimer = treasuresLeft = 0;
   gameType = GFLAG_1P;
 
   for (;;) {
@@ -938,7 +1014,20 @@ int main()
       FadeOut(0, true); // fade to black immediately
     }
     SetTileTable(tileset);
-    levelOffset = LoadLevel(currentLevel, &theme, &treasuresLeft, &timer);
+
+    uint16_t timeBonus = 0;
+    levelOffset = LoadLevel(currentLevel, &theme, &treasuresLeft, &timeBonus);
+
+  /* __asm__ __volatile__ ("wdr"); */
+    // Convert timeBonus into unpacked BCD and store in timer[3] array (not time critical)
+    BCD_zero(timer, 3);
+    while (timeBonus > 255) {
+      BCD_addConstant(timer, 3, 255);
+      timeBonus -= 255;
+    }
+    if (timeBonus > 0)
+      BCD_addConstant(timer, 3, timeBonus);
+  /* __asm__ __volatile__ ("wdr"); */
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
 
@@ -957,22 +1046,22 @@ int main()
       spawnMonster(&monster[i], levelOffset, i);
 
     levelEndTimer = 0;
-    for (uint8_t i = 0; i < PLAYERS; ++i)
+    for (uint8_t i = 0; i < 5 * PLAYERS; ++i)
       levelScore[i] = gameScore[i];
 
     if (currentLevel == 0) {
-      gameType = doTitleScreen(monster, &highScore);
+      gameType = doTitleScreen(monster, highScore);
       currentLevel = 1;
-
-      for (uint8_t i = 0; i < PLAYERS; ++i)
-        gameScore[i] = 0;
-
+      BCD_zero(gameScore, 5 * PLAYERS);
       continue;
     } else {
-      if (currentLevel == LEVELS - 1)
-        timer = 0; // don't display the timer or level number on the victory screen
-      else
-        DisplayNumber(3, 0, currentLevel, 2); // display the level number
+      if (currentLevel == LEVELS - 1) {
+        BCD_zero(timer, 3); // don't display the timer or level number on the victory screen
+      } else {
+        uint8_t levelDisplay[2] = {0};
+        BCD_addConstant(levelDisplay, 2, currentLevel);
+        BCD_display(2, 0, levelDisplay, 2); // display the level number
+      }
 
       FadeIn(1, true);
     }
@@ -981,48 +1070,50 @@ int main()
     uint16_t offset = 0 * SCREEN_TILES_H + 11;
     vram[offset] = FIRST_DIGIT_TILE + 10 + RAM_TILES_COUNT;
     vram[offset + 1] = FIRST_DIGIT_TILE + 1 + RAM_TILES_COUNT;
-    //SetTile(11, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
-    //SetTile(12, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 1);
-    DisplayNumber(18, 0, levelScore[0], 5);
 
     if (!(gameType & GFLAG_1P)) {
       offset = 0 * SCREEN_TILES_H + 20;
       vram[offset] = FIRST_DIGIT_TILE + 10 + RAM_TILES_COUNT;
       vram[offset + 1] = FIRST_DIGIT_TILE + 2 + RAM_TILES_COUNT;
-      //SetTile(20, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 10);
-      //SetTile(21, 0, FIRST_DIGIT_TILE + theme * DIGIT_TILES_IN_THEME + 2);
-      DisplayNumber(18 + (PLAYERS - 1) * 9, 0, levelScore[PLAYERS - 1], 5);
     }
 
     // Main game loop
     for (;;) {
       /* static uint8_t localFrameCounter; */
       WaitVsync(1);
+      /* __asm__ __volatile__ ("wdr"); */
 
       /* uint8_t* ramTile = GetUserRamTile(0); */
       /* CopyFlashTile(0, 0); */
       /* ramTile[27] = 0x07; */
       /* vram[0] = 0; */
 
+      /* __asm__ __volatile__ ("wdr"); */
+
       // Animate all background tiles at once by modifying the tileset pointer
       if ((backgroundFrameCounter % BACKGROUND_FRAME_SKIP) == 0) {
         SetTileTable((tileset + (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (THEMES_N)) * theme) + 
-                     (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
-        //        SetTileTable(tileset + 64 * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) * pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
-        if (timer != 0)
-          DisplayNumber(8, 0, --timer, 3); // decrement the in-game time display
+                     (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) *
+                     pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
+
+        // Decrement and update the in-game time display if time is greater than zero
+        if (timer[0] || timer[1] || timer[2]) {
+          BCD_decrement(timer, 3);
+          BCD_display(6, 0, timer, 3);
+        }
       }
       // Compile-time assert that we are working with a power of 2
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
       backgroundFrameCounter = (backgroundFrameCounter + 1) & (BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation) - 1);
 
-/*       DisplayNumber(18, 0, levelScore[0], 5, theme); */
-/* #if (PLAYERS == 2) */
-/*       if (!(gameType & GFLAG_1P)) */
-/*         DisplayNumber(27, 0, levelScore[1], 5, theme); */
-/* #endif // (PLAYERS == 2) */
+      // Update the score
+      BCD_display(14, 0, &levelScore[0], 5);
+#if (PLAYERS == 2)
+      if (!(gameType & GFLAG_1P))
+        BCD_display(23, 0, &levelScore[5], 5);
+#endif // (PLAYERS == 2)
 
-      /* DisplayNumber(20, 0, gameScore[0], 5, theme); */
+      /* __asm__ __volatile__ ("wdr"); */
 
       // Display debugging information
       /* uint16_t sc = StackCount(); */
@@ -1089,8 +1180,7 @@ int main()
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
-              levelScore[p] += 25;
-              DisplayNumber(18 + p * 9, 0, levelScore[p], 5);
+              BCD_addConstant(&levelScore[5 * p], 5, 25);
               if (e->update == entity_update)
                 e->monsterhop = true; // player should now do the monster hop, but only if gravity applies
             } else {
@@ -1191,8 +1281,7 @@ int main()
           if (treasureCollected) {
             TriggerFx(2, 128, true);
             treasuresLeft -= treasureCollected;
-            levelScore[i] += treasureCollected * 5; // each treasure is worth 5 points
-            DisplayNumber(18 + i * 9, 0, levelScore[i], 5);
+            BCD_addConstant(&levelScore[5 * i], 5, treasureCollected * 5); // each treasure is worth 5 points
 
             // Check to see if the last treasure has just been collected
             if (treasuresLeft == 0) {
@@ -1222,12 +1311,12 @@ int main()
               e->invincible = true;
             }
             for (uint8_t i = 0; i < PLAYERS; ++i) {
-              uint16_t prev = gameScore[i];
-              gameScore[i] = levelScore[i] + timer; // add time bonus
-              if (gameScore[i] < prev)
-                gameScore[i] = -1; // prevent rollover
+              for (uint8_t j = 0; j < 5; ++j)
+                gameScore[j + (5 * i)] = levelScore[j + (5 * i)];
+              BCD_addBCD(&gameScore[5 * i], 5, timer, 3); // add time bonus
             }
-            timer = 0;
+
+            BCD_zero(timer, 3);
             ++levelEndTimer; // initiate level end sequence
           }
         } else if (levelEndTimer++ == WORLD_FALLING_GRACE_FRAMES + 1) { // ensure portal is shown (albiet briefly) if a player overlaps it before it is displayed
@@ -1235,8 +1324,8 @@ int main()
           hide_exit_sign();
           FadeOut(1, false); // asynchronous fade to black
         } else if (levelEndTimer == 60) {
-          if ((gameType & GFLAG_1P) && (gameScore[0] > highScore))
-            SaveHighScore(gameScore[0]);
+          if ((gameType & GFLAG_1P) && (BCD_compare(gameScore, highScore, 5) > 0))
+            SaveHighScore(gameScore);
           for (uint8_t i = 0; i < MAX_SPRITES; ++i)
             sprites[i].x = OFF_SCREEN;
           if (++currentLevel == LEVELS)
@@ -1251,14 +1340,12 @@ int main()
 
       if (held & BTN_SELECT) {
         if (pressed & BTN_SL) {
-          for (uint8_t i = 0; i < PLAYERS; ++i)
-            gameScore[i] = 0;
+          BCD_zero(gameScore, 5 * PLAYERS);
           if (--currentLevel == 0)
             currentLevel = LEVELS - 2;
           break; // load previous level
         } else if (pressed & BTN_SR) {
-          for (uint8_t i = 0; i < PLAYERS; ++i)
-            gameScore[i] = 0;
+          BCD_zero(gameScore, 5 * PLAYERS);
           if (++currentLevel == LEVELS - 1)
             currentLevel = 1;
           break; // load next level
@@ -1291,12 +1378,14 @@ int main()
         for (uint8_t i = 0; i < PLAYERS; ++i) {
           ENTITY* e = (ENTITY*)&player[i];
           if (e->dead && (e->render == null_render) && (player[i].buttons.held && (player[i].buttons.held & ~BTN_START))) {
-            levelScore[i] = gameScore[i]; // respawning in multiplayer mode resets your score for that level
-            DisplayNumber(18 + i * 9, 0, levelScore[i], 5);
+            for (uint8_t j = 0; j < 5; ++j)
+              levelScore[j + (5 * i)] = gameScore[j + (5 * i)]; // respawning in multiplayer mode resets your score for that level
             spawnPlayer((PLAYER*)e, levelOffset, i, gameType);
           }
         }
       }
+
+      /* __asm__ __volatile__ ("wdr"); */
 
     }
   }
