@@ -298,7 +298,8 @@ void ai_fly_circle_ccw(ENTITY* e)
   e->update = null_update; // ensure ai_fly_circle behaves correctly
 }
 
-void entity_update(ENTITY* const e)
+__attribute__((optimize("O3")))
+void player_update(ENTITY* const e)
 {
   bool wasLeft = (e->dx < 0);
   bool wasRight = (e->dx > 0);
@@ -386,13 +387,12 @@ void entity_update(ENTITY* const e)
 
   // Jump logic
   if (e->jump && !e->jumping && !(e->falling ? (e->framesFalling > WORLD_FALLING_GRACE_FRAMES) : false)) {
-    if (e->tag < PLAYERS)  // only play the jump sound effect when a human player is jumping
-      TriggerFx(0, 128, true);
+    TriggerFx(0, 128, true);
     if (e->dy > 0)
       e->dy = 0;           // if falling down, reset vertical velocity so jumps during grace period are consistent with jumps from ground
     ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
     e->jumping = true;
-    e->jumpReleased = e->falling = false;
+    e->jumpReleased = false;
   }
 
   // Variable height jumping
@@ -477,6 +477,138 @@ void entity_update(ENTITY* const e)
       e->dx = e->dy = 0;
     }
   }
+}
+
+__attribute__((optimize("O3")))
+void entity_update(ENTITY* const e)
+{
+/* __asm__ __volatile__ ("wdr"); */
+
+  bool wasLeft = (e->dx < 0);
+  bool wasRight = (e->dx > 0);
+
+  int16_t ddx = 0;
+
+  if (e->left)
+    ddx -= WORLD_ACCEL;    // entity wants to go left
+  else if (wasLeft)
+    ddx += WORLD_FRICTION; // entity was going left, but not anymore
+
+  if (e->right)
+    ddx += WORLD_ACCEL;    // entity wants to go right
+  else if (wasRight)
+    ddx -= WORLD_FRICTION; // entity was going right, but not anymore
+
+  // Compile-time assert that we are working with a power of 2
+  BUILD_BUG_ON(isNotPowerOf2(WORLD_FPS));
+
+  // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  e->x += (e->dx / WORLD_FPS);
+  e->dx += (ddx / WORLD_FPS);
+  if (e->dx < -e->maxdx)
+    e->dx = -e->maxdx;
+  else if (e->dx > e->maxdx)
+    e->dx = e->maxdx;
+
+  // Clamp X to within screen bounds
+  if (e->x > ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT))) {
+    e->x = ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT));
+    e->dx = 0;
+  } else if (e->x < 0) {
+    e->x = 0;
+    e->dx = 0;
+  }
+
+  // Clamp horizontal velocity to zero if we detect that the direction has changed
+  if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0)))
+    e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
+
+  // Collision Detection for X
+  uint8_t tx = p2ht(e->x);
+  uint8_t ty = p2vt(e->y);
+  bool ny = (bool)nv(e->y); // true if entity overlaps below
+  uint16_t offset = ty * SCREEN_TILES_H + tx;
+  bool cell      = isSolid(vram[offset                     ] - RAM_TILES_COUNT); // equiv. GetTile(tx,     ty    )
+  uint8_t tright =         vram[offset + 1                 ] - RAM_TILES_COUNT;  // equiv. GetTile(tx + 1, ty    )
+  bool cellright = isSolid(tright); 
+  bool celldown  = isSolid(vram[offset + SCREEN_TILES_H    ] - RAM_TILES_COUNT); // equiv. GetTile(tx,     ty + 1)
+  uint8_t tdiag  =         vram[offset + SCREEN_TILES_H + 1] - RAM_TILES_COUNT;  // equiv. GetTile(tx + 1, ty + 1)
+  bool celldiag  = isSolid(tdiag);
+
+  if (e->dx > 0) {
+    if ((      cellright && !cell) ||
+        (ny && celldiag  && !celldown)) {
+      e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform just hit
+      e->dx = 0;           // stop horizontal velocity
+    }
+  } else if (e->dx < 0) {
+    if ((      cell     && !cellright) ||
+        (ny && celldown && !celldiag)) { // isLadder() checks avoid glitch
+      e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform just hit
+      e->dx = 0;           // stop horizontal velocity
+    }
+  }
+
+  int16_t ddy = WORLD_GRAVITY;
+
+  // Jump logic
+  if (e->jump && !e->jumping && !e->falling) {
+    ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
+    e->jumping = true;
+  }
+
+  // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+  int16_t prevY = e->y; // cache previous Y value for one-way tiles
+  e->y += (e->dy / WORLD_FPS);
+  e->dy += (ddy / WORLD_FPS);
+  if (e->dy < -WORLD_MAXDY)
+    e->dy = -WORLD_MAXDY;
+  else if (e->dy > WORLD_MAXDY)
+    e->dy = WORLD_MAXDY;
+
+  // Clamp Y to within screen bounds
+  if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
+    e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
+    e->dy = 0;
+    // Kill the entity if it would have fallen through the bottom of the screen
+    if (!e->invincible)
+      e->dead = true;
+/* __asm__ __volatile__ ("wdr"); */
+    return;
+  } else if (e->y < 0) {
+    e->y = 0;
+    e->dy = 0;
+  }
+
+  // Collision Detection for Y (uses rounded X so if it looks like the entity should fall through a one-tile-wide hole, it will)
+  int16_t roundedX = (e->dx == 0) ? nearestScreenPixel(e->x) << FP_SHIFT : e->x;
+  tx = p2ht(roundedX);
+  ty = p2vt(e->y);
+  bool nx = (bool)nh(roundedX);  // true if entity overlaps right
+  offset = ty * SCREEN_TILES_H + tx;
+  cell      = isSolidForEntity(offset,                      ty,     prevY, WORLD_METER, false); // equiv. ... tx,     ty
+  cellright = isSolidForEntity(offset + 1,                  ty,     prevY, WORLD_METER, false); // equiv. ... tx + 1, ty
+  celldown  = isSolidForEntity(offset + SCREEN_TILES_H,     ty + 1, prevY, WORLD_METER, false); // equiv. ... tx,     ty + 1
+  celldiag  = isSolidForEntity(offset + SCREEN_TILES_H + 1, ty + 1, prevY, WORLD_METER, false); // equiv. ... tx + 1, ty + 1
+
+  if (e->dy > 0) {
+    if ((      celldown && !cell) ||
+        (nx && celldiag && !cellright)) {
+      e->y = vt2p(ty);     // clamp the y position to avoid falling into platform below
+      e->dy = 0;           // stop downward velocity
+      e->jumping = false;  // no longer jumping
+    }
+  } else if (e->dy < 0) {
+    if ((      cell      && !celldown) ||
+        (nx && cellright && !celldiag)) {
+      e->y = vt2p(ty + 1); // clamp the y position to avoid jumping into platform above
+      e->dy = 0;           // stop updard velocity
+    }
+  }
+
+  e->falling = !(celldown || (nx && celldiag)) && !e->jumping; // detect if we're now falling or not
+
+/* __asm__ __volatile__ ("wdr"); */
 }
 
 void entity_update_dying(ENTITY* const e)
@@ -640,7 +772,7 @@ void entity_update_ladder(ENTITY* const e)
         (nx &&       isLadder(vram[offset + 1                 ] - RAM_TILES_COUNT)) ||  // equiv. ... GetTile(tx + 1, ty) ...
         (ny &&       isLadder(vram[offset + SCREEN_TILES_H    ] - RAM_TILES_COUNT)) ||  // equiv. ... GetTile(tx, ty + 1) ...
         (nx && ny && isLadder(vram[offset + SCREEN_TILES_H + 1] - RAM_TILES_COUNT)))) { // equiv. ... GetTile(tx + 1, ty + 1) ...
-    e->update = entity_update;
+    e->update = player_update;
     e->animationFrameCounter = 0;
     e->framesFalling = 0;   // reset the counter so a grace jump is allowed if moving off the ladder causes the entity to fall
     e->jumpReleased = true; // set this flag so attempting to jump off a ladder while moving up or down happens as soon as the entity leaves the ladder
@@ -648,13 +780,14 @@ void entity_update_ladder(ENTITY* const e)
 
   // Allow jumping off ladder if the entity is not moving up or down
   if (e->jump && (!(e->up || e->down))) { // don't allow jumping if up or down is being held, because the entity would immediately rejoin the ladder
-    e->jumping = e->falling = false; // ensure jump happens when calling entity_update
+    e->jumping = e->falling = false; // ensure jump happens when calling player_update
     e->jump = true;
-    e->update = entity_update;
+    e->update = player_update;
     e->animationFrameCounter = 0;
-    entity_update(e); // run this inline, so the jump and proper collision can happen this frame
+    player_update(e); // run this inline, so the jump and proper collision can happen this frame
   }
 }
+
 
 #define GENERIC_OFFSET_DEAD (-3)
 #define GENERIC_OFFSET_STATIONARY (-2)
@@ -835,7 +968,7 @@ void player_input(ENTITY* const e)
   if (e->jumpReleased) {                                      // jumping multiple times requires releasing the jump button between jumps
     e->jump = (bool)(p->buttons.held & BTN_A);                // player[i].jump can only be true if BTN_A has been released from the previous jump
 
-    if (e->jump && e->update == entity_update) {
+    if (e->jump && e->update == player_update) {
       // Look at the tile(s) above the player's head. If the jump would not be allowed, then don't set jump to true until they can actually jump
       // This allows the player to hold the jump button early while jump-restricted, but still make the jump as soon as it is allowed
       int16_t roundedX = nearestScreenPixel(e->x) << FP_SHIFT; // ignore subpixels for this calculation

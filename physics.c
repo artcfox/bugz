@@ -114,7 +114,7 @@ static void BCD_addBCD(uint8_t* const accumulator, uint8_t digits, uint8_t* cons
       accumulator[digits] = 9;
 }
 
-static void BCD_decrement(uint8_t* const num, uint8_t digits)
+static inline void BCD_decrement(uint8_t* const num, uint8_t digits)
 {
   // Check to make sure the entire number is greater than zero first
   for (uint8_t i = 0; i < digits; ++i)
@@ -257,9 +257,10 @@ typedef enum UPDATE_FUNCTION UPDATE_FUNCTION;
 
 enum UPDATE_FUNCTION {
   NULL_UPDATE = 0,
-  ENTITY_UPDATE = 1,
-  ENTITY_UPDATE_FLYING = 2,
-  ENTITY_UPDATE_LADDER = 3,
+  PLAYER_UPDATE = 1,
+  ENTITY_UPDATE = 2,
+  ENTITY_UPDATE_FLYING = 3,
+  ENTITY_UPDATE_LADDER = 4,
 };
 
 typedef void (*updateFnPtr)(ENTITY*);
@@ -267,6 +268,8 @@ __attribute__(( optimize("Os") ))
 static updateFnPtr updateFunc(const UPDATE_FUNCTION u)
 {
   switch (u) {
+  case PLAYER_UPDATE:
+    return player_update;
   case ENTITY_UPDATE:
     return entity_update;
   case ENTITY_UPDATE_FLYING:
@@ -788,6 +791,8 @@ static void spawnPlayer(PLAYER* const p, const uint16_t levelOffset, const uint8
               (int16_t)(playerMaxDX(levelOffset, i)),
               (int16_t)(playerImpulse(levelOffset, i)));
   ENTITY* const e = (ENTITY*)p;
+  if (e->update == entity_update)
+    e->update = player_update;
   // The cast to bool is necessary to properly set bit flags
   //e->left = (bool)(playerFlags & IFLAG_LEFT);
   //e->right = (bool)(playerFlags & IFLAG_RIGHT);
@@ -1105,7 +1110,7 @@ int main()
                      (TILE_WIDTH * TILE_HEIGHT) * ((TILESET_SIZE - TITLE_SCREEN_TILES) / (3 * THEMES_N)) *
                      pgm_read_byte(&backgroundAnimation[backgroundFrameCounter / BACKGROUND_FRAME_SKIP]));
 
-        // Decrement and update the in-game time display if time is greater than zero
+        // Decrement, and display the time bonus timer if its value is greater than zero
         if (timer[0] || timer[1] || timer[2]) {
           BCD_decrement(timer, 3);
           BCD_display(6, 0, timer, 3);
@@ -1115,14 +1120,14 @@ int main()
       BUILD_BUG_ON(isNotPowerOf2(BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation)));
       backgroundFrameCounter = (backgroundFrameCounter + 1) & (BACKGROUND_FRAME_SKIP * NELEMS(backgroundAnimation) - 1);
 
-      // Update the score
+      // Display the score(s)
       BCD_display(14, 0, &levelScore[0], SCORE_DIGITS);
 #if (PLAYERS == 2)
       if (!(gameType & GFLAG_1P))
         BCD_display(23, 0, &levelScore[SCORE_DIGITS], SCORE_DIGITS);
 #endif // (PLAYERS == 2)
 
-      /* __asm__ __volatile__ ("wdr"); */
+/* __asm__ __volatile__ ("wdr"); */
 
       // Display debugging information
       /* uint16_t sc = StackCount(); */
@@ -1159,12 +1164,12 @@ int main()
           if (((playerPrevY[0] + WORLD_METER - (1 << FP_SHIFT)) < (playerPrevY[1])) && !p2->invincible) {
             killPlayer(p2);
             p2->monsterhop = false; // die like a bug
-            if (p1->update == entity_update)
+            if (p1->update == player_update)
               p1->monsterhop = true; // player should now do the monster hop, but only if gravity applies
           } else if (((playerPrevY[1] + WORLD_METER - (1 << FP_SHIFT)) < (playerPrevY[0])) && !p1->invincible) {
             killPlayer(p1);
             p1->monsterhop = false; // die like a bug
-            if (p2->update == entity_update)
+            if (p2->update == player_update)
               p2->monsterhop = true; // player should now do the monster hop, but only if gravity applies
           }
         }
@@ -1190,7 +1195,7 @@ int main()
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
               BCD_addConstant(&levelScore[SCORE_DIGITS * p], SCORE_DIGITS, KILL_MONSTER_POINTS);
-              if (e->update == entity_update)
+              if (e->update == player_update)
                 e->monsterhop = true; // player should now do the monster hop, but only if gravity applies
             } else {
               killPlayer(e);

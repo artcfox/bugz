@@ -57,7 +57,7 @@
 
 #define nearestScreenPixel(p) (((p) + (1 << (FP_SHIFT - 1))) >> FP_SHIFT)
 
-#define PLAYERS 1
+#define PLAYERS 2
 #define MONSTERS 6
 
 // Include the auto-generated definition for LEVELS
@@ -254,6 +254,7 @@ void entity_update_dying(ENTITY* const e);
 void entity_update_flying(ENTITY* const e);
 void entity_update_ladder(ENTITY* const e);
 
+void player_update(ENTITY* const e);
 void player_render(ENTITY* const e);
 void ladybug_render(ENTITY* const e);
 void ant_render(ENTITY* const e);
