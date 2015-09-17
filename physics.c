@@ -47,14 +47,64 @@ extern const struct PatchStruct patches[] PROGMEM;
 #define COLLECT_TREASURE_POINTS 5
 #define KILL_MONSTER_POINTS 25
 
+/*
+ * BCD_zero
+ *
+ * Sets all digits of a BCD number to zero
+ *
+ * num [out]
+ *   The BCD number to be zeroed
+ *
+ * digits [in]
+ *   The number of digits in the BCD number, num
+ */
 static void BCD_zero(uint8_t* const num, uint8_t digits)
 {
   while (digits--)
     num[digits] = 0;
 }
 
-// Returns < 0 if num1 < num2, 0 if num1 == num2, and > 0 if num1 > num2
-int8_t BCD_compare(uint8_t* const num1, uint8_t* const num2, uint8_t digits)
+/*
+ * BCD_copy
+ *
+ * Copies the value of the BCD number, src, into the BCD number, dst
+ *
+ * dst [out]
+ *   The destination BCD number
+ *
+ * src [in]
+ *   The source BCD number
+ *
+ * digits [in]
+ *   The number of digits to copy
+ *
+ */
+static void BCD_copy(uint8_t* const dst, const uint8_t* const src, const uint8_t digits)
+{
+  for (uint8_t i = 0; i < digits; ++i)
+    dst[i] = src[i];
+}
+
+/*
+ * BCD_compare
+ *
+ * Compares two (equal length) BCD numbers
+ *
+ * num1 [in]
+ *   The first BCD number
+ *
+ * num2 [in]
+ *   The second BCD number
+ *
+ * digits [in]
+ *    The number of digits in the BCD numbers to compare
+ *
+ * Returns:
+ *   An integer less than, equal to, or greater than zero if num1 is
+ *   found, respectively, to be less than, to match, or be greater
+ *   than num2.
+ */
+static int8_t BCD_compare(uint8_t* const num1, uint8_t* const num2, uint8_t digits)
 {
   while (digits--) {
     if (num1[digits] < num2[digits])
@@ -66,10 +116,33 @@ int8_t BCD_compare(uint8_t* const num1, uint8_t* const num2, uint8_t digits)
   return 0;
 }
 
-static uint8_t BCD_addConstant(uint8_t* const num, uint8_t digits, uint8_t x)
+/*
+ * BCD_addConstant
+ *
+ * Adds a constant (binary number) to a BCD number
+ *
+ * num [in, out]
+ *   The BCD number
+ *
+ * digits [in]
+ *   The number of digits in the BCD number, num
+ *
+ * x [in]
+ *   The binary value to be added to the BCD number
+ *
+ *   Note: The largest value that can be safely added to a BCD number
+ *         is BCD_ADD_CONSTANT_MAX. If the result would overflow num,
+ *         then num will be clamped to its maximum value (all 9's).
+ *
+ * Returns:
+ *   A boolean that is true if num has been clamped to its maximum
+ *   value (all 9's), or false otherwise.
+ */
+#define BCD_ADD_CONSTANT_MAX 246
+static bool BCD_addConstant(uint8_t* const num, const uint8_t digits, uint8_t x)
 {
   for (uint8_t i = 0; i < digits; ++i) {
-    uint16_t val = (uint16_t)num[i] + x;
+    uint8_t val = num[i] + x;
     if (val < 10) { // speed up the common cases
       num[i] = val;
       x = 0;
@@ -83,8 +156,8 @@ static uint8_t BCD_addConstant(uint8_t* const num, uint8_t digits, uint8_t x)
     } else if (val < 40) {
       num[i] = val - 30;
       x = 3;
-    } else { // handle the rest of the cases (up to 255) with a loop
-      for (uint8_t j = 5; j < 28; ++j) {
+    } else { // handle the rest of the cases (up to 255 - 9) with a loop
+      for (uint8_t j = 5; j < 26; ++j) {
         if (val < (j * 10)) {
           num[i] = val - ((j - 1) * 10);
           x = (j - 1);
@@ -95,32 +168,75 @@ static uint8_t BCD_addConstant(uint8_t* const num, uint8_t digits, uint8_t x)
   }
 
   if (x > 0) {
-    while (digits--)
-      num[digits] = 9;
-    return 1;
-  } else {
-    return 0;
+    for (uint8_t i = 0; i < digits; ++i)
+      num[i] = 9;
+    return true;
   }
-}
 
-static void BCD_addBCD(uint8_t* const accumulator, uint8_t digits, uint8_t* const x, const uint8_t xdigits)
+  return false;
+}
+/*
+ * BCD_addBCD
+ *
+ * Adds two BCD numbers, num1, num2, and stores the result in num1
+ *
+ * num1 [in, out]
+ *   The first BCD number. Will contain the result of the addition.
+ *
+ *   Note: If the result would overflow num1, then num1 will be
+ *         clamped to its maximum value (all 9's).
+ *
+ * num1_digits [in]
+ *   The number of digits in the BCD number, num1
+ *
+ * num2 [in]
+ *   The second BCD number
+ *
+ * num2_digits [in]
+ *   The number of digits in the BCD number, num2
+ *
+ *   Note: The number of digits in num1 and num2 do not have to be the
+ *         same, but num1_digits must be greater than or equal to
+ *         num2_digits.
+ *
+ * Returns:
+ *   A boolean that is true if num1 has been clamped to its maximum
+ *   value (all 9's), or false otherwise.
+ */
+static bool BCD_addBCD(uint8_t* const num1, const uint8_t num1_digits, const uint8_t* const num2, const uint8_t num2_digits)
 {
-  uint8_t retval = 0;
-  for (uint8_t i = 0; i < xdigits; ++i)
-    retval |= BCD_addConstant(accumulator + i, digits - i, x[i]);
+  bool retval = false;
+  for (uint8_t i = 0; i < num2_digits; ++i)
+    retval |= BCD_addConstant(num1 + i, num1_digits - i, num2[i]);
 
   if (retval)
-    while (digits--)
-      accumulator[digits] = 9;
+    for (uint8_t i = 0; i < num1_digits; ++i)
+      num1[i] = 9;
+  return retval;
 }
 
-static inline void BCD_decrement(uint8_t* const num, uint8_t digits)
+/*
+ * BCD_decrement
+ *
+ * Decrements a BCD number by one
+ * 
+ * num [in, out]
+ *   The BCD number. Will be decremented by one.
+ *
+ * Note: If the result would underflow num, it will be clamped to its
+ *       minimum value (all 0's).
+ *
+ * Returns:
+ *   A boolean that is true if num has been clamped to its minimum
+ *   value (all 0's), or false otherwise.
+ */
+static bool BCD_decrement(uint8_t* const num, const uint8_t digits)
 {
   // Check to make sure the entire number is greater than zero first
   for (uint8_t i = 0; i < digits; ++i)
     if (num[i] > 0)
       goto skip;
-  return;
+  return true;
 
  skip:
   for (uint8_t i = 0; i < digits; ++i) {
@@ -132,23 +248,32 @@ static inline void BCD_decrement(uint8_t* const num, uint8_t digits)
       break;
     }
   }
+  return false;
 }
 
+/*
+ * BCD_display
+ *
+ * Displays a BCD number at tile coordinates (x, y)
+ *
+ * x [in]
+ *   The x location of the most significant digit of the BCD number to be printed
+ *
+ * y [in]
+ *   The y location of the BCD number to be printed
+ *
+ * num [in]
+ *   The BCD number
+ *
+ * digits [in]
+ *   The number of digits in the BCD number, num
+ */
 __attribute__(( always_inline ))
-static inline void BCD_copy(uint8_t* const dst, const uint8_t* const src, const uint8_t digits)
+static inline void BCD_display(const uint8_t x, const uint8_t y, const uint8_t* const num, uint8_t digits)
 {
-  for (uint8_t i = 0; i < digits; ++i)
-    dst[i] = src[i];
-}
-
-__attribute__(( always_inline ))
-static inline void BCD_display(uint8_t x, const uint8_t y, const uint8_t* const num, uint8_t digits)
-{
-  /* __asm__ __volatile__ ("wdr"); */
   uint16_t offset = y * SCREEN_TILES_H + x;
   while (digits--)
-    vram[offset++] = num[digits] + FIRST_DIGIT_TILE + RAM_TILES_COUNT; // get next digit
-  /* __asm__ __volatile__ ("wdr"); */
+    vram[offset++] = num[digits] + FIRST_DIGIT_TILE + RAM_TILES_COUNT;
 }
 
 __attribute__(( optimize("Os") ))
@@ -1033,18 +1158,22 @@ int main()
     SetTileTable(tileset);
 
     uint16_t timeBonus = 0;
+/* __asm__ __volatile__ ("wdr"); */
+    SetRenderingParameters(262 - 80, 80);
+
     levelOffset = LoadLevel(currentLevel, &theme, &treasuresLeft, &timeBonus);
 
-  /* __asm__ __volatile__ ("wdr"); */
-    // Convert timeBonus into unpacked BCD and store in timer[3] array (not time critical)
-    BCD_zero(timer, 3);
-    while (timeBonus > 255) {
-      BCD_addConstant(timer, TIMER_DIGITS, 255);
-      timeBonus -= 255;
+    // Convert timeBonus into unpacked BCD and store in timer[TIMER_DIGITS] array (not time critical)
+    BCD_zero(timer, TIMER_DIGITS);
+    while (timeBonus > BCD_ADD_CONSTANT_MAX) {
+      BCD_addConstant(timer, TIMER_DIGITS, BCD_ADD_CONSTANT_MAX);
+      timeBonus -= BCD_ADD_CONSTANT_MAX;
     }
     if (timeBonus > 0)
       BCD_addConstant(timer, TIMER_DIGITS, timeBonus);
-  /* __asm__ __volatile__ ("wdr"); */
+
+    SetRenderingParameters(FIRST_RENDER_LINE, FRAME_LINES);
+/* __asm__ __volatile__ ("wdr"); */
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
 
@@ -1194,7 +1323,10 @@ int main()
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
+  /* __asm__ __volatile__ ("wdr"); */
+
               BCD_addConstant(&levelScore[SCORE_DIGITS * p], SCORE_DIGITS, KILL_MONSTER_POINTS);
+  /* __asm__ __volatile__ ("wdr"); */
               if (e->update == player_update)
                 e->monsterhop = true; // player should now do the monster hop, but only if gravity applies
             } else {
