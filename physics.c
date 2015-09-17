@@ -1159,7 +1159,7 @@ int main()
 
     uint16_t timeBonus = 0;
 /* __asm__ __volatile__ ("wdr"); */
-    SetRenderingParameters(262 - 80, 80);
+    //SetRenderingParameters(262 - 80, 80);
 
     levelOffset = LoadLevel(currentLevel, &theme, &treasuresLeft, &timeBonus);
 
@@ -1172,7 +1172,7 @@ int main()
     if (timeBonus > 0)
       BCD_addConstant(timer, TIMER_DIGITS, timeBonus);
 
-    SetRenderingParameters(FIRST_RENDER_LINE, FRAME_LINES);
+    //SetRenderingParameters(FIRST_RENDER_LINE, FRAME_LINES);
 /* __asm__ __volatile__ ("wdr"); */
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
