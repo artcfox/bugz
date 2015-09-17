@@ -931,7 +931,7 @@ static void spawnPlayer(PLAYER* const p, const uint16_t levelOffset, const uint8
 }
 
 __attribute__(( always_inline ))
-static inline bool overlap(const int16_t x1, const int16_t y1, const uint8_t w1, const uint8_t h1, const int16_t x2, const int16_t y2, const uint8_t w2, const uint8_t h2)
+static inline bool overlap(const uint8_t x1, const uint8_t y1, const uint8_t w1, const uint8_t h1, const uint8_t x2, const uint8_t y2, const uint8_t w2, const uint8_t h2)
 {
   return !(((x1 + w1 - 1) < x2) ||
            ((x2 + w2 - 1) < x1) ||
@@ -1281,6 +1281,7 @@ int main()
         playerPrevY[i] = e->y; // cache the previous Y value to use for kill detection below
         e->input(e);
         e->update(e);
+        e->render(e);
       }
 
 #if (PLAYERS == 2)
@@ -1289,7 +1290,7 @@ int main()
         ENTITY* p1 = (ENTITY*)(&player[0]);
         ENTITY* p2 = (ENTITY*)(&player[1]);
         if (p1->interacts && !p1->dead && p2->interacts && !p2->dead &&
-            overlap(p1->x, p1->y, WORLD_METER, WORLD_METER, p2->x, p2->y, WORLD_METER, WORLD_METER)) {
+            overlap(sprites[0].x, sprites[0].y, TILE_WIDTH, TILE_HEIGHT, sprites[1].x, sprites[1].y, TILE_WIDTH, TILE_HEIGHT)) {
           if (((playerPrevY[0] + WORLD_METER - (1 << FP_SHIFT)) < (playerPrevY[1])) && !p2->invincible) {
             killPlayer(p2);
             p2->monsterhop = false; // die like a bug
@@ -1310,15 +1311,16 @@ int main()
         int16_t monsterPrevY = monster[i].y; // cache the previous Y value to use for kill detection below
         monster[i].input(&monster[i]);
         monster[i].update(&monster[i]);
+        monster[i].render(&monster[i]);
 
         // Collision detection (calculation assumes each sprite is WORLD_METER wide, and uses a shrunken hitbox for the monster)
         for (uint8_t p = 0; p < PLAYERS; ++p) {
           ENTITY* const e = (ENTITY*)(&player[p]);
           if (monster[i].interacts && !monster[i].dead && e->interacts && !e->dead &&
-              overlap(e->x, e->y, WORLD_METER, WORLD_METER,
-                      monster[i].x + (1 << FP_SHIFT),
-                      monster[i].y + (3 << FP_SHIFT),
-                      WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (4 << FP_SHIFT))) {
+              overlap(sprites[p].x, sprites[p].y, TILE_WIDTH, TILE_HEIGHT,
+                      sprites[PLAYERS + i + 4].x + 1,
+                      sprites[PLAYERS + i + 4].y + 3,
+                      TILE_WIDTH - 2, TILE_HEIGHT - 4)) {
             // If a player and a monster overlap, and the bottom pixel of the player's previous Y is above the top
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
@@ -1337,10 +1339,10 @@ int main()
       }
 
       // Render every entity
-      for (uint8_t i = 0; i < PLAYERS; ++i)
-        ((ENTITY*)(&player[i]))->render((ENTITY*)(&player[i]));
-      for (uint8_t i = 0; i < MONSTERS; ++i)
-        monster[i].render(&monster[i]);
+      /* for (uint8_t i = 0; i < PLAYERS; ++i) */
+      /*   ((ENTITY*)(&player[i]))->render((ENTITY*)(&player[i])); */
+      /* for (uint8_t i = 0; i < MONSTERS; ++i) */
+      /*   monster[i].render(&monster[i]); */
 
       // Check if the dead flag has been set for a monster and/or if we need to respawn a monster
       for (uint8_t i = 0; i < MONSTERS; ++i) {
@@ -1362,13 +1364,13 @@ int main()
       for (uint8_t i = 0; i < PLAYERS; ++i) {
         ENTITY* const e = (ENTITY*)(&player[i]);
         if (e->interacts && !e->dead) {
-          uint8_t tx = p2ht(e->x);
-          uint8_t ty = p2vt(e->y);
+          uint8_t tx = sprites[i].x / TILE_WIDTH;
+          uint8_t ty = sprites[i].y / TILE_HEIGHT;
           if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) // bounds check to prevent writing outside of VRAM
             continue;
 
-          bool nx = nh(e->x) && (tx + 1 < SCREEN_TILES_H);  // true if entity overlaps right
-          bool ny = nv(e->y) && (ty + 1 < SCREEN_TILES_V);  // true if entity overlaps below
+          bool nx = (sprites[i].x % TILE_WIDTH) && (tx + 1 < SCREEN_TILES_H);  // true if entity overlaps right
+          bool ny = (sprites[i].y % TILE_HEIGHT) && (ty + 1 < SCREEN_TILES_V);  // true if entity overlaps below
 
           uint8_t treasureCollected = 0;
           bool killedByFire = false;
@@ -1379,10 +1381,10 @@ int main()
             vram[offset] += TREASURE_TO_SKY_OFFSET;   // equiv. SetTile(tx, ty, ...
             treasureCollected++;
           } else if (isFire(t)) {
-            if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
-                        ht2p(tx    ) + (1 << FP_SHIFT),
-                        vt2p(ty    ) + (6 << FP_SHIFT),
-                        WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (2 << FP_SHIFT)))
+            if (overlap(sprites[i].x, sprites[i].y, TILE_WIDTH, TILE_HEIGHT,
+                        (tx    ) * TILE_WIDTH + 1,
+                        (ty    ) * TILE_HEIGHT + 5,
+                        TILE_WIDTH - 2, 2))
               killedByFire = true;
           }
           t = vram[offset + 1] - RAM_TILES_COUNT;         // equiv. GetTile(tx + 1, ty)
@@ -1391,10 +1393,10 @@ int main()
               vram[offset + 1] += TREASURE_TO_SKY_OFFSET; // equiv. SetTile(tx + 1, ty, ...
               treasureCollected++;
             } else if (isFire(t)) {
-              if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
-                          ht2p(tx + 1) + (1 << FP_SHIFT),
-                          vt2p(ty    ) + (6 << FP_SHIFT),
-                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (2 << FP_SHIFT)))
+              if (overlap(sprites[i].x, sprites[i].y, TILE_WIDTH, TILE_HEIGHT,
+                          (tx + 1) * TILE_WIDTH + 1,
+                          (ty    ) * TILE_HEIGHT + 5,
+                          TILE_WIDTH - 2, 2))
                 killedByFire = true;
             }
           }
@@ -1404,10 +1406,10 @@ int main()
               vram[offset + SCREEN_TILES_H] += TREASURE_TO_SKY_OFFSET; // equiv. SetTile(tx, ty + 1, ...
               treasureCollected++;
             } else if (isFire(t)) {
-              if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
-                          ht2p(tx    ) + (1 << FP_SHIFT),
-                          vt2p(ty + 1) + (6 << FP_SHIFT),
-                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (2 << FP_SHIFT)))
+              if (overlap(sprites[i].x, sprites[i].y, TILE_WIDTH, TILE_HEIGHT,
+                          (tx    ) * TILE_WIDTH + 1,
+                          (ty + 1) * TILE_HEIGHT + 5,
+                          TILE_WIDTH - 2, 2))
                 killedByFire = true;
             }
           }
@@ -1417,10 +1419,10 @@ int main()
               vram[offset + SCREEN_TILES_H + 1] += TREASURE_TO_SKY_OFFSET; // equiv. SetTile(tx + 1, ty + 1, ...
               treasureCollected++;
             } else if (isFire(t)) {
-              if (overlap(e->x, e->y, WORLD_METER, WORLD_METER,
-                          ht2p(tx + 1) + (1 << FP_SHIFT),
-                          vt2p(ty + 1) + (6 << FP_SHIFT),
-                          WORLD_METER - (2 << FP_SHIFT), WORLD_METER - (2 << FP_SHIFT)))
+              if (overlap(sprites[i].x, sprites[i].y, TILE_WIDTH, TILE_HEIGHT,
+                          (tx + 1) * TILE_WIDTH + 1,
+                          (ty + 1) * TILE_HEIGHT + 5,
+                          TILE_WIDTH - 2, 2))
                 killedByFire = true;
             }
           }
@@ -1445,8 +1447,8 @@ int main()
           bool overlapsPortal = false;
           for (uint8_t i = 0; i < PLAYERS; ++i) {
             ENTITY* e = (ENTITY*)&player[i];
-            if (!e->dead && overlap(e->x, e->y, WORLD_METER, WORLD_METER,
-                                    sprites[PLAYERS].x << FP_SHIFT, sprites[PLAYERS].y << FP_SHIFT, 2 * WORLD_METER, 2 * WORLD_METER))
+            if (!e->dead && overlap(sprites[i].x, sprites[i].y, TILE_WIDTH, TILE_HEIGHT,
+                                    sprites[PLAYERS].x, sprites[PLAYERS].y, 2 * TILE_WIDTH, 2 * TILE_HEIGHT))
               overlapsPortal = true;
           }
           if (overlapsPortal) {
