@@ -1159,7 +1159,10 @@ int main()
 
     uint16_t timeBonus = 0;
 /* __asm__ __volatile__ ("wdr"); */
-    //SetRenderingParameters(262 - 80, 80);
+/*     // Wait until all sound effects have stopped playing to avoid sound glitches */
+/*     while ((tracks[0].flags | tracks[1].flags) & TRACK_FLAGS_PLAYING) */
+/*       WaitVsync(1); */
+/*     SetRenderingParameters(262 - 80, 80); */
 
     levelOffset = LoadLevel(currentLevel, &theme, &treasuresLeft, &timeBonus);
 
@@ -1172,7 +1175,7 @@ int main()
     if (timeBonus > 0)
       BCD_addConstant(timer, TIMER_DIGITS, timeBonus);
 
-    //SetRenderingParameters(FIRST_RENDER_LINE, FRAME_LINES);
+/*     SetRenderingParameters(FIRST_RENDER_LINE, FRAME_LINES); */
 /* __asm__ __volatile__ ("wdr"); */
 
     /* SetUserPostVsyncCallback(&VsyncCallBack);   */
@@ -1279,9 +1282,11 @@ int main()
       for (uint8_t i = 0; i < PLAYERS; ++i) {
         ENTITY* e = (ENTITY*)(&player[i]);
         playerPrevY[i] = e->y; // cache the previous Y value to use for kill detection below
+  /* __asm__ __volatile__ ("wdr"); */
         e->input(e);
         e->update(e);
         e->render(e);
+  /* __asm__ __volatile__ ("wdr"); */
       }
 
 #if (PLAYERS == 2)
@@ -1326,7 +1331,6 @@ int main()
             if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
               killMonster(&monster[i]);
   /* __asm__ __volatile__ ("wdr"); */
-
               BCD_addConstant(&levelScore[SCORE_DIGITS * p], SCORE_DIGITS, KILL_MONSTER_POINTS);
   /* __asm__ __volatile__ ("wdr"); */
               if (e->update == player_update)
