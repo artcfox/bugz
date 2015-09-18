@@ -554,11 +554,7 @@ const uint8_t levelData[] PROGMEM = {
 #define LEVEL_TIME_BONUS_SIZE 2
 #define LEVEL_PLAYER_INITIAL_FLAGS_START (LEVEL_TIME_BONUS_START + LEVEL_TIME_BONUS_SIZE)
 #define LEVEL_PLAYER_INITIAL_FLAGS_SIZE 2
-#define LEVEL_PLAYER_MAXDX_START (LEVEL_PLAYER_INITIAL_FLAGS_START + LEVEL_PLAYER_INITIAL_FLAGS_SIZE)
-#define LEVEL_PLAYER_MAXDX_SIZE (2 * sizeof(int16_t))
-#define LEVEL_PLAYER_IMPULSE_START (LEVEL_PLAYER_MAXDX_START + LEVEL_PLAYER_MAXDX_SIZE)
-#define LEVEL_PLAYER_IMPULSE_SIZE (2 * sizeof(int16_t))
-#define LEVEL_PLAYER_INPUT_START (LEVEL_PLAYER_IMPULSE_START + LEVEL_PLAYER_IMPULSE_SIZE)
+#define LEVEL_PLAYER_INPUT_START (LEVEL_PLAYER_INITIAL_FLAGS_START + LEVEL_PLAYER_INITIAL_FLAGS_SIZE)
 #define LEVEL_PLAYER_INPUT_SIZE 2
 #define LEVEL_PLAYER_UPDATE_START (LEVEL_PLAYER_INPUT_START + LEVEL_PLAYER_INPUT_SIZE)
 #define LEVEL_PLAYER_UPDATE_SIZE 2
@@ -593,8 +589,6 @@ const uint8_t levelData[] PROGMEM = {
 #define theme(levelOffset) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_THEME_START]))
 #define timeBonus(levelOffset) ((uint16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_TIME_BONUS_START]))
 #define playerFlags(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INITIAL_FLAGS_START + (i)]))
-#define playerMaxDX(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_MAXDX_START + ((i) * sizeof(int16_t))]))
-#define playerImpulse(levelOffset, i) ((int16_t)pgm_read_word(&levelData[(levelOffset) + LEVEL_PLAYER_IMPULSE_START + ((i) * sizeof(int16_t))]))
 #define playerInput(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_INPUT_START + (i)]))
 #define playerUpdate(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_UPDATE_START + (i)]))
 #define playerRender(levelOffset, i) ((uint8_t)pgm_read_byte(&levelData[(levelOffset) + LEVEL_PLAYER_RENDER_START + (i)]))
@@ -912,9 +906,7 @@ static void spawnPlayer(PLAYER* const p, const uint16_t levelOffset, const uint8
               inputFunc(input),
               updateFunc(update),
               renderFunc(render), i,
-              tx, ty,
-              (int16_t)(playerMaxDX(levelOffset, i)),
-              (int16_t)(playerImpulse(levelOffset, i)));
+              tx, ty);
   ENTITY* const e = (ENTITY*)p;
   if (e->update == entity_update)
     e->update = player_update;
@@ -1282,11 +1274,11 @@ int main()
       for (uint8_t i = 0; i < PLAYERS; ++i) {
         ENTITY* e = (ENTITY*)(&player[i]);
         playerPrevY[i] = e->y; // cache the previous Y value to use for kill detection below
-  /* __asm__ __volatile__ ("wdr"); */
         e->input(e);
-        e->update(e);
-        e->render(e);
   /* __asm__ __volatile__ ("wdr"); */
+        e->update(e);
+  /* __asm__ __volatile__ ("wdr"); */
+        e->render(e);
       }
 
 #if (PLAYERS == 2)

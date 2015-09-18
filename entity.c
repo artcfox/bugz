@@ -323,15 +323,15 @@ void player_update(ENTITY* const e)
   e->x += (e->dx / WORLD_FPS);
   e->dx += (ddx / WORLD_FPS);
   if (e->turbo) {
-    if (e->dx < -(e->maxdx + WORLD_METER))
-      e->dx = -(e->maxdx + WORLD_METER);
-    else if (e->dx > (e->maxdx + WORLD_METER))
-      e->dx = (e->maxdx + WORLD_METER);
+    if (e->dx < -(WORLD_MAXDX + WORLD_METER))
+      e->dx = -(WORLD_MAXDX + WORLD_METER);
+    else if (e->dx > (WORLD_MAXDX + WORLD_METER))
+      e->dx = (WORLD_MAXDX + WORLD_METER);
   } else {
-    if (e->dx < -e->maxdx)
-      e->dx = -e->maxdx;
-    else if (e->dx > e->maxdx)
-      e->dx = e->maxdx;
+    if (e->dx < -WORLD_MAXDX)
+      e->dx = -WORLD_MAXDX;
+    else if (e->dx > WORLD_MAXDX)
+      e->dx = WORLD_MAXDX;
   }
 
   // Clamp X to within screen bounds
@@ -349,25 +349,24 @@ void player_update(ENTITY* const e)
 
   // Collision Detection for X
   uint8_t tx = p2ht(e->x);
+  bool nx = (bool)nh(e->x); // true if entity overlaps right
   uint8_t ty = p2vt(e->y);
   bool ny = (bool)nv(e->y); // true if entity overlaps below
   uint16_t offset = ty * SCREEN_TILES_H + tx;
   bool cell      = isSolid(vram[offset                     ] - RAM_TILES_COUNT); // equiv. GetTile(tx,     ty    )
-  uint8_t tright =         vram[offset + 1                 ] - RAM_TILES_COUNT;  // equiv. GetTile(tx + 1, ty    )
-  bool cellright = isSolid(tright); 
+  bool cellright = isSolid(vram[offset + 1                 ] - RAM_TILES_COUNT); // equiv. GetTile(tx + 1, ty    )
   bool celldown  = isSolid(vram[offset + SCREEN_TILES_H    ] - RAM_TILES_COUNT); // equiv. GetTile(tx,     ty + 1)
-  uint8_t tdiag  =         vram[offset + SCREEN_TILES_H + 1] - RAM_TILES_COUNT;  // equiv. GetTile(tx + 1, ty + 1)
-  bool celldiag  = isSolid(tdiag);
+  bool celldiag  = isSolid(vram[offset + SCREEN_TILES_H + 1] - RAM_TILES_COUNT); // equiv. GetTile(tx + 1, ty + 1)
 
   if (e->dx > 0) {
-    if ((      cellright && !cell) ||
+    if ((nx && cellright && !cell) || // nx check avoids potential glitch when moving off ladder
         (ny && celldiag  && !celldown)) {
       e->x = ht2p(tx);     // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
     }
   } else if (e->dx < 0) {
-    if ((      cell     && !cellright && !isLadder(tright)) ||
-        (ny && celldown && !celldiag  && !isLadder(tdiag))) { // isLadder() checks avoid glitch
+    if ((nx && cell     && !cellright) || // nx check avoids potential glitch when moving off ladder
+        (ny && celldown && !celldiag)) {
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
     }
@@ -390,7 +389,7 @@ void player_update(ENTITY* const e)
     TriggerFx(0, 128, true);
     if (e->dy > 0)
       e->dy = 0;           // if falling down, reset vertical velocity so jumps during grace period are consistent with jumps from ground
-    ddy -= e->impulse;     // apply an instantaneous (large) vertical impulse
+    ddy -= WORLD_JUMP;     // apply an instantaneous (large) vertical impulse
     e->jumping = true;
     e->jumpReleased = false;
   }
@@ -424,8 +423,8 @@ void player_update(ENTITY* const e)
   // Collision Detection for Y (uses rounded X so if it looks like the entity should fall through a one-tile-wide hole, it will)
   int16_t roundedX = (e->dx == 0) ? nearestScreenPixel(e->x) << FP_SHIFT : e->x;
   tx = p2ht(roundedX);
+  nx = (bool)nh(roundedX);  // true if entity overlaps right
   ty = p2vt(e->y);
-  bool nx = (bool)nh(roundedX);  // true if entity overlaps right
   offset = ty * SCREEN_TILES_H + tx;
   cell      = isSolidForEntity(offset,                      ty,     prevY, WORLD_METER, e->down); // equiv. ... tx,     ty
   cellright = isSolidForEntity(offset + 1,                  ty,     prevY, WORLD_METER, e->down); // equiv. ... tx + 1, ty
@@ -529,11 +528,9 @@ void entity_update(ENTITY* const e)
   bool ny = (bool)nv(e->y); // true if entity overlaps below
   uint16_t offset = ty * SCREEN_TILES_H + tx;
   bool cell      = isSolid(vram[offset                     ] - RAM_TILES_COUNT); // equiv. GetTile(tx,     ty    )
-  uint8_t tright =         vram[offset + 1                 ] - RAM_TILES_COUNT;  // equiv. GetTile(tx + 1, ty    )
-  bool cellright = isSolid(tright); 
+  bool cellright = isSolid(vram[offset + 1                 ] - RAM_TILES_COUNT); // equiv. GetTile(tx + 1, ty    )
   bool celldown  = isSolid(vram[offset + SCREEN_TILES_H    ] - RAM_TILES_COUNT); // equiv. GetTile(tx,     ty + 1)
-  uint8_t tdiag  =         vram[offset + SCREEN_TILES_H + 1] - RAM_TILES_COUNT;  // equiv. GetTile(tx + 1, ty + 1)
-  bool celldiag  = isSolid(tdiag);
+  bool celldiag  = isSolid(vram[offset + SCREEN_TILES_H + 1] - RAM_TILES_COUNT); // equiv. GetTile(tx + 1, ty + 1)
 
   if (e->dx > 0) {
     if ((      cellright && !cell) ||
@@ -543,7 +540,7 @@ void entity_update(ENTITY* const e)
     }
   } else if (e->dx < 0) {
     if ((      cell     && !cellright) ||
-        (ny && celldown && !celldiag)) { // isLadder() checks avoid glitch
+        (ny && celldown && !celldiag)) {
       e->x = ht2p(tx + 1); // clamp the x position to avoid moving into the platform just hit
       e->dx = 0;           // stop horizontal velocity
     }
@@ -942,10 +939,10 @@ void spider_render(ENTITY* const e)
 
 // ---------- PLAYER
 
-void player_init(PLAYER* const p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint8_t x, const uint8_t y, const int16_t maxdx, const int16_t impulse)
+void player_init(PLAYER* const p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint8_t x, const uint8_t y)
 {
   memset(&(p->buttons), 0, sizeof(BUTTON_INFO));
-  entity_init((ENTITY*)p, input, update, render, tag, x, y, maxdx, impulse);
+  entity_init((ENTITY*)p, input, update, render, tag, x, y, WORLD_MAXDX, WORLD_JUMP);
 }
 
 void player_input(ENTITY* const e)

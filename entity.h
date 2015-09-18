@@ -233,7 +233,7 @@ void null_input(ENTITY* const e);
 void null_render(ENTITY* const e);
 
 void entity_init(ENTITY* const e, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint8_t x, const uint8_t y, const int16_t maxdx, const int16_t impulse);
-void player_init(PLAYER* const p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint8_t x, const uint8_t y, const int16_t maxdx, const int16_t impulse);
+void player_init(PLAYER* const p, void (*input)(ENTITY*), void (*update)(ENTITY*), void (*render)(ENTITY*), const uint8_t tag, const uint8_t x, const uint8_t y);
 
 void player_input(ENTITY* const e);
 void ai_walk_until_blocked(ENTITY* const e);
