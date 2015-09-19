@@ -1043,7 +1043,7 @@ static GAME_FLAGS doTitleScreen(ENTITY* const monster, uint8_t* highScore)
   sprites[0].x -= 4;
 
   for (;;) {
-    if (selection == 0 && (highScore[4] || highScore[3] || highScore[2] || highScore[1] || highScore[0])) { // 1P
+    if (selection == 0 && (highScore[0] || highScore[1] || highScore[2] || highScore[3] || highScore[4])) { // 1P
       // Using SetTile here results in smaller code
       SetTile(11, 24, LAST_FIRE_TILE + 10);
       SetTile(12, 24, LAST_FIRE_TILE + 8);
@@ -1196,7 +1196,7 @@ int main()
       continue;
     } else {
       if (currentLevel == LEVELS - 1) {
-        BCD_zero(timer, 3); // don't display the timer or level number on the victory screen
+        BCD_zero(timer, TIMER_DIGITS); // don't display the timer or level number on the victory screen
       } else {
         uint8_t levelDisplay[2] = {0};
         BCD_addConstant(levelDisplay, 2, currentLevel);
@@ -1236,8 +1236,8 @@ int main()
 
         // Decrement, and display the time bonus timer if its value is greater than zero
         if (timer[0] || timer[1] || timer[2]) {
-          BCD_decrement(timer, 3);
-          BCD_display(6, 0, timer, 3);
+          BCD_decrement(timer, TIMER_DIGITS);
+          BCD_display(6, 0, timer, TIMER_DIGITS);
         }
       }
       // Compile-time assert that we are working with a power of 2
