@@ -1221,7 +1221,7 @@ int main()
     for (;;) {
       /* static uint8_t localFrameCounter; */
       WaitVsync(1);
-/* __asm__ __volatile__ ("wdr"); */
+__asm__ __volatile__ ("wdr");
 
       /* uint8_t* ramTile = GetUserRamTile(0); */
       /* CopyFlashTile(0, 0); */
@@ -1258,14 +1258,6 @@ int main()
       /* DisplayNumber(SCREEN_TILES_H - 3, 1, sc, 4); */
       /* DisplayNumber(2, 0, globalFrameCounter, 3); */
       /* DisplayNumber(6, 0, localFrameCounter++, 3); */
-      /* DisplayNumber(4, 0, (uint16_t)tracks[1].patchCommandStreamPos, 5); */
-      /* DisplayNumber(8, 0, (uint16_t)tracks[1].patchCurrDeltaTime, 3); */
-      /* DisplayNumber(12, 0, (uint16_t)tracks[1].patchNextDeltaTime, 3); */
-      /* DisplayNumber(18, 0, (uint16_t)tracks[2].patchCommandStreamPos, 5); */
-      /* DisplayNumber(22, 0, (uint16_t)tracks[2].patchCurrDeltaTime, 3); */
-      /* DisplayNumber(26, 0, (uint16_t)tracks[2].patchNextDeltaTime, 3); */
-      /* DisplayNumber(23, 0, currentLevel, 3); */
-      /* //DisplayNumber(SCREEN_TILES_H - 1, SCREEN_TILES_V - 1, levelOffset, 5); */
 
       // Proper kill detection requires the previous Y value for each entity
       int16_t playerPrevY[PLAYERS];
@@ -1495,7 +1487,7 @@ int main()
           BCD_zero(gameScore, SCORE_DIGITS * PLAYERS);
           if (++currentLevel == LEVELS - 1)
             currentLevel = 1;
-/* __asm__ __volatile__ ("wdr"); */
+__asm__ __volatile__ ("wdr");
           break; // load next level
         } else if (pressed & BTN_START) {
           currentLevel = 0;
@@ -1533,7 +1525,7 @@ int main()
         }
       }
 
-/* __asm__ __volatile__ ("wdr"); */
+__asm__ __volatile__ ("wdr");
 
     }
   }

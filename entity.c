@@ -663,6 +663,7 @@ void entity_update_dying(ENTITY* const e)
   }
 }
 
+__attribute__((optimize("O3")))
 void entity_update_flying(ENTITY* const e)
 {
   bool wasLeft = (e->dx < 0);
@@ -753,6 +754,7 @@ void entity_update_flying(ENTITY* const e)
   }
 }
 
+__attribute__((optimize("O3")))
 void entity_update_ladder(ENTITY* const e)
 {
   entity_update_flying(e);
@@ -781,7 +783,9 @@ void entity_update_ladder(ENTITY* const e)
     e->jump = true;
     e->update = player_update;
     e->animationFrameCounter = 0;
-    player_update(e); // run this inline, so the jump and proper collision can happen this frame
+    /* UZEMCHR='L'; */
+    /* UZEMCHR='\n'; */
+    //player_update(e); // run this inline, so the jump and proper collision can happen this frame
   }
 }
 

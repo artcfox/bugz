@@ -39,6 +39,9 @@
 #include <avr/pgmspace.h>
 #include <uzebox.h>
 
+#define UZEMCHR _SFR_IO8(26) //uzem whisper port for outputting characters to the console
+#define UZEMHEX _SFR_IO8(25) //uzem whisper port for outputting hex bytes values to the console
+
 #define NELEMS(x) (sizeof(x)/sizeof(x[0]))
 
 // Gives a compile-time error if condition is not satisfied, produces no code otherwise
