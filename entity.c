@@ -783,8 +783,8 @@ void entity_update_ladder(ENTITY* const e)
     e->jump = true;
     e->update = player_update;
     e->animationFrameCounter = 0;
-    /* UZEMCHR='L'; */
-    /* UZEMCHR='\n'; */
+    UZEMCHR='L';
+    UZEMCHR='\n';
     //player_update(e); // run this inline, so the jump and proper collision can happen this frame
   }
 }

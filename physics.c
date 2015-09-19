@@ -1260,12 +1260,12 @@ __asm__ __volatile__ ("wdr");
       /* DisplayNumber(6, 0, localFrameCounter++, 3); */
 
       // Proper kill detection requires the previous Y value for each entity
-      int16_t playerPrevY[PLAYERS];
+      uint8_t playerPrevY[PLAYERS];
 
       // Get inputs/update the state of the players
       for (uint8_t i = 0; i < PLAYERS; ++i) {
         ENTITY* e = (ENTITY*)(&player[i]);
-        playerPrevY[i] = e->y; // cache the previous Y value to use for kill detection below
+        playerPrevY[i] = sprites[i].y; // cache the previous Y value to use for kill detection below
         e->input(e);
   /* __asm__ __volatile__ ("wdr"); */
         e->update(e);
@@ -1280,12 +1280,12 @@ __asm__ __volatile__ ("wdr");
         ENTITY* p2 = (ENTITY*)(&player[1]);
         if (p1->interacts && !p1->dead && p2->interacts && !p2->dead &&
             overlap(sprites[0].x, sprites[0].y, TILE_WIDTH, TILE_HEIGHT, sprites[1].x, sprites[1].y, TILE_WIDTH, TILE_HEIGHT)) {
-          if (((playerPrevY[0] + WORLD_METER - (1 << FP_SHIFT)) < (playerPrevY[1])) && !p2->invincible) {
+          if (((playerPrevY[0] + TILE_HEIGHT - 1) < (playerPrevY[1])) && !p2->invincible) {
             killPlayer(p2);
             p2->monsterhop = false; // die like a bug
             if (p1->update == player_update)
               p1->monsterhop = true; // player should now do the monster hop, but only if gravity applies
-          } else if (((playerPrevY[1] + WORLD_METER - (1 << FP_SHIFT)) < (playerPrevY[0])) && !p1->invincible) {
+          } else if (((playerPrevY[1] + TILE_HEIGHT - 1) < (playerPrevY[0])) && !p1->invincible) {
             killPlayer(p1);
             p1->monsterhop = false; // die like a bug
             if (p2->update == player_update)
@@ -1297,7 +1297,7 @@ __asm__ __volatile__ ("wdr");
 
       // Get inputs/update the state of the monsters, and perform collision detection with each player
       for (uint8_t i = 0; i < MONSTERS; ++i) {
-        int16_t monsterPrevY = monster[i].y; // cache the previous Y value to use for kill detection below
+        uint8_t monsterPrevY = sprites[PLAYERS + i + 4].y; // cache the previous Y value to use for kill detection below
         monster[i].input(&monster[i]);
         monster[i].update(&monster[i]);
         monster[i].render(&monster[i]);
@@ -1312,7 +1312,7 @@ __asm__ __volatile__ ("wdr");
                       TILE_WIDTH - 2, TILE_HEIGHT - 4)) {
             // If a player and a monster overlap, and the bottom pixel of the player's previous Y is above the top
             // of the monster's previous Y then the player kills the monster, otherwise the monster kills the player.
-            if (((playerPrevY[p] + WORLD_METER - (1 << FP_SHIFT)) <= (monsterPrevY + (3 << FP_SHIFT))) && !monster[i].invincible) {
+            if (((playerPrevY[p] + TILE_HEIGHT - 1) <= (monsterPrevY + 3)) && !monster[i].invincible) {
               killMonster(&monster[i]);
   /* __asm__ __volatile__ ("wdr"); */
               BCD_addConstant(&levelScore[SCORE_DIGITS * p], SCORE_DIGITS, KILL_MONSTER_POINTS);
@@ -1325,12 +1325,6 @@ __asm__ __volatile__ ("wdr");
           }
         }
       }
-
-      // Render every entity
-      /* for (uint8_t i = 0; i < PLAYERS; ++i) */
-      /*   ((ENTITY*)(&player[i]))->render((ENTITY*)(&player[i])); */
-      /* for (uint8_t i = 0; i < MONSTERS; ++i) */
-      /*   monster[i].render(&monster[i]); */
 
       // Check if the dead flag has been set for a monster and/or if we need to respawn a monster
       for (uint8_t i = 0; i < MONSTERS; ++i) {
@@ -1354,11 +1348,11 @@ __asm__ __volatile__ ("wdr");
         if (e->interacts && !e->dead) {
           uint8_t tx = sprites[i].x / TILE_WIDTH;
           uint8_t ty = sprites[i].y / TILE_HEIGHT;
-          if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) // bounds check to prevent writing outside of VRAM
-            continue;
+          /* if (tx >= SCREEN_TILES_H || ty >= SCREEN_TILES_V) // bounds check to prevent writing outside of VRAM */
+          /*   continue; */
 
-          bool nx = (sprites[i].x % TILE_WIDTH) && (tx + 1 < SCREEN_TILES_H);  // true if entity overlaps right
-          bool ny = (sprites[i].y % TILE_HEIGHT) && (ty + 1 < SCREEN_TILES_V);  // true if entity overlaps below
+          bool nx = (sprites[i].x % TILE_WIDTH) /* && (tx + 1 < SCREEN_TILES_H) */;  // true if entity overlaps right
+          bool ny = (sprites[i].y % TILE_HEIGHT) /* && (ty + 1 < SCREEN_TILES_V) */;  // true if entity overlaps below
 
           uint8_t treasureCollected = 0;
           bool killedByFire = false;
@@ -1479,12 +1473,14 @@ __asm__ __volatile__ ("wdr");
 
       if (held & BTN_SELECT) {
         if (pressed & BTN_SL) {
-          BCD_zero(gameScore, SCORE_DIGITS * PLAYERS);
+          if (gameType & GFLAG_1P)
+            BCD_zero(gameScore, SCORE_DIGITS * PLAYERS);
           if (--currentLevel == 0)
             currentLevel = LEVELS - 2;
           break; // load previous level
         } else if (pressed & BTN_SR) {
-          BCD_zero(gameScore, SCORE_DIGITS * PLAYERS);
+          if (gameType & GFLAG_1P)
+            BCD_zero(gameScore, SCORE_DIGITS * PLAYERS);
           if (++currentLevel == LEVELS - 1)
             currentLevel = 1;
 __asm__ __volatile__ ("wdr");
