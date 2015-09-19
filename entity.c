@@ -681,34 +681,35 @@ void entity_update_flying(ENTITY* const e)
   else if (wasRight)
     ddx -= WORLD_FRICTION; // entity was going right, but not anymore
 
-  // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  e->x += (e->dx / WORLD_FPS);
-  e->dx += (ddx / WORLD_FPS);
-  if (e->turbo) {
-    if (e->dx < -(e->maxdx + WORLD_METER))
-      e->dx = -(e->maxdx + WORLD_METER);
-    else if (e->dx > (e->maxdx + WORLD_METER))
-      e->dx = (e->maxdx + WORLD_METER);
-  } else {
-    if (e->dx < -e->maxdx)
-      e->dx = -e->maxdx;
-    else if (e->dx > e->maxdx)
-      e->dx = e->maxdx;
+  if (e->left || e->right || wasLeft || wasRight) { // smaller and faster than 'if (ddx)'
+    // Integrate the X forces to calculate the new position (x,y) and the new velocity (dx,dy)
+    e->x += (e->dx / WORLD_FPS);
+    e->dx += (ddx / WORLD_FPS);
+    if (e->turbo) {
+      if (e->dx < -(e->maxdx + WORLD_METER))
+        e->dx = -(e->maxdx + WORLD_METER);
+      else if (e->dx > (e->maxdx + WORLD_METER))
+        e->dx = (e->maxdx + WORLD_METER);
+    } else {
+      if (e->dx < -e->maxdx)
+        e->dx = -e->maxdx;
+      else if (e->dx > e->maxdx)
+        e->dx = e->maxdx;
+    }
+
+    // Clamp horizontal velocity to zero if we detect that the entities direction has changed
+    if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0)))
+      e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
+
+    // Clamp X to within screen bounds
+    if (e->x > ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT))) {
+      e->x = ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT));
+      e->dx = 0;
+    } else if (e->x < 0) {
+      e->x = 0;
+      e->dx = 0;
+    }
   }
-
-  // Clamp horizontal velocity to zero if we detect that the entities direction has changed
-  if ((wasLeft && (e->dx > 0)) || (wasRight && (e->dx < 0)))
-    e->dx = 0; // clamp at zero to prevent friction from making the entity jiggle side to side
-
-  // Clamp X to within screen bounds
-  if (e->x > ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT))) {
-    e->x = ((SCREEN_TILES_H - 1) * (TILE_WIDTH << FP_SHIFT));
-    e->dx = 0;
-  } else if (e->x < 0) {
-    e->x = 0;
-    e->dx = 0;
-  }
-
   bool wasUp = (e->dy < 0);
   bool wasDown = (e->dy > 0);
 
@@ -724,33 +725,35 @@ void entity_update_flying(ENTITY* const e)
   else if (wasDown)
     ddy -= WORLD_FRICTION; // entity was going down, but not anymore
 
-  // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
-  e->y += (e->dy / WORLD_FPS);
-  e->dy += (ddy / WORLD_FPS);
-  if (e->turbo) {
-    if (e->dy < -(e->maxdx + WORLD_METER)) // use e->maxdx as maxdy, since there is no gravity
-      e->dy = -(e->maxdx + WORLD_METER);
-    else if (e->dy > (e->maxdx + WORLD_METER))
-      e->dy = (e->maxdx + WORLD_METER);
-  } else {
-    if (e->dy < -e->maxdx)
-      e->dy = -e->maxdx;
-    else if (e->dy > e->maxdx)
-      e->dy = e->maxdx;
-  }
+  if (e->up || e->down || wasUp || wasDown) { // smaller and faster than 'if (ddy)'
+    // Integrate the Y forces to calculate the new position (x,y) and the new velocity (dx,dy)
+    e->y += (e->dy / WORLD_FPS);
+    e->dy += (ddy / WORLD_FPS);
+    if (e->turbo) {
+      if (e->dy < -(e->maxdx + WORLD_METER)) // use e->maxdx as maxdy, since there is no gravity
+        e->dy = -(e->maxdx + WORLD_METER);
+      else if (e->dy > (e->maxdx + WORLD_METER))
+        e->dy = (e->maxdx + WORLD_METER);
+    } else {
+      if (e->dy < -e->maxdx)
+        e->dy = -e->maxdx;
+      else if (e->dy > e->maxdx)
+        e->dy = e->maxdx;
+    }
 
-  // Clamp vertical velocity to zero if we detect that the entities direction has changed
-  if ((wasUp && (e->dy > 0)) || (wasDown && (e->dy < 0)))
-    e->dy = 0; // clamp at zero to prevent friction from making the entity jiggle up and down
+    // Clamp vertical velocity to zero if we detect that the entities direction has changed
+    if ((wasUp && (e->dy > 0)) || (wasDown && (e->dy < 0)))
+      e->dy = 0; // clamp at zero to prevent friction from making the entity jiggle up and down
 
-  // Clamp Y to within screen bounds
-  if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
-    e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
-    e->dy = 0;
-    //TriggerFx(3, 128, true); // uncomment this line to debug level designs, will make a sound if the entity clips
-  } else if (e->y < 0) {
-    e->y = 0;
-    e->dy = 0;
+    // Clamp Y to within screen bounds
+    if (e->y > ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT))) {
+      e->y = ((SCREEN_TILES_V - 1) * (TILE_HEIGHT << FP_SHIFT));
+      e->dy = 0;
+      //TriggerFx(3, 128, true); // uncomment this line to debug level designs, will make a sound if the entity clips
+    } else if (e->y < 0) {
+      e->y = 0;
+      e->dy = 0;
+    }
   }
 }
 
