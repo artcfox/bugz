@@ -138,7 +138,7 @@ static int8_t BCD_compare(uint8_t* const num1, uint8_t* const num2, uint8_t digi
  *   A boolean that is true if num has been clamped to its maximum
  *   value (all 9's), or false otherwise.
  */
-#define BCD_ADD_CONSTANT_MAX 246
+#define BCD_ADD_CONSTANT_MAX 244
 static bool BCD_addConstant(uint8_t* const num, const uint8_t digits, uint8_t x)
 {
   for (uint8_t i = 0; i < digits; ++i) {
@@ -544,6 +544,9 @@ const uint8_t levelData[] PROGMEM = {
 
 #include "data/levels/0170-organic_mountain_level.inc"
 #include "editor/levels/0170-organic_mountain_level.xcf.png.inc"
+
+#include "data/levels/0190-pachinko_ant_tubes_level.inc"
+#include "editor/levels/0190-pachinko_ant_tubes_level.xcf.png.inc"
 
   // Victory screen
 #include "data/levels/9999-victory_level.inc"
