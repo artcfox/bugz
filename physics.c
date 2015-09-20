@@ -545,6 +545,9 @@ const uint8_t levelData[] PROGMEM = {
 #include "data/levels/0170-organic_mountain_level.inc"
 #include "editor/levels/0170-organic_mountain_level.xcf.png.inc"
 
+#include "data/levels/0180-faces_level.inc"
+#include "editor/levels/0180-faces_level.xcf.png.inc"
+
 #include "data/levels/0190-pachinko_ant_tubes_level.inc"
 #include "editor/levels/0190-pachinko_ant_tubes_level.xcf.png.inc"
 
