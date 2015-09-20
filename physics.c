@@ -551,6 +551,9 @@ const uint8_t levelData[] PROGMEM = {
 #include "data/levels/0190-pachinko_ant_tubes_level.inc"
 #include "editor/levels/0190-pachinko_ant_tubes_level.xcf.png.inc"
 
+#include "data/levels/0200-platforms_and_ladders_level.inc"
+#include "editor/levels/0200-platforms_and_ladders_level.xcf.png.inc"
+
   // Victory screen
 #include "data/levels/9999-victory_level.inc"
 #include "editor/levels/9999-victory_level.xcf.png.inc"
