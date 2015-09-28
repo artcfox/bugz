@@ -873,7 +873,7 @@ static void generic_flying_render(ENTITY* const e, const uint8_t animationStart)
   } else {
     if ((e->animationFrameCounter % GENERIC_FLYING_ANIMATION_FRAME_SKIP) == 0)
       sprites[e->tag].tileIndex = animationStart + pgm_read_byte(&genericFlyingAnimation[e->animationFrameCounter / GENERIC_FLYING_ANIMATION_FRAME_SKIP]);
-    if (++e->animationFrameCounter == GENERIC_FLYING_ANIMATION_FRAME_SKIP * NELEMS(genericFlyingAnimation))
+    if (++e->animationFrameCounter == GENERIC_FLYING_ANIMATION_FRAME_SKIP * NELEMS(genericFlyingAnimation)) // not a power of 2
       e->animationFrameCounter = 0;
   }
 
@@ -915,22 +915,21 @@ void butterfly_render(ENTITY* const e)
   generic_flying_render(e, BUTTERFLY_ANIMATION_START);
 }
 
-#define SPIDER_ANIMATION_START 67
-#define SPIDER_DEAD (SPIDER_ANIMATION_START - 1)
-#define SPIDER_ANIMATION_FRAME_SKIP 8
-const uint8_t spiderAnimation[] PROGMEM = { 0, 1 };
+#define GENERIC_SPIDER_OFFSET_DEAD (-1)
+#define GENERIC_SPIDER_ANIMATION_FRAME_SKIP 8
+const uint8_t genericSpiderAnimation[] PROGMEM = { 0, 1 };
 
-void spider_render(ENTITY* const e)
+static void generic_spider_render(ENTITY* const e, const uint8_t animationStart)
 {
   if (e->dead) {
-    sprites[e->tag].tileIndex = SPIDER_DEAD;
+    sprites[e->tag].tileIndex = animationStart + GENERIC_SPIDER_OFFSET_DEAD;
   } else {
     for (uint8_t i = (e->turbo ? 2 : 1); i; --i) { // turbo makes animations faster
-      if ((e->animationFrameCounter % SPIDER_ANIMATION_FRAME_SKIP) == 0)
-        sprites[e->tag].tileIndex = SPIDER_ANIMATION_START + pgm_read_byte(&spiderAnimation[e->animationFrameCounter / SPIDER_ANIMATION_FRAME_SKIP]);
+      if ((e->animationFrameCounter % GENERIC_SPIDER_ANIMATION_FRAME_SKIP) == 0)
+        sprites[e->tag].tileIndex = animationStart + pgm_read_byte(&genericSpiderAnimation[e->animationFrameCounter / GENERIC_SPIDER_ANIMATION_FRAME_SKIP]);
       // Compile-time assert that we are working with a power of 2
-      BUILD_BUG_ON(isNotPowerOf2(SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation)));
-      e->animationFrameCounter = (e->animationFrameCounter + 1) & (SPIDER_ANIMATION_FRAME_SKIP * NELEMS(spiderAnimation) - 1);
+      BUILD_BUG_ON(isNotPowerOf2(GENERIC_SPIDER_ANIMATION_FRAME_SKIP * NELEMS(genericSpiderAnimation)));
+      e->animationFrameCounter = (e->animationFrameCounter + 1) & (GENERIC_SPIDER_ANIMATION_FRAME_SKIP * NELEMS(genericSpiderAnimation) - 1);
     }
   }
 
@@ -943,6 +942,21 @@ void spider_render(ENTITY* const e)
   sprites[e->tag].x = nearestScreenPixel(e->x);
   sprites[e->tag].y = nearestScreenPixel(e->y);
 }
+
+#define SPIDER_ANIMATION_START 67
+
+void spider_render(ENTITY* const e)
+{
+  generic_spider_render(e, SPIDER_ANIMATION_START);
+}
+
+#define ALT_SPIDER_ANIMATION_START 70
+
+void alt_spider_render(ENTITY* const e)
+{
+  generic_spider_render(e, ALT_SPIDER_ANIMATION_START);
+}
+
 
 // ---------- PLAYER
 
@@ -1050,7 +1064,7 @@ void player_render(ENTITY* const e)
   sprites[e->tag].y = nearestScreenPixel(e->y);
 }
 
-#define EXIT_SIGN_START 69
+#define EXIT_SIGN_START 72
 
 void show_exit_sign(const uint8_t tx, const uint8_t ty)
 {
