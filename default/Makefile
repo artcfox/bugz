@@ -3,8 +3,8 @@
 ###############################################################################
 
 ## General Flags
-PROJECT = Physics
-GAME= physics
+PROJECT = Bugz
+GAME= bugz
 MCU = atmega644
 TARGET = $(GAME).elf
 CC = avr-gcc
@@ -85,7 +85,7 @@ uzeboxVideoEngine.o: $(KERNEL_DIR)/uzeboxVideoEngine.c
 	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
 ## Compile game sources
-$(GAME).o: ../physics.c
+$(GAME).o: ../bugz.c
 	$(CC) $(INCLUDES) $(CFLAGS) -O2 -c  $<
 
 entity.o: ../entity.c
