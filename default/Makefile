@@ -24,12 +24,12 @@ MIX_PATH_ESC := $(subst $(SPACE),$(SPACE_ESC),$(MIX_PATH))
 
 ## Kernel settings
 KERNEL_DIR = ../../../kernel
-KERNEL_OPTIONS  = -DVIDEO_MODE=3 -DINTRO_LOGO=0 -DSCROLLING=0 -DSOUND_MIXER=1
+KERNEL_OPTIONS  = -DVIDEO_MODE=3 -DINTRO_LOGO=0 -DSCROLLING=0 -DSOUND_MIXER=1 -DSOUND_CHANNEL_5_ENABLE=0
 KERNEL_OPTIONS += -DMAX_SPRITES=12 -DRAM_TILES_COUNT=36 -DSCREEN_TILES_V=28
 KERNEL_OPTIONS += -DMIXER_WAVES=\"$(MIX_PATH_ESC)\"
 
 ## Options common to compile, link and assembly rules
-COMMON = -mmcu=$(MCU)
+COMMON = -mmcu=$(MCU) #-flto -fwhole-program
 
 ## Compile options common for all C compilation units.
 CFLAGS = $(COMMON)
