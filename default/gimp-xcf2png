@@ -1,0 +1,20 @@
+#!/bin/bash
+gimp -n -i -b - <<EOF
+(let* ( (file's (cadr (file-glob "*.xcf" 1))) (filename "") (image 0) (layer 0) )
+  (while (pair? file's)
+    (set! image (car (gimp-file-load RUN-NONINTERACTIVE (car file's) (car file's))))
+    (set! layer (car (gimp-image-get-layer-by-name image "Background")))
+    (set! filename (string-append (substring (car file's) 0 (- (string-length (car file's)) 4)) ".xcf.png"))
+    (gimp-file-save RUN-NONINTERACTIVE image layer filename filename)
+    (set! layer (car (gimp-image-get-layer-by-name image "Ladders")))
+    (set! filename (string-append (substring (car file's) 0 (- (string-length (car file's)) 4)) ".xcf-ladders.png"))
+    (gimp-file-save RUN-NONINTERACTIVE image layer filename filename)
+    (set! layer (car (gimp-image-get-layer-by-name image "Entities")))
+    (set! filename (string-append (substring (car file's) 0 (- (string-length (car file's)) 4)) ".xcf-entities.png"))
+    (gimp-file-save RUN-NONINTERACTIVE image layer filename filename)
+    (gimp-image-delete image)
+    (set! file's (cdr file's))
+    )
+  (gimp-quit 0)
+  )
+EOF
